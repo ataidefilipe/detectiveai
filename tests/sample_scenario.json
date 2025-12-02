@@ -1,0 +1,66 @@
+{
+  "title": "The Mysterious Theft",
+  "description": "A priceless artifact has been stolen from the museum.",
+  "culprit": "Dr. Elena Vargas",
+  "suspects": [
+    {
+      "name": "Dr. Elena Vargas",
+      "backstory": "Curator of the museum, known for her expertise in ancient artifacts.",
+      "final_phrase": "I've shared all I can; the truth is out there."
+    },
+    {
+      "name": "Mr. Alex Thompson",
+      "backstory": "Security guard on duty that night."
+    },
+    {
+      "name": "Ms. Sophia Lee",
+      "backstory": "Visiting archaeologist."
+    }
+  ],
+  "evidences": [
+    {
+      "name": "Broken Window",
+      "description": "Glass shards near the exhibit.",
+      "is_mandatory": true
+    },
+    {
+      "name": "Fingerprint on Display Case",
+      "description": "Unidentified print."
+    },
+    {
+      "name": "Security Footage",
+      "description": "Blurry video of the incident.",
+      "is_mandatory": true
+    }
+  ],
+  "secrets": [
+    {
+      "suspect": "Dr. Elena Vargas",
+      "evidence": "Fingerprint on Display Case",
+      "content": "The fingerprint matches Elena's, but she claims it was from earlier handling.",
+      "is_core": true
+    },
+    {
+      "suspect": "Mr. Alex Thompson",
+      "evidence": "Security Footage",
+      "content": "Alex was seen near the exhibit at odd hours.",
+      "is_core": false
+    },
+    {
+      "suspect": "Ms. Sophia Lee",
+      "evidence": "Broken Window",
+      "content": "Sophia has a cut on her hand matching glass shards.",
+      "is_core": true
+    }
+  ],
+  "chronology": [
+    {
+      "time": "8:00 PM",
+      "description": "Museum closes to public."
+    },
+    {
+      "time": "10:30 PM",
+      "description": "Alarm triggered."
+    }
+  ]
+}

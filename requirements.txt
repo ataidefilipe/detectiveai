@@ -1,0 +1,7 @@
+# Project dependencies
+
+fastapi
+uvicorn[standard]
+sqlalchemy[asyncio]
+pydantic
+alembic
