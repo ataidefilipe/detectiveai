@@ -1,5 +1,3 @@
-Boa, então vamos virar isso num backlog **bem dev**, fase 01 = “motor do jogo + API básica”, sem UI bonita ainda.
-
 Vou assumir:
 
 * Python 3.x
@@ -12,7 +10,7 @@ Vou assumir:
 
 ### Bloco 0 – Setup de projeto
 
-**T1 – Criar estrutura base do projeto Python**
+**T1 – Criar estrutura base do projeto Python** - ok
 
 * Criar repositório/projeto com estrutura mínima, ex.:
   `app/` (código), `tests/`, `app/api/`, `app/domain/`, `app/services/`, `app/infra/`.
@@ -21,7 +19,7 @@ Vou assumir:
 
 ---
 
-**T2 – Adicionar dependências principais**
+**T2 – Adicionar dependências principais** - ok
 
 * Incluir e instalar:
 
@@ -34,7 +32,7 @@ Vou assumir:
 
 ---
 
-**T3 – Criar servidor FastAPI básico (hello world)**
+**T3 – Criar servidor FastAPI básico (hello world)** - ok
 
 * Criar `app/main.py` com instância FastAPI.
 * Adicionar rota `GET /health` retornando `{status: "ok"}`.
