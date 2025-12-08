@@ -117,7 +117,7 @@ Vou assumir:
 
 ---
 
-### Bloco 3 – Sessão de jogo e estados
+### Bloco 3 – Sessão de jogo e estados - ok
 
 **T10 – Serviço para criar sessão de jogo**
 
@@ -132,7 +132,7 @@ Vou assumir:
 
 ---
 
-**T11 – API: endpoint para criar sessão (POST /sessions)**
+**T11 – API: endpoint para criar sessão (POST /sessions)** - ok
 
 * Criar rota `POST /sessions` recebendo `scenario_id`.
 * Chamar `create_session` e retornar `session_id` + info básica.
@@ -140,7 +140,7 @@ Vou assumir:
 
 ---
 
-**T12 – Serviço para consultar estado resumido da sessão**
+**T12 – Serviço para consultar estado resumido da sessão** - ok
 
 * Função `get_session_overview(session_id)` que retorna:
 
