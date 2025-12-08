@@ -43,7 +43,7 @@ Vou assumir:
 
 ### Bloco 1 – Modelo de domínio (Python / ORM)
 
-**T4 – Definir modelos Pydantic para entidades principais**
+**T4 – Definir modelos Pydantic para entidades principais** - ok
 
 * Criar `app/domain/models.py` com Pydantic models para:
 
@@ -53,7 +53,7 @@ Vou assumir:
 
 ---
 
-**T5 – Criar modelos ORM (SQLAlchemy) para armazenamento**
+**T5 – Criar modelos ORM (SQLAlchemy) para armazenamento** - ok
 
 * Em `app/infra/db_models.py`, criar classes SQLAlchemy para:
 
@@ -70,7 +70,7 @@ Vou assumir:
 
 ---
 
-**T6 – Configurar conexão SQLite e inicialização do banco**
+**T6 – Configurar conexão SQLite e inicialização do banco** - ok
 
 * Criar `app/infra/db.py` com:
 
