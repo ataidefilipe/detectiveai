@@ -70,7 +70,7 @@ Vou assumir:
 
 ---
 
-**T6 – Configurar conexão SQLite e inicialização do banco**
+**T6 – Configurar conexão SQLite e inicialização do banco** - ok
 
 * Criar `app/infra/db.py` com:
 
