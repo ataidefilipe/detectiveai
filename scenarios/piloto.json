@@ -1,0 +1,114 @@
+{
+  "title": "O Caso do Escritório Trancado",
+  "description": "Um funcionário importante da empresa Solarium Corp foi encontrado morto dentro de uma sala trancada por dentro. Apenas quatro pessoas tinham acesso ao andar no horário do crime.",
+
+  "culprit": "Marina Souza",
+
+  "suspects": [
+    {
+      "name": "Marina Souza",
+      "backstory": "Assistente financeira. Trabalhou por cinco anos com a vítima, mas recentemente teve conflitos sobre relatórios contábeis. É meticulosa, ansiosa e tenta sempre parecer calma.",
+      "final_phrase": "Eu… já disse tudo que tinha pra dizer."
+    },
+    {
+      "name": "Rogério Lima",
+      "backstory": "Segurança do prédio. Trabalha no turno da noite há 12 anos. Conhecido por seguir regras, mas também por dormir em serviço. Não gosta do chefe da segurança.",
+      "final_phrase": "Já falei tudo que eu sei, chefe."
+    },
+    {
+      "name": "Clara Martins",
+      "backstory": "Estagiária de TI. Inteligente, distraída, frequentemente fica até tarde mexendo em servidores. É vista como a 'nerd da equipe'.",
+      "final_phrase": "Sério, não tenho mais nada pra dizer!"
+    },
+    {
+      "name": "Eduardo Farias",
+      "backstory": "Gerente do setor. Tem histórico de discussões com a vítima sobre metas e pressão excessiva. Tentou pedir transferência recentemente.",
+      "final_phrase": "Não adianta insistir, já respondi tudo."
+    }
+  ],
+
+  "evidences": [
+    {
+      "name": "Relatório Contábil Alterado",
+      "description": "Documento encontrado na mesa da vítima com números adulterados.",
+      "is_mandatory": true
+    },
+    {
+      "name": "Cartão de Acesso de Marina",
+      "description": "Registro mostra que o cartão de Marina abriu a porta às 22h14.",
+      "is_mandatory": true
+    },
+    {
+      "name": "Café Derramado",
+      "description": "Uma caneca quebrada no chão ainda quente quando o corpo foi achado.",
+      "is_mandatory": false
+    },
+    {
+      "name": "Falha no Sistema de Câmeras",
+      "description": "Servidores reiniciaram sozinhos entre 22h00 e 22h20.",
+      "is_mandatory": false
+    },
+    {
+      "name": "Testemunho da Estagiária",
+      "description": "Clara afirma que viu Marina entrando no andar, mas não falou nada por medo.",
+      "is_mandatory": true
+    },
+    {
+      "name": "Luvas de Borracha",
+      "description": "Encontradas na lixeira do banheiro do andar.",
+      "is_mandatory": false
+    }
+  ],
+
+  "secrets": [
+    {
+      "suspect": "Marina Souza",
+      "evidence": "Relatório Contábil Alterado",
+      "content": "Marina adulterou números porque descobriu irregularidades que a vítima encobria, mas teve medo de denunciar.",
+      "is_core": true
+    },
+    {
+      "suspect": "Marina Souza",
+      "evidence": "Cartão de Acesso de Marina",
+      "content": "Ela realmente esteve na sala pouco antes do crime e discutiu com a vítima.",
+      "is_core": true
+    },
+    {
+      "suspect": "Rogério Lima",
+      "evidence": "Falha no Sistema de Câmeras",
+      "content": "Ele desligou câmeras sem querer enquanto dormia e tentou encobrir o erro.",
+      "is_core": false
+    },
+    {
+      "suspect": "Clara Martins",
+      "evidence": "Testemunho da Estagiária",
+      "content": "Clara viu Marina entrar, mas mentiu inicialmente por medo de perder o estágio.",
+      "is_core": false
+    },
+    {
+      "suspect": "Eduardo Farias",
+      "evidence": "Luvas de Borracha",
+      "content": "Eduardo usou as luvas para limpar marcas de café porque achou que seria culpado; ele estava escondendo apenas sua tentativa de proteger a própria reputação.",
+      "is_core": false
+    }
+  ],
+
+  "chronology": [
+    {
+      "time": "21h40",
+      "description": "A vítima chega ao escritório para revisar documentos."
+    },
+    {
+      "time": "22h10",
+      "description": "Câmeras falham por 10 minutos."
+    },
+    {
+      "time": "22h14",
+      "description": "Cartão de Marina registra abertura da porta."
+    },
+    {
+      "time": "22h30",
+      "description": "Café derramado ainda quente é encontrado."
+    }
+  ]
+}

@@ -83,7 +83,7 @@ Vou assumir:
 
 ### Bloco 2 – Carregamento de cenário (JSON → banco)
 
-**T7 – Definir esquema de JSON para cenário**
+**T7 – Definir esquema de JSON para cenário** - ok
 
 * Em `app/domain/schema_scenario.py`, definir classes Pydantic para o JSON do cenário:
 
@@ -93,7 +93,7 @@ Vou assumir:
 
 ---
 
-**T8 – Implementar loader de cenário a partir de JSON**
+**T8 – Implementar loader de cenário a partir de JSON** - ok
 
 * Criar `app/services/scenario_loader.py` com função:
 
@@ -104,7 +104,7 @@ Vou assumir:
 
 ---
 
-**T9 – Criar arquivo JSON de cenário piloto mínimo**
+**T9 – Criar arquivo JSON de cenário piloto mínimo** - ok
 
 * Criar `scenarios/piloto.json` com:
 
