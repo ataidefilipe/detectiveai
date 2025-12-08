@@ -119,7 +119,7 @@ Vou assumir:
 
 ### Bloco 3 – Sessão de jogo e estados - ok
 
-**T10 – Serviço para criar sessão de jogo**
+**T10 – Serviço para criar sessão de jogo** - ok
 
 * Em `app/services/session_service.py`, criar função:
 
@@ -151,7 +151,7 @@ Vou assumir:
 
 ---
 
-**T13 – API: endpoint GET /sessions/{session_id}**
+**T13 – API: endpoint GET /sessions/{session_id}** - ok
 
 * Expor `get_session_overview` na API.
   ✅ *Pronto quando:* `GET /sessions/{id}` retorna JSON legível com status, cenário e lista de suspeitos.
