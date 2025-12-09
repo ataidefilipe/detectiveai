@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean, Float, JSON
 from sqlalchemy.orm import relationship, declarative_base
 from datetime import datetime
+from sqlalchemy.ext.mutable import MutableList
 
 Base = declarative_base()
 
@@ -66,7 +67,7 @@ class SessionSuspectStateModel(Base):
     __tablename__ = "session_suspect_states"
     session_id = Column(Integer, ForeignKey("sessions.id"), primary_key=True)
     suspect_id = Column(Integer, ForeignKey("suspects.id"), primary_key=True)
-    revealed_secret_ids = Column(JSON, default=list)
+    revealed_secret_ids = Column(MutableList.as_mutable(JSON), default=list)
     is_closed = Column(Boolean, default=False)
     progress = Column(Float, default=0.0)
 

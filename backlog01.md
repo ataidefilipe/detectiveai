@@ -242,7 +242,7 @@ Vou assumir:
 
 ### Bloco 5 – Progresso do suspeito e “já falei tudo que sabia”
 
-**T21 – Função para calcular progresso do suspeito**
+**T21 – Função para calcular progresso do suspeito** - ok
 
 * Em `session_service`, criar função:
 
@@ -254,7 +254,7 @@ Vou assumir:
 
 ---
 
-**T22 – Marcar suspeito como “fechado” quando todos os segredos core forem revelados**
+**T22 – Marcar suspeito como “fechado” quando todos os segredos core forem revelados** - ok
 
 * Estender `apply_evidence_to_suspect` para, após marcar segredos revelados:
 
@@ -264,7 +264,7 @@ Vou assumir:
 
 ---
 
-**T23 – Adaptar DummyNpcAIAdapter para usar frase final ao fechar**
+**T23 – Adaptar DummyNpcAIAdapter para usar frase final ao fechar** - ok
 
 * Se `is_closed=True` e o jogador continuar perguntando:
 
@@ -273,7 +273,7 @@ Vou assumir:
 
 ---
 
-**T24 – Expor progresso do suspeito na API**
+**T24 – Expor progresso do suspeito na API** - ok
 
 * Atualizar `GET /sessions/{session_id}` e/ou endpoint específico para suspeito para retornar:
 

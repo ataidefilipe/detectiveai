@@ -6,7 +6,8 @@ from app.infra.db_models import (
     ScenarioModel,
     SessionModel,
     SessionSuspectStateModel,
-    SuspectModel
+    SuspectModel,
+    SecretModel
 )
 
 
@@ -132,11 +133,14 @@ def get_session_overview(session_id: int, db: Optional[Session] = None) -> Dict[
 
             progress = s_state.progress if s_state else 0.0
 
+            # Pegar o status de 'fechado' (is_closed)
+            is_closed = s_state.is_closed if s_state else False
+
             suspects_summary.append({
                 "suspect_id": s.id,
                 "name": s.name,
                 "progress": progress,
-                "is_closed": s_state.is_closed if s_state else False
+                "is_closed": is_closed
             })
 
         # -------------------------
@@ -162,3 +166,95 @@ def get_session_overview(session_id: int, db: Optional[Session] = None) -> Dict[
     finally:
         if close_session:
             db.close()
+
+def calculate_suspect_progress(
+    session_id: int,
+    suspect_id: int,
+    db: Optional[Session] = None
+) -> float:
+    """
+    Calculates the progress of a suspect in a specific session.
+
+    Progress formula:
+        core secrets revealed / total core secrets
+
+    Returns:
+        float (0.0 to 1.0)
+    """
+
+    close_session = False
+    if db is None:
+        db = SessionLocal()
+        close_session = True
+
+    try:
+        # Load session state for suspect
+        state = db.query(SessionSuspectStateModel).filter(
+            SessionSuspectStateModel.session_id == session_id,
+            SessionSuspectStateModel.suspect_id == suspect_id
+        ).first()
+
+        if not state:
+            raise ValueError(
+                f"Suspect {suspect_id} does not belong to session {session_id}."
+            )
+
+        # Load all core secrets of this suspect
+        core_secrets = db.query(SecretModel).filter(
+            SecretModel.suspect_id == suspect_id,
+            SecretModel.is_core == True
+        ).all()
+
+        total_core = len(core_secrets)
+        if total_core == 0:
+            return 1.0  # Suspect has no core secrets → full progress
+
+        # Count how many were revealed
+        revealed_core = 0
+        for secret in core_secrets:
+            if secret.id in state.revealed_secret_ids:
+                revealed_core += 1
+
+        progress = revealed_core / total_core
+
+        # Update state.progress automatically (optional but useful)
+        state.progress = progress
+        db.commit()
+
+        return progress
+
+    finally:
+        if close_session:
+            db.close()
+
+def get_suspect_state(session_id: int, suspect_id: int, db: Optional[Session] = None) -> Dict[str, Any]:
+    """
+    Fetches the progress and closed status of a suspect in a given session.
+    """
+    close_session = False
+    if db is None:
+        db = SessionLocal()
+        close_session = True
+
+    try:
+        # Fetch the suspect's state for the given session
+        state = db.query(SessionSuspectStateModel).filter(
+            SessionSuspectStateModel.session_id == session_id,
+            SessionSuspectStateModel.suspect_id == suspect_id
+        ).first()
+
+        if not state:
+            raise ValueError(f"Suspect {suspect_id} not part of session {session_id}.")
+
+        return {
+            "progress": state.progress,
+            "is_closed": state.is_closed
+        }
+    finally:
+        if close_session:
+            db.close()
+
+
+
+
+

@@ -2,13 +2,13 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List
 
-from app.services.session_service import create_session, get_session_overview
+from app.services.session_service import create_session, get_session_overview, get_suspect_state
 from app.api.schemas.chat import PlayerChatInput
 from app.services.chat_service import add_player_message, add_npc_reply
 from app.services.secret_service import apply_evidence_to_suspect
 
 from app.infra.db import SessionLocal
-from app.infra.db_models import NpcChatMessageModel, SessionModel, SuspectModel
+from app.infra.db_models import NpcChatMessageModel, SessionModel, SessionSuspectStateModel, SuspectModel
 
 router = APIRouter()
 
@@ -104,7 +104,37 @@ def api_get_session_overview(session_id: int):
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
+    # Adiciona o progresso e status de cada suspeito
+    for suspect in overview['suspects']:
+        suspect_state = get_suspect_state(session_id, suspect['suspect_id'])
+        suspect['progress'] = suspect_state['progress']
+        suspect['is_closed'] = suspect_state['is_closed']
+        
     return overview
+
+@router.get("/sessions/{session_id}/suspects/{suspect_id}/status")
+def get_suspect_status(session_id: int, suspect_id: int):
+    db = SessionLocal()
+    try:
+        state = db.query(SessionSuspectStateModel).filter(
+            SessionSuspectStateModel.session_id == session_id,
+            SessionSuspectStateModel.suspect_id == suspect_id
+        ).first()
+
+        if not state:
+            raise HTTPException(status_code=404, detail="Suspect not found in this session.")
+
+        return {
+            "suspect_id": state.suspect_id,
+            "progress": state.progress,
+            "is_closed": state.is_closed
+        }
+
+    finally:
+        db.close()
+
+
+
 
 class ChatMessageResponse(BaseModel):
     id: int
@@ -112,7 +142,6 @@ class ChatMessageResponse(BaseModel):
     text: str
     evidence_id: int | None
     timestamp: str
-
 
 @router.get("/sessions/{session_id}/suspects/{suspect_id}/messages",
             response_model=List[ChatMessageResponse])

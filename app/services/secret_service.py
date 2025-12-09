@@ -16,9 +16,10 @@ def apply_evidence_to_suspect(
     db: Optional[Session] = None
 ) -> List[Dict[str, Any]]:
     """
-    Applies an evidence to a suspect during a session.
-    Reveals the secrets associated with that evidence.
-    Returns a list of revealed secrets (as dictionaries).
+    Applies evidence to a suspect:
+      - Reveals secrets associated with that evidence
+      - Updates progress
+      - If all core secrets are revealed, marks suspect as 'closed'
     """
 
     close_session = False
@@ -28,7 +29,7 @@ def apply_evidence_to_suspect(
 
     try:
         # ---------------------------------------
-        # 1. Encontrar o state do suspeito na sessão
+        # 1. Fetch state of suspect in this session
         # ---------------------------------------
         state = db.query(SessionSuspectStateModel).filter(
             SessionSuspectStateModel.session_id == session_id,
@@ -39,7 +40,7 @@ def apply_evidence_to_suspect(
             raise ValueError(f"Suspect {suspect_id} not part of session {session_id}.")
 
         # ---------------------------------------
-        # 2. Buscar segredos desse suspeito ligados à evidência
+        # 2. Find secrets revealed by this evidence
         # ---------------------------------------
         secrets = db.query(SecretModel).filter(
             SecretModel.suspect_id == suspect_id,
@@ -47,12 +48,12 @@ def apply_evidence_to_suspect(
         ).all()
 
         if not secrets:
-            return []  # Nenhum segredo é revelado por essa evidência
+            return []
 
         revealed_now = []
 
         # ---------------------------------------
-        # 3. Revelar segredos (evitando duplicações)
+        # 3. Reveal secrets (append only new ones)
         # ---------------------------------------
         for secret in secrets:
             if secret.id not in state.revealed_secret_ids:
@@ -63,13 +64,30 @@ def apply_evidence_to_suspect(
                     "is_core": secret.is_core
                 })
 
-        # Atualizar progresso simples (quantidade revelada / total)
-        total_secrets = db.query(SecretModel).filter(
-            SecretModel.suspect_id == suspect_id
-        ).count()
+        # ---------------------------------------
+        # 4. Recalculate progress (core secrets only)
+        # ---------------------------------------
+        all_core = db.query(SecretModel).filter(
+            SecretModel.suspect_id == suspect_id,
+            SecretModel.is_core == True
+        ).all()
 
-        if total_secrets > 0:
-            state.progress = len(state.revealed_secret_ids) / total_secrets
+        total_core = len(all_core)
+
+        if total_core > 0:
+            revealed_core = sum(
+                1 for s in all_core if s.id in state.revealed_secret_ids
+            )
+            state.progress = revealed_core / total_core
+        else:
+            # No core secrets → progress always 1.0
+            state.progress = 1.0
+
+        # ---------------------------------------
+        # 5. If all core secrets revealed → close suspect
+        # ---------------------------------------
+        if total_core > 0 and state.progress == 1.0:
+            state.is_closed = True
 
         db.commit()
         db.refresh(state)
