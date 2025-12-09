@@ -160,7 +160,7 @@ Vou assumir:
 
 ### Bloco 4 – Chat com NPC e uso de evidência
 
-**T14 – Serviço para registrar mensagem do jogador**
+**T14 – Serviço para registrar mensagem do jogador** - ok
 
 * Em `app/services/chat_service.py`, criar função:
 
@@ -171,7 +171,7 @@ Vou assumir:
 
 ---
 
-**T15 – Serviço para aplicar evidência sobre segredos do suspeito**
+**T15 – Serviço para aplicar evidência sobre segredos do suspeito** - ok
 
 * Ainda em `chat_service` ou `secret_service`, criar função:
 
@@ -184,7 +184,7 @@ Vou assumir:
 
 ---
 
-**T16 – Definir interface para adaptador de IA (sem implementação real ainda)**
+**T16 – Definir interface para adaptador de IA (sem implementação real ainda)** - ok
 
 * Em `app/services/ai_adapter.py`, criar interface/abstração:
 
@@ -194,7 +194,7 @@ Vou assumir:
 
 ---
 
-**T17 – Criar implementação dummy do adaptador de IA**
+**T17 – Criar implementação dummy do adaptador de IA** - ok
 
 * `DummyNpcAIAdapter(NpcAIAdapter)` que:
 
@@ -204,7 +204,7 @@ Vou assumir:
 
 ---
 
-**T18 – Serviço para gerar resposta do NPC**
+**T18 – Serviço para gerar resposta do NPC** - ok
 
 * Criar função:
 
@@ -219,7 +219,7 @@ Vou assumir:
 
 ---
 
-**T19 – API: endpoint POST /sessions/{session_id}/suspects/{suspect_id}/messages**
+**T19 – API: endpoint POST /sessions/{session_id}/suspects/{suspect_id}/messages** - ok
 
 * Corpo da requisição: `{ "text": "...", "evidence_id": null | int }`.
 * Fluxo:
@@ -232,7 +232,7 @@ Vou assumir:
 
 ---
 
-**T20 – API: endpoint GET /sessions/{session_id}/suspects/{suspect_id}/messages**
+**T20 – API: endpoint GET /sessions/{session_id}/suspects/{suspect_id}/messages** - ok
 
 * Retornar lista ordenada (cronológica) de mensagens do chat daquele suspeito.
 * Campos: `id`, `sender_type`, `text`, `evidence_id`, `timestamp`.
