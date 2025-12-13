@@ -106,6 +106,13 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
             if e.is_mandatory:
                 mandatory_evidence_ids.append(evidence.id)
 
+        # -------------------------
+        # 6.5 Persist verdict rules (T24.5)
+        # -------------------------
+        scenario.required_evidence_ids = mandatory_evidence_ids
+        db.commit()
+        db.refresh(scenario)
+
         # store mandatory evidence IDs inside scenario? (future)
         # for now we keep culprit only
 

@@ -7,10 +7,19 @@ Base = declarative_base()
 
 class ScenarioModel(Base):
     __tablename__ = "scenarios"
+
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
     description = Column(String)
     culprit_id = Column(Integer)  # Not FK, as it's a reference to Suspect
+
+    required_evidence_ids = Column(
+        MutableList.as_mutable(JSON), default=list
+    )
+
+    partial_evidence_ids = Column(
+        MutableList.as_mutable(JSON), default=list
+    )
 
     suspects = relationship("SuspectModel", back_populates="scenario")
     evidences = relationship("EvidenceModel", back_populates="scenario")

@@ -283,6 +283,25 @@ Vou assumir:
 
 ---
 
+**T24.5 - Persistir regras de veredito no domínio do cenário**
+
+  * Definir no backend como o cenário informa:
+      evidências obrigatórias
+      evidências parciais (opcional no MVP)
+
+  *  Pode ser feito de forma simples:
+
+      campo JSON no ScenarioModel
+      ou tabela simples ScenarioEvidenceRule
+
+  * No MVP:
+
+      basta suportar “obrigatórias”
+
+*Pronto quando:* 
+  O backend consegue responder:
+    “Quais evidências são obrigatórias para esse cenário?”
+
 ### Bloco 6 – Acusação final e veredito
 
 **T25 – Implementar função de avaliação de veredito**
@@ -361,7 +380,3 @@ Vou assumir:
     ✅ *Pronto quando:* esse fluxo roda de ponta a ponta sem erro.
 
 ---
-
-Se você quiser, no próximo passo posso:
-
-* Pegar alguns desses itens (por exemplo T4–T5–T7) e já te devolver **código Python de exemplo** para os modelos/domínio, como base real de implementação.
