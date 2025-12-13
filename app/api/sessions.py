@@ -2,13 +2,17 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List
 
-from app.services.session_service import create_session, get_session_overview, get_suspect_state
 from app.api.schemas.chat import PlayerChatInput
+from app.api.schemas.verdict import AccuseRequest, AccuseResponse
+
 from app.services.chat_service import add_player_message, add_npc_reply
 from app.services.secret_service import apply_evidence_to_suspect
+from app.services.session_finalize_service import finalize_session
+from app.services.session_service import create_session, get_session_overview, get_suspect_state
 
 from app.infra.db import SessionLocal
-from app.infra.db_models import NpcChatMessageModel, SessionModel, SessionSuspectStateModel, SuspectModel
+from app.infra.db_models import NpcChatMessageModel, SessionModel, SessionSuspectStateModel, SuspectModel, ScenarioModel
+
 
 router = APIRouter()
 
@@ -85,6 +89,75 @@ def send_message_to_suspect(session_id: int, suspect_id: int, payload: PlayerCha
         "npc_message": npc_msg,
         "revealed_secrets": revealed_secrets
     }
+
+
+@router.post(
+    "/sessions/{session_id}/accuse",
+    response_model=AccuseResponse
+)
+def accuse_session(session_id: int, payload: AccuseRequest):
+    """
+    Finalizes a session by accusing a suspect with selected evidences.
+    """
+
+    db = SessionLocal()
+    try:
+        # ----------------------------------------
+        # 1. Finalize session
+        # ----------------------------------------
+        result = finalize_session(
+            session_id=session_id,
+            chosen_suspect_id=payload.suspect_id,
+            evidence_ids=payload.evidence_ids,
+            db=db
+        )
+
+        verdict = result["verdict"]
+
+        # ----------------------------------------
+        # 2. Load scenario for extra context
+        # ----------------------------------------
+        scenario = (
+            db.query(ScenarioModel)
+            .filter(ScenarioModel.id == result["verdict"]["real_culprit_id"])
+            .first()
+        )
+
+        # ----------------------------------------
+        # 3. Basic description (non-AI)
+        # ----------------------------------------
+        if verdict["result_type"] == "correct":
+            description = (
+                "Você identificou corretamente o culpado e apresentou todas "
+                "as evidências essenciais."
+            )
+        elif verdict["result_type"] == "partial":
+            description = (
+                "Você identificou corretamente o culpado, mas deixou passar "
+                "evidências essenciais."
+            )
+        else:
+            description = (
+                "O suspeito acusado não é o verdadeiro culpado."
+            )
+
+        # ----------------------------------------
+        # 4. Build response
+        # ----------------------------------------
+        return AccuseResponse(
+            session_id=result["session_id"],
+            status=result["status"],
+            result_type=verdict["result_type"],
+            chosen_suspect_id=verdict["chosen_suspect_id"],
+            real_culprit_id=verdict["real_culprit_id"],
+            required_evidence_ids=verdict["required_evidence_ids"],
+            missing_evidence_ids=verdict["missing_evidence_ids"],
+            description=description
+        )
+
+    finally:
+        db.close()
+
 
 
 # -----------------------------

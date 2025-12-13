@@ -66,6 +66,12 @@ class SessionModel(Base):
     scenario_id = Column(Integer, ForeignKey("scenarios.id"), nullable=False)
     status = Column(String, default="in_progress")
     created_at = Column(DateTime, default=datetime.now)
+    chosen_suspect_id = Column(Integer, nullable=True)
+    chosen_evidence_ids = Column(
+        MutableList.as_mutable(JSON),
+        default=list
+    )
+    result_type = Column(String, nullable=True)
 
     scenario = relationship("ScenarioModel", back_populates="sessions")
     session_states = relationship("SessionSuspectStateModel", back_populates="session")

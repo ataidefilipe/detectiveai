@@ -283,7 +283,7 @@ Vou assumir:
 
 ---
 
-**T24.5 - Persistir regras de veredito no domínio do cenário**
+**T24.5 - Persistir regras de veredito no domínio do cenário** - ok
 
   * Definir no backend como o cenário informa:
       evidências obrigatórias
@@ -304,7 +304,7 @@ Vou assumir:
 
 ### Bloco 6 – Acusação final e veredito
 
-**T25 – Implementar função de avaliação de veredito**
+**T25 – Implementar função de avaliação de veredito** - ok
 
 * Em `app/services/verdict_service.py`, criar função:
 
@@ -320,7 +320,7 @@ Vou assumir:
 
 ---
 
-**T26 – Serviço para finalizar sessão**
+**T26 – Serviço para finalizar sessão** - ok
 
 * Função:
 
@@ -334,7 +334,7 @@ Vou assumir:
 
 ---
 
-**T27 – API: endpoint POST /sessions/{session_id}/accuse**
+**T27 – API: endpoint POST /sessions/{session_id}/accuse** - 
 
 * Corpo: `{ "suspect_id": X, "evidence_ids": [ ... ] }`.
 * Chamadas:
