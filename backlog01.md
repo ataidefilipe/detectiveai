@@ -347,7 +347,7 @@ Vou assumir:
 
 ### Bloco 7 – Testes básicos
 
-**T28 – Testes unitários: lógica de segredos**
+**T28 – Testes unitários: lógica de segredos** - ok
 
 * Testar `apply_evidence_to_suspect`:
 
@@ -357,7 +357,7 @@ Vou assumir:
 
 ---
 
-**T29 – Testes unitários: avaliação de veredito**
+**T29 – Testes unitários: avaliação de veredito** - ok
 
 * Testar `evaluate_verdict`:
 
@@ -368,7 +368,7 @@ Vou assumir:
 
 ---
 
-**T30 – Teste de fluxo integrado (happy path)**
+**T30 – Teste de fluxo integrado (happy path)** - ok
 
 * Escrever teste que:
 
