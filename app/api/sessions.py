@@ -4,6 +4,7 @@ from typing import List
 
 from app.api.schemas.chat import PlayerChatInput
 from app.api.schemas.verdict import AccuseRequest, AccuseResponse
+from app.api.schemas.evidence import EvidenceResponse
 
 from app.services.chat_service import add_player_message, add_npc_reply
 from app.services.secret_service import apply_evidence_to_suspect
@@ -11,7 +12,7 @@ from app.services.session_finalize_service import finalize_session
 from app.services.session_service import create_session, get_session_overview, get_suspect_state
 
 from app.infra.db import SessionLocal
-from app.infra.db_models import NpcChatMessageModel, SessionModel, SessionSuspectStateModel, SuspectModel, ScenarioModel
+from app.infra.db_models import NpcChatMessageModel, SessionModel, SessionSuspectStateModel, SuspectModel, ScenarioModel, EvidenceModel
 
 
 router = APIRouter()
@@ -115,16 +116,7 @@ def accuse_session(session_id: int, payload: AccuseRequest):
         verdict = result["verdict"]
 
         # ----------------------------------------
-        # 2. Load scenario for extra context
-        # ----------------------------------------
-        scenario = (
-            db.query(ScenarioModel)
-            .filter(ScenarioModel.id == result["verdict"]["real_culprit_id"])
-            .first()
-        )
-
-        # ----------------------------------------
-        # 3. Basic description (non-AI)
+        # 2. Basic description (non-AI)
         # ----------------------------------------
         if verdict["result_type"] == "correct":
             description = (
@@ -142,7 +134,7 @@ def accuse_session(session_id: int, payload: AccuseRequest):
             )
 
         # ----------------------------------------
-        # 4. Build response
+        # 3. Build response
         # ----------------------------------------
         return AccuseResponse(
             session_id=result["session_id"],
@@ -157,8 +149,6 @@ def accuse_session(session_id: int, payload: AccuseRequest):
 
     finally:
         db.close()
-
-
 
 # -----------------------------
 # NEW: GET /sessions/{session_id}
@@ -263,6 +253,43 @@ def get_chat_messages(session_id: int, suspect_id: int):
         ]
 
         return result
+
+    finally:
+        db.close()
+
+
+@router.get(
+    "/sessions/{session_id}/evidences",
+    response_model=list[EvidenceResponse]
+)
+def get_session_evidences(session_id: int):
+    db = SessionLocal()
+    try:
+        # 1. Buscar sessão
+        session = db.query(SessionModel).filter(
+            SessionModel.id == session_id
+        ).first()
+
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+
+        # 2. Buscar evidências do cenário
+        evidences = db.query(EvidenceModel).filter(
+            EvidenceModel.scenario_id == session.scenario_id
+        ).all()
+
+        # 3. Mapear obrigatórias
+        mandatory_ids = session.scenario.required_evidence_ids
+
+        return [
+            EvidenceResponse(
+                id=e.id,
+                name=e.name,
+                description=e.description,
+                is_mandatory=e.id in mandatory_ids
+            )
+            for e in evidences
+        ]
 
     finally:
         db.close()
