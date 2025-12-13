@@ -334,7 +334,7 @@ Vou assumir:
 
 ---
 
-**T27 – API: endpoint POST /sessions/{session_id}/accuse** - 
+**T27 – API: endpoint POST /sessions/{session_id}/accuse** - ok
 
 * Corpo: `{ "suspect_id": X, "evidence_ids": [ ... ] }`.
 * Chamadas:
