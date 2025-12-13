@@ -212,7 +212,11 @@ def add_npc_reply(
             "revealed_secrets": revealed_secrets,
             "hidden_secrets": hidden_list,
             "is_closed": state.is_closed,
-            "final_phrase": "Já falei tudo que sabia."
+            "final_phrase": (
+                suspect.final_phrase
+                if suspect and suspect.final_phrase
+                else "Já falei tudo que sabia."
+            )
         }
 
         # ----------------------------------------

@@ -78,7 +78,8 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
             suspect = SuspectModel(
                 scenario_id=scenario.id,
                 name=s.name,
-                backstory=s.backstory
+                backstory=s.backstory,
+                final_phrase=s.final_phrase
             )
             db.add(suspect)
             db.commit()

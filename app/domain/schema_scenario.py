@@ -10,8 +10,10 @@ class SecretConfig(BaseModel):
 class SuspectConfig(BaseModel):
     name: str = Field(..., description="Name of the suspect")
     backstory: Optional[str] = None
-    final_phrase: Optional[str] = Field(default="I've told you everything I know.", description="Phrase when all core secrets are revealed")
-
+    final_phrase: Optional[str] = Field(
+        default="Já falei tudo que sabia.",
+        description="Phrase used when the suspect is closed"
+    )
 class EvidenceConfig(BaseModel):
     name: str = Field(..., description="Name of the evidence")
     description: Optional[str] = None
