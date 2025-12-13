@@ -173,13 +173,9 @@ def calculate_suspect_progress(
     db: Optional[Session] = None
 ) -> float:
     """
-    Calculates the progress of a suspect in a specific session.
-
-    Progress formula:
-        core secrets revealed / total core secrets
-
-    Returns:
-        float (0.0 to 1.0)
+    READ-ONLY helper.
+    Calculates progress based on already persisted revealed secrets.
+    Does NOT mutate database state.
     """
 
     close_session = False
@@ -188,7 +184,6 @@ def calculate_suspect_progress(
         close_session = True
 
     try:
-        # Load session state for suspect
         state = db.query(SessionSuspectStateModel).filter(
             SessionSuspectStateModel.session_id == session_id,
             SessionSuspectStateModel.suspect_id == suspect_id
@@ -199,7 +194,6 @@ def calculate_suspect_progress(
                 f"Suspect {suspect_id} does not belong to session {session_id}."
             )
 
-        # Load all core secrets of this suspect
         core_secrets = db.query(SecretModel).filter(
             SecretModel.suspect_id == suspect_id,
             SecretModel.is_core == True
@@ -207,25 +201,18 @@ def calculate_suspect_progress(
 
         total_core = len(core_secrets)
         if total_core == 0:
-            return 1.0  # Suspect has no core secrets → full progress
+            return 1.0
 
-        # Count how many were revealed
-        revealed_core = 0
-        for secret in core_secrets:
-            if secret.id in state.revealed_secret_ids:
-                revealed_core += 1
+        revealed_core = sum(
+            1 for s in core_secrets if s.id in state.revealed_secret_ids
+        )
 
-        progress = revealed_core / total_core
-
-        # Update state.progress automatically (optional but useful)
-        state.progress = progress
-        db.commit()
-
-        return progress
+        return revealed_core / total_core
 
     finally:
         if close_session:
             db.close()
+
 
 def get_suspect_state(session_id: int, suspect_id: int, db: Optional[Session] = None) -> Dict[str, Any]:
     """
