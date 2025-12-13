@@ -167,12 +167,7 @@ def api_get_session_overview(session_id: int):
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
-    # Adiciona o progresso e status de cada suspeito
-    for suspect in overview['suspects']:
-        suspect_state = get_suspect_state(session_id, suspect['suspect_id'])
-        suspect['progress'] = suspect_state['progress']
-        suspect['is_closed'] = suspect_state['is_closed']
-        
+    # get_session_overview já retorna progress e is_closed por suspeito
     return overview
 
 @router.get("/sessions/{session_id}/suspects/{suspect_id}/status")
