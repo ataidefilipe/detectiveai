@@ -77,7 +77,7 @@ Vou organizar por prioridade real de “jogar do zero”.
 
 ## P0 — Necessário para jogar do início ao fim
 
-### US-01 — Bootstrap automático do jogo ao subir a API
+### US-01 — Bootstrap automático do jogo ao subir a API - ok
 
 **Por quê:** hoje precisa rodar scripts manualmente antes.
 **Tarefas**
