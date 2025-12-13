@@ -40,14 +40,14 @@ class CreateSessionResponse(BaseModel):
 @router.post("/sessions", response_model=CreateSessionResponse)
 def api_create_session(payload: CreateSessionRequest):
     try:
-        session = create_session(payload.scenario_id)
+        session_data = create_session(payload.scenario_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
     return CreateSessionResponse(
-        session_id=session.id,
-        scenario_id=session.scenario_id,
-        status=session.status
+        session_id=session_data["id"],
+        scenario_id=session_data["scenario_id"],
+        status=session_data["status"]
     )
 
 @router.post("/sessions/{session_id}/suspects/{suspect_id}/messages")

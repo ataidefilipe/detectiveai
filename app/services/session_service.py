@@ -70,8 +70,15 @@ def create_session(scenario_id: int, db: Optional[Session] = None) -> SessionMod
         # Refresh session to load states
         db.refresh(session)
 
+        result = {
+            "id": session.id,
+            "scenario_id": session.scenario_id,
+            "status": session.status,
+            "created_at": session.created_at.isoformat()
+        }
+
         print(f"[session] Session {session.id} created for scenario {scenario_id}")
-        return session
+        return result
 
     finally:
         if close_session:
