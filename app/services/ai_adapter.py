@@ -54,11 +54,12 @@ class NpcAIAdapter:
         self,
         suspect_state: Dict[str, Any],
         chat_history: List[Dict[str, Any]],
-        player_message: Dict[str, Any]
+        player_message: Dict[str, Any],
+        npc_context: Dict[str, Any] | None = None
     ) -> str:
         """
-        Returns the reply of the NPC. Must be implemented by child classes.
+        npc_context:
+            Contexto completo do NPC e do caso, preparado pelo backend.
+            Pode conter cenário, verdades, mentiras, segredos revelados e regras.
         """
-        raise NotImplementedError(
-            "NpcAIAdapter.generate_reply must be implemented by subclasses."
-        )
+

@@ -9,10 +9,12 @@ from app.infra.db_models import (
     SessionSuspectStateModel,
     SessionEvidenceUsageModel,
     SecretModel,
-    EvidenceModel
+    EvidenceModel,
+    ScenarioModel
 )
 
 from app.services.ai_adapter_factory import get_npc_ai_adapter
+from app.services.npc_context_builder import build_npc_context
 
 ai = get_npc_ai_adapter()
 
@@ -147,6 +149,9 @@ def add_npc_reply(
             SuspectModel.id == suspect_id
         ).first()
 
+        true_timeline = suspect.true_timeline or []
+        lies = suspect.lies or []
+
         # ----------------------------------------
         # 2. Load chat history for this suspect/session
         # ----------------------------------------
@@ -221,10 +226,55 @@ def add_npc_reply(
         }
 
         # ----------------------------------------
-        # 5. Call AI adapter
+        # Load scenario
         # ----------------------------------------
+
+        session = (
+            db.query(SessionModel)
+            .filter(SessionModel.id == session_id)
+            .first()
+        )
+
+        if not session:
+            raise ValueError(f"Session {session_id} not found")        
+
+        scenario = (
+            db.query(ScenarioModel)
+            .filter(ScenarioModel.id == session.scenario_id)
+            .first()
+        )
+
+        if not scenario:
+            raise ValueError("Scenario not found for session")
+
+        # ----------------------------------------
+        # Build pressure points (MVP)
+        # ----------------------------------------
+        pressure_points = [
+            {
+                "evidence_id": msg["evidence_id"],
+                "text": msg["text"]
+            }
+            for msg in chat_history
+            if msg.get("evidence_id") is not None
+        ]
+
+        # ----------------------------------------
+        # Call AI adapter
+        # ----------------------------------------
+        npc_context = build_npc_context(
+            scenario=scenario,
+            suspect=suspect,
+            suspect_state=suspect_state,
+            revealed_secrets=revealed_secrets,
+            pressure_points=pressure_points,
+            true_timeline=true_timeline,
+            lies=lies
+        )
+
         reply_text = ai.generate_reply(
             suspect_state=suspect_state,
+            npc_context=npc_context,
             chat_history=chat_history,
             player_message=player_message_dict
         )

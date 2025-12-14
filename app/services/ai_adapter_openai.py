@@ -25,21 +25,23 @@ class OpenAINpcAIAdapter(NpcAIAdapter):
 
     def generate_reply(
         self,
-        suspect_state: Dict[str, Any],
-        chat_history: List[Dict[str, Any]],
-        player_message: Dict[str, Any]
+        suspect_state: dict,
+        chat_history: list,
+        player_message: dict,
+        npc_context: dict | None = None
     ) -> str:
+        if not npc_context:
+            raise ValueError("npc_context is required for OpenAI adapter")
 
-        messages = build_npc_prompt(
-            suspect_state=suspect_state,
+        prompt = build_npc_prompt(
+            npc_context=npc_context,
             chat_history=chat_history,
             player_message=player_message
         )
 
         response = self.client.responses.create(
             model=self.model,
-            input=messages,
-            max_output_tokens=300,
+            input=prompt
         )
 
         return response.output_text.strip()

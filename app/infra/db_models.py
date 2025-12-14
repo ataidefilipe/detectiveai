@@ -11,6 +11,7 @@ class ScenarioModel(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
     description = Column(String)
+    case_summary = Column(String)
     culprit_id = Column(Integer)  # Not FK, as it's a reference to Suspect
 
     required_evidence_ids = Column(
@@ -33,6 +34,8 @@ class SuspectModel(Base):
     backstory = Column(String)
     initial_statement = Column(String)
     final_phrase = Column(String, nullable=True)
+    true_timeline = Column(JSON) 
+    lies = Column(JSON)          
 
     scenario = relationship("ScenarioModel", back_populates="suspects")
     secrets = relationship("SecretModel", back_populates="suspect")

@@ -24,6 +24,7 @@ class DummyNpcAIAdapter(NpcAIAdapter):
         suspect_state: Dict[str, Any],
         chat_history: List[Dict[str, Any]],
         player_message: Dict[str, Any],
+        npc_context: Dict[str, Any] | None = None
     ) -> str:
 
         name = suspect_state.get("name", "O suspeito")
