@@ -5,6 +5,7 @@ from typing import List
 from app.api.schemas.chat import PlayerChatInput
 from app.api.schemas.verdict import AccuseRequest, AccuseResponse
 from app.api.schemas.evidence import EvidenceResponse
+from app.api.schemas.suspect import SuspectSessionResponse
 
 from app.services.chat_service import add_player_message, add_npc_reply
 from app.services.secret_service import apply_evidence_to_suspect
@@ -150,6 +151,8 @@ def accuse_session(session_id: int, payload: AccuseRequest):
     finally:
         db.close()
 
+
+
 # -----------------------------
 # NEW: GET /sessions/{session_id}
 # -----------------------------
@@ -288,3 +291,46 @@ def get_session_evidences(session_id: int):
 
     finally:
         db.close()
+
+@router.get(
+    "/sessions/{session_id}/suspects",
+    response_model=list[SuspectSessionResponse]
+)
+def list_session_suspects(session_id: int):
+    db = SessionLocal()
+    try:
+        # 1. Validar sessão
+        session = db.query(SessionModel).filter(
+            SessionModel.id == session_id
+        ).first()
+
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+
+        # 2. Buscar suspeitos do cenário
+        suspects = db.query(SuspectModel).filter(
+            SuspectModel.scenario_id == session.scenario_id
+        ).all()
+
+        # 3. Buscar estados da sessão
+        states = db.query(SessionSuspectStateModel).filter(
+            SessionSuspectStateModel.session_id == session_id
+        ).all()
+
+        state_map = {s.suspect_id: s for s in states}
+
+        # 4. Montar resposta
+        return [
+            SuspectSessionResponse(
+                suspect_id=s.id,
+                name=s.name,
+                backstory=s.backstory,
+                progress=state_map[s.id].progress if s.id in state_map else 0.0,
+                is_closed=state_map[s.id].is_closed if s.id in state_map else False
+            )
+            for s in suspects
+        ]
+
+    finally:
+        db.close()
+
