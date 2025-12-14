@@ -12,8 +12,9 @@ from app.infra.db_models import (
     EvidenceModel
 )
 
-from app.services.ai_adapter_dummy import DummyNpcAIAdapter
-ai = DummyNpcAIAdapter()
+from app.services.ai_adapter_factory import get_npc_ai_adapter
+
+ai = get_npc_ai_adapter()
 
 def add_player_message(
     session_id: int,

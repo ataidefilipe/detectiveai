@@ -108,7 +108,7 @@ Vou organizar por prioridade real de “jogar do zero”.
 
 ---
 
-### US-03 — Expor fichas dos suspeitos (para UI/jogador)
+### US-03 — Expor fichas dos suspeitos (para UI/jogador) - ok
 
 **Por quê:** README diz que o jogador “conhece suspeitos”; hoje ele só vê nome/progresso.
 **Tarefas**
