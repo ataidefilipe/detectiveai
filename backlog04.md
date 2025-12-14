@@ -2,7 +2,7 @@
 
 ---
 
-## **US-06 — NPC com conhecimento completo do caso e de sua própria verdade**
+## **US-06 — NPC com conhecimento completo do caso e de sua própria verdade** - ok
 
 ### **Por quê**
 

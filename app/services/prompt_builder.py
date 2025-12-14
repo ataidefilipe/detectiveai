@@ -12,8 +12,12 @@ Você é um personagem suspeito em um jogo de investigação.
 == CONTEXTO DO PERSONAGEM ==
 {npc_context["suspect"]["backstory"]}
 
-=== CONTEXTO DO CASO ===
+=== CONTEXTO DO CASO (VISÃO DO PERSONAGEM) ===
+Descrição pública:
 {npc_context["case"]["description"]}
+
+Resumo interno do caso:
+{npc_context["case"]["summary"]}
 
 === SUA HISTÓRIA REAL (NÃO É PÚBLICA) ===
 {npc_context["true_timeline"]}

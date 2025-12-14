@@ -61,7 +61,8 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
         # -------------------------
         scenario = ScenarioModel(
             title=config.title,
-            description=config.description
+            description=config.description,
+            case_summary=config.case_summary
         )
         db.add(scenario)
         db.commit()

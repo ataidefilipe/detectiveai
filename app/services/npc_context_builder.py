@@ -11,6 +11,7 @@ def build_npc_context(
         "case": {
             "title": scenario.title,
             "description": scenario.description,
+            "summary": scenario.case_summary,
         },
         "suspect": {
             "id": suspect.id,
