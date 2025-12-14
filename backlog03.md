@@ -123,7 +123,7 @@ Vou organizar por prioridade real de “jogar do zero”.
 
 ---
 
-### TS-07 — Adapter OpenAI (IA real) + fallback para Dummy (sem quebrar testes)
+### TS-07 — Adapter OpenAI (IA real) + fallback para Dummy (sem quebrar testes) - ok
 
 **Tarefas**
 
@@ -138,9 +138,9 @@ Vou organizar por prioridade real de “jogar do zero”.
 
 ---
 
-## P1 — Melhorias pequenas que deixam “jogar” agradável (sem inflar)
+## P1 — Melhorias pequenas que deixam “jogar” agradável (sem inflar) 
 
-### US-04 — Melhorar resposta do endpoint de mensagem (turno) para UX
+### US-04 — Melhorar resposta do endpoint de mensagem (turno) para UX - ok
 
 **Por quê:** a UI costuma precisar de mais contexto em 1 chamada.
 **Tarefas**

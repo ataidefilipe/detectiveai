@@ -85,11 +85,18 @@ def send_message_to_suspect(session_id: int, suspect_id: int, payload: PlayerCha
         player_message_id=player_msg["id"]
     )
 
-    # 4. Output combined
+    # 4. Fetch updated suspect state (snapshot for UX)
+    suspect_state = get_suspect_state(
+        session_id=session_id,
+        suspect_id=suspect_id
+    )
+
+    # 5. Output combined response
     return {
         "player_message": player_msg,
         "npc_message": npc_msg,
-        "revealed_secrets": revealed_secrets
+        "revealed_secrets": revealed_secrets,
+        "suspect_state": suspect_state
     }
 
 
