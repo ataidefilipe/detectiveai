@@ -95,7 +95,7 @@ Vou organizar por prioridade real de “jogar do zero”.
 
 ---
 
-### US-02 — Listar cenários disponíveis
+### US-02 — Listar cenários disponíveis - ok
 
 **Por quê:** jogador/cliente precisa escolher cenário sem “adivinhar id=1”.
 **Tarefas**
