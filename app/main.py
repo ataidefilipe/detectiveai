@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI
 from app.api.sessions import router as sessions_router
 from app.api.scenarios import router as scenarios_router
