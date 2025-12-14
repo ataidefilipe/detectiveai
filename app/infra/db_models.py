@@ -31,6 +31,7 @@ class SuspectModel(Base):
     scenario_id = Column(Integer, ForeignKey("scenarios.id"), nullable=False)
     name = Column(String, nullable=False)
     backstory = Column(String)
+    initial_statement = Column(String)
     final_phrase = Column(String, nullable=True)
 
     scenario = relationship("ScenarioModel", back_populates="suspects")

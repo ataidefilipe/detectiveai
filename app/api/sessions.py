@@ -332,6 +332,7 @@ def list_session_suspects(session_id: int):
                 suspect_id=s.id,
                 name=s.name,
                 backstory=s.backstory,
+                initial_statement=s.initial_statement,
                 progress=state_map[s.id].progress if s.id in state_map else 0.0,
                 is_closed=state_map[s.id].is_closed if s.id in state_map else False
             )

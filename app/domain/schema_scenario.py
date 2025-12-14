@@ -8,12 +8,17 @@ class SecretConfig(BaseModel):
     is_core: bool = Field(default=False, description="Whether this is a core secret for progress")
 
 class SuspectConfig(BaseModel):
-    name: str = Field(..., description="Name of the suspect")
+    name: str
     backstory: Optional[str] = None
-    final_phrase: Optional[str] = Field(
-        default="Já falei tudo que sabia.",
-        description="Phrase used when the suspect is closed"
+    initial_statement: Optional[str] = Field(
+        default=None,
+        description="Initial statement shown to the player before interrogation"
     )
+    final_phrase: Optional[str] = Field(
+        default="I've told you everything I know."
+    )
+
+
 class EvidenceConfig(BaseModel):
     name: str = Field(..., description="Name of the evidence")
     description: Optional[str] = None

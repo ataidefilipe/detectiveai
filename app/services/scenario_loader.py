@@ -79,6 +79,7 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
                 scenario_id=scenario.id,
                 name=s.name,
                 backstory=s.backstory,
+                initial_statement=s.initial_statement,
                 final_phrase=s.final_phrase
             )
             db.add(suspect)
