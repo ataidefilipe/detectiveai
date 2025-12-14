@@ -9,7 +9,7 @@ def build_npc_context(
         "case": {
             "title": scenario.title,
             "description": scenario.description,
-            "summary": scenario.case_summary,
+            "summary": scenario.case_summary
         },
         "suspect": {
             "id": suspect.id,
@@ -19,17 +19,12 @@ def build_npc_context(
             "is_closed": suspect_state.get("is_closed", False),
             "progress": suspect_state.get("progress", 0.0),
         },
-
-        # 🔴 CONHECIMENTO INTERNO (NUNCA EXPOSTO)
+        # 🔴 CONHECIMENTO INTERNO
         "true_timeline": suspect.true_timeline or [],
-
-        # 🔴 AINDA VAZIO — TS-10
-        "lies": [],
-
-        # 🔴 CONTROLADO PELO BACKEND
+        "lies": suspect.lies or [],
+        # 🔴 CONTROLE DO BACKEND
         "revealed_secrets": revealed_secrets,
         "pressure_points": pressure_points,
-
         "rules": {
             "can_only_use_revealed_secrets": True,
             "never_invent_facts": True,

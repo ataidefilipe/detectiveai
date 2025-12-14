@@ -7,6 +7,10 @@ class SecretConfig(BaseModel):
     content: str = Field(..., description="The secret information")
     is_core: bool = Field(default=False, description="Whether this is a core secret for progress")
 
+class LieConfig(BaseModel):
+    statement: str
+    broken_by: str
+
 class SuspectConfig(BaseModel):
     name: str
     backstory: Optional[str] = None
@@ -21,6 +25,7 @@ class SuspectConfig(BaseModel):
     final_phrase: Optional[str] = Field(
         default="I've told you everything I know."
     )
+    lies: Optional[List[LieConfig]] = None
 
 
 class EvidenceConfig(BaseModel):
@@ -46,3 +51,5 @@ class ScenarioConfig(BaseModel):
     evidences: List[EvidenceConfig] = Field(..., description="List of evidences")
     secrets: List[SecretConfig] = Field(..., description="List of secrets")
     chronology: Optional[List[ChronologyEvent]] = None
+
+

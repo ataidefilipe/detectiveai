@@ -268,8 +268,6 @@ def add_npc_reply(
             suspect_state=suspect_state,
             revealed_secrets=revealed_secrets,
             pressure_points=pressure_points,
-            true_timeline=true_timeline,
-            lies=lies
         )
 
         reply_text = ai.generate_reply(

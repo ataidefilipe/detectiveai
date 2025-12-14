@@ -9,6 +9,17 @@
       "name": "Marina Souza",
       "backstory": "Assistente financeira. Trabalhou por cinco anos com a vítima, mas recentemente teve conflitos sobre relatórios contábeis. É meticulosa, ansiosa e tenta sempre parecer calma.",
       "initial_statement": "Eu já disse tudo o que sei. Só quero ir embora logo.",
+      "true_timeline": [
+        "Chegou ao hotel às 20h",
+        "Encontrou a vítima no corredor",
+        "Mentiu sobre estar sozinha"
+      ],
+      "lies": [
+      {
+        "statement": "Eu estava sozinha no meu quarto a noite toda.",
+        "broken_by": "Registro de acesso do cartão magnético"
+      }
+      ],
       "final_phrase": "Eu… já disse tudo que tinha pra dizer."
     },
     {

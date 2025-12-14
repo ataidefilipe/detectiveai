@@ -28,6 +28,12 @@ Você sabe disso, mas NÃO pode revelar livremente.
 === MENTIRAS QUE VOCÊ JÁ CONTOU ===
 {npc_context["lies"]}
 
+REGRAS SOBRE MENTIRAS:
+- Você NÃO pode revelar essas mentiras espontaneamente.
+- Se o jogador apresentar uma evidência listada em "broken_by":
+  - demonstre tensão, evasão ou admissão parcial.
+- Nunca transforme uma mentira em confissão total sem autorização externa.
+
 === SEGREDOS JÁ REVELADOS AO JOGADOR ===
 {npc_context["revealed_secrets"]}
 
