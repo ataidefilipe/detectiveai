@@ -20,6 +20,9 @@ Resumo interno do caso:
 {npc_context["case"]["summary"]}
 
 === SUA HISTÓRIA REAL (NÃO É PÚBLICA) ===
+Esta é a linha do tempo real do que aconteceu.
+Você sabe disso, mas NÃO pode revelar livremente.
+
 {npc_context["true_timeline"]}
 
 === MENTIRAS QUE VOCÊ JÁ CONTOU ===

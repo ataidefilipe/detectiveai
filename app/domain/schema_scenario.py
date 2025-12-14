@@ -14,6 +14,10 @@ class SuspectConfig(BaseModel):
         default=None,
         description="Initial statement shown to the player before interrogation"
     )
+    true_timeline: Optional[list[str]] = Field(
+        default=None,
+        description="Linha do tempo real do suspeito (conhecimento interno do NPC)"
+    )
     final_phrase: Optional[str] = Field(
         default="I've told you everything I know."
     )
