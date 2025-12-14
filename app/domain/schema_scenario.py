@@ -31,6 +31,12 @@ class ChronologyEvent(BaseModel):
 class ScenarioConfig(BaseModel):
     title: str = Field(..., description="Title of the scenario")
     description: Optional[str] = None
+
+    case_summary: Optional[str] = Field(
+        default=None,
+        description="Resumo interno do caso, conhecido pelo NPC mas não exposto ao jogador"
+    )
+    
     culprit: str = Field(..., description="Name of the guilty suspect")
     suspects: List[SuspectConfig] = Field(..., description="List of suspects")
     evidences: List[EvidenceConfig] = Field(..., description="List of evidences")
