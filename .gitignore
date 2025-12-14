@@ -1,3 +1,4 @@
 *.db
 arquivounico.py
 saida.md
+.env
