@@ -857,7 +857,7 @@ Adicionar indicador mínimo no retorno do turno:
 
 ---
 
-### Tarefa E1 — Tornar `scenario_loader` transacional (all-or-nothing)
+### Tarefa E1 — Tornar `scenario_loader` transacional (all-or-nothing) - CONCLUÍDO
 
 **Prioridade:** P1
 **Tipo:** Pipeline de conteúdo / integridade de dados
@@ -903,13 +903,13 @@ Garantir que o carregamento de um cenário seja atômico:
 
 ### DoD
 
-* [ ] Falha no loader não deixa registros parciais do cenário no DB.
-* [ ] Loader continua idempotente para cenário já existente.
-* [ ] Teste de rollback de cenário inválido implementado.
+* [x] Falha no loader não deixa registros parciais do cenário no DB.
+* [x] Loader continua idempotente para cenário já existente.
+* [x] Teste de rollback de cenário inválido implementado.
 
 ---
 
-### Tarefa E2 — Limpar pontos de entrada inconsistentes (`start_app` inexistente) e padronizar execução
+### Tarefa E2 — Limpar pontos de entrada inconsistentes (`start_app` inexistente) e padronizar execução - CONCLUÍDO
 
 **Prioridade:** P2 (mas rápida e recomendada)
 **Tipo:** Manutenção / developer experience
@@ -952,9 +952,9 @@ Padronizar entrypoints do projeto e remover código morto/inconsistente.
 
 ### DoD
 
-* [ ] `python -m app` funciona ou é removido/documentado corretamente.
-* [ ] README contém instrução de execução válida.
-* [ ] Não há import quebrado relacionado a `start_app`.
+* [x] `python -m app` funciona ou é removido/documentado corretamente.
+* [x] README contém instrução de execução válida.
+* [x] Não há import quebrado relacionado a `start_app`.
 
 ---
 
@@ -962,7 +962,7 @@ Padronizar entrypoints do projeto e remover código morto/inconsistente.
 
 ---
 
-### Tarefa F1 — Criar suíte de testes de regressão do loop principal (anti-bypass + integridade)
+### Tarefa F1 — Criar suíte de testes de regressão do loop principal (anti-bypass + integridade) - CONCLUÍDO
 
 **Prioridade:** P0
 **Tipo:** Testes automatizados
@@ -1012,14 +1012,14 @@ Criar testes para:
 
 ### DoD
 
-* [ ] 5 regressões críticas cobertas.
-* [ ] Testes rodam com provider dummy sem depender de OpenAI.
-* [ ] Testes falham no código antigo e passam no código refatorado (critério ideal).
-* [ ] CI local (`pytest -q`) permanece rápida.
+* [x] 5 regressões críticas cobertas.
+* [x] Testes rodam com provider dummy sem depender de OpenAI.
+* [x] Testes falham no código antigo e passam no código refatorado (critério ideal).
+* [x] CI local (`pytest -q`) permanece rápida.
 
 ---
 
-### Tarefa F2 — Atualizar README e contrato da API para refletir o MVP real após refatoração
+### Tarefa F2 — Atualizar README e contrato da API para refletir o MVP real após refatoração - CONCLUÍDO
 
 **Prioridade:** P1
 **Tipo:** Documentação técnica / produto
@@ -1073,10 +1073,10 @@ Atualizar documentação para refletir:
 
 ### DoD
 
-* [ ] README compatível com comportamento real da API.
-* [ ] Exemplos de resposta atualizados.
-* [ ] Limitações do MVP explicitadas sem contradizer o sistema.
-* [ ] Passos de setup/execução/testes validados.
+* [x] README compatível com comportamento real da API.
+* [x] Exemplos de resposta atualizados.
+* [x] Limitações do MVP explicitadas sem contradizer o sistema.
+* [x] Passos de setup/execução/testes validados.
 
 ---
 

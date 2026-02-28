@@ -65,7 +65,7 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
             case_summary=config.case_summary
         )
         db.add(scenario)
-        db.commit()
+        db.flush()
         db.refresh(scenario)
 
         # Maps for later linking secrets
@@ -87,7 +87,7 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
                 lies=[lie.dict() for lie in s.lies] if s.lies else None
             )
             db.add(suspect)
-            db.commit()
+            db.flush()
             db.refresh(suspect)
 
             suspect_map[s.name] = suspect.id
@@ -104,7 +104,7 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
                 description=e.description
             )
             db.add(evidence)
-            db.commit()
+            db.flush()
             db.refresh(evidence)
 
             evidence_map[e.name] = evidence.id
@@ -116,7 +116,7 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
         # 6.5 Persist verdict rules (T24.5)
         # -------------------------
         scenario.required_evidence_ids = mandatory_evidence_ids
-        db.commit()
+        db.flush()
         db.refresh(scenario)
 
         # store mandatory evidence IDs inside scenario? (future)
@@ -131,7 +131,7 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
             )
 
         scenario.culprit_id = suspect_map[config.culprit]
-        db.commit()
+        db.flush()
         db.refresh(scenario)
 
         # -------------------------
@@ -160,6 +160,10 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
 
         print(f"[loader] Scenario '{scenario.title}' loaded successfully.")
         return scenario
+    except Exception as e:
+        db.rollback()
+        print(f"[loader] Transaction failed! Rolling back scenario '{data.get('title', 'Unknown')}'. Reason: {e}")
+        raise e
 
     finally:
         if close_session:

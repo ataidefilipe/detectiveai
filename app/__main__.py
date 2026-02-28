@@ -1,6 +1,6 @@
 """Main execution entry point for the detective AI app."""
 
-from .main import start_app
+import uvicorn
 
 if __name__ == "__main__":
-    start_app()
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
