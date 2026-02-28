@@ -77,9 +77,18 @@ def run_interrogation_turn(
         db=db
     )
 
+    # Calculate evidence effect for UI feedback
+    evidence_effect = "none"
+    if evidence_id is not None:
+        if is_effective:
+            evidence_effect = "revealed_secret"
+        elif usage and usage.was_effective:
+            evidence_effect = "duplicate"
+
     return {
         "player_message": player_msg,
         "npc_message": npc_msg,
         "revealed_secrets": revealed_secrets,
+        "evidence_effect": evidence_effect,
         "suspect_state": suspect_state
     }

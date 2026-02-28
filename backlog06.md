@@ -550,10 +550,10 @@ Fazer o Dummy responder com base nos **segredos revelados neste turno** (`reveal
 
 ### DoD
 
-* [ ] Evidência sem efeito não gera resposta de admissão/incriminação no dummy.
-* [ ] Evidência com efeito gera resposta apropriada.
-* [ ] Existe teste cobrindo ambos os casos.
-* [ ] Interface do adapter continua compatível (ou contrato atualizado/documentado).
+* [x] Evidência sem efeito não gera resposta de admissão/incriminação no dummy.
+* [x] Evidência com efeito gera resposta apropriada.
+* [x] Existe teste cobrindo ambos os casos.
+* [x] Interface do adapter continua compatível (ou contrato atualizado/documentado).
 
 ---
 
@@ -604,10 +604,10 @@ Criar campo explícito de personalidade do suspeito e usar esse campo para o com
 
 ### DoD
 
-* [ ] Suspeitos podem ter `personality` explícita sem quebrar cenários antigos.
-* [ ] Dummy adapter varia respostas conforme personalidade.
-* [ ] Cenário piloto atualizado com exemplos de personalidade.
-* [ ] Teste de loader + teste de resposta dummy por personalidade.
+* [x] Suspeitos podem ter `personality` explícita sem quebrar cenários antigos.
+* [x] Dummy adapter varia respostas conforme personalidade.
+* [x] Cenário piloto atualizado com exemplos de personalidade.
+* [x] Teste de loader + teste de resposta dummy por personalidade.
 
 ---
 
@@ -662,9 +662,9 @@ Garantir que o prompt contenha a última mensagem do jogador **uma única vez**.
 
 ### DoD
 
-* [ ] Última mensagem do jogador aparece uma vez no prompt final.
-* [ ] Contrato de `build_npc_prompt()` documentado.
-* [ ] Teste unitário de regressão criado.
+* [x] Última mensagem do jogador aparece uma vez no prompt final.
+* [x] Contrato de `build_npc_prompt()` documentado.
+* [x] Teste unitário de regressão criado.
 
 ---
 
@@ -725,10 +725,10 @@ Enviar ao LLM apenas o contexto necessário para estilo/nuance, reduzindo risco 
 
 ### DoD
 
-* [ ] `true_timeline` e `lies` podem ser omitidos do LLM via configuração padrão do MVP.
-* [ ] Prompt continua funcionando com dummy e OpenAI.
-* [ ] Teste valida que campos sensíveis não são enviados em modo estrito.
-* [ ] README explica o modo estrito e o racional.
+* [x] `true_timeline` e `lies` podem ser omitidos do LLM via configuração padrão do MVP.
+* [x] Prompt continua funcionando com dummy e OpenAI.
+* [x] Teste valida que campos sensíveis não são enviados em modo estrito.
+* [x] README explica o modo estrito e o racional.
 
 ---
 
@@ -736,7 +736,7 @@ Enviar ao LLM apenas o contexto necessário para estilo/nuance, reduzindo risco 
 
 ---
 
-### Tarefa D1 — Corrigir semântica de `progress` e `is_closed` (incluindo caso sem core secrets)
+### Tarefa D1 — Corrigir semântica de `progress` e `is_closed` (incluindo caso sem core secrets) - CONCLUÍDO
 
 **Prioridade:** P1
 **Tipo:** Regra de estado / UX
@@ -793,13 +793,13 @@ Tornar `progress` e `is_closed` semanticamente consistentes e previsíveis.
 
 ### DoD
 
-* [ ] Caso sem core secrets tem comportamento definido e testado.
-* [ ] `progress` e `is_closed` não entram em estado contraditório sem justificativa.
-* [ ] Endpoints retornam estado consistente após confrontos.
+* [x] Caso sem core secrets tem comportamento definido e testado.
+* [x] `progress` e `is_closed` não entram em estado contraditório sem justificativa.
+* [x] Endpoints retornam estado consistente após confrontos.
 
 ---
 
-### Tarefa D2 — Introduzir estado mínimo de “evidência efetiva” no retorno de turno (UX sem board visual)
+### Tarefa D2 — Introduzir estado mínimo de “evidência efetiva” no retorno de turno (UX sem board visual) - CONCLUÍDO
 
 **Prioridade:** P1
 **Tipo:** UX backend / contrato de resposta

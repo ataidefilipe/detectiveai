@@ -57,12 +57,31 @@ def create_session(scenario_id: int, db: Optional[Session] = None) -> SessionMod
         suspects = db.query(SuspectModel).filter(SuspectModel.scenario_id == scenario_id).all()
 
         for suspect in suspects:
+            core_secrets = db.query(SecretModel).filter(
+                SecretModel.suspect_id == suspect.id,
+                SecretModel.is_core == True
+            ).count()
+
+            regular_secrets = db.query(SecretModel).filter(
+                SecretModel.suspect_id == suspect.id,
+            ).count()
+
+            initial_progress = 0.0
+            initial_closed = False
+
+            if core_secrets == 0:
+                if regular_secrets == 0:
+                    initial_progress = 1.0
+                    initial_closed = True
+                else:
+                    initial_progress = 0.0
+
             state = SessionSuspectStateModel(
                 session_id=session.id,
                 suspect_id=suspect.id,
                 revealed_secret_ids=[],
-                is_closed=False,
-                progress=0.0
+                is_closed=initial_closed,
+                progress=initial_progress
             )
             db.add(state)
 

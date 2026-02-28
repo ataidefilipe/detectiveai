@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List
 
-from app.api.schemas.chat import PlayerChatInput
+from app.api.schemas.chat import PlayerChatInput, PlayerTurnResponse
 from app.api.schemas.verdict import AccuseRequest, AccuseResponse
 from app.api.schemas.evidence import EvidenceResponse
 from app.api.schemas.suspect import SuspectSessionResponse
@@ -47,7 +47,10 @@ def api_create_session(payload: CreateSessionRequest):
         status=session_data["status"]
     )
 
-@router.post("/sessions/{session_id}/suspects/{suspect_id}/messages")
+@router.post(
+    "/sessions/{session_id}/suspects/{suspect_id}/messages",
+    response_model=PlayerTurnResponse
+)
 def send_message_to_suspect(session_id: int, suspect_id: int, payload: PlayerChatInput):
     """
     Handles a full interrogation turn atomically.

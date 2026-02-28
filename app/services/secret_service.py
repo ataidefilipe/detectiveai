@@ -80,15 +80,32 @@ def apply_evidence_to_suspect(
                 1 for s in all_core if s.id in state.revealed_secret_ids
             )
             state.progress = revealed_core / total_core
+            
+            if state.progress >= 1.0:
+                state.is_closed = True
         else:
-            # No core secrets → progress always 1.0
-            state.progress = 1.0
-
-        # ---------------------------------------
-        # 5. If all core secrets revealed → close suspect
-        # ---------------------------------------
-        if total_core > 0 and state.progress == 1.0:
-            state.is_closed = True
+            # ---------------------------------------
+            # Fallback for Suspects without Core Secrets
+            # ---------------------------------------
+            all_regular = db.query(SecretModel).filter(
+                SecretModel.suspect_id == suspect_id,
+            ).all()
+            
+            total_regular = len(all_regular)
+            
+            if total_regular > 0:
+                revealed_regular = sum(
+                    1 for s in all_regular if s.id in state.revealed_secret_ids
+                )
+                state.progress = revealed_regular / total_regular
+                
+                # Suspect without core secrets closes when all minor secrets are found
+                if state.progress >= 1.0:
+                    state.is_closed = True
+            else:
+                # No secrets at all = purely narrative NPC
+                state.progress = 1.0
+                state.is_closed = True
 
         db.flush()
         db.refresh(state)
