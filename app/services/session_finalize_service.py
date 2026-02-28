@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.infra.db import SessionLocal
 from app.infra.db_models import SessionModel
 from app.services.verdict_service import evaluate_verdict
+from app.core.exceptions import NotFoundError, RuleViolationError
 
 
 def finalize_session(
@@ -36,12 +37,12 @@ def finalize_session(
         ).first()
 
         if not session:
-            raise ValueError(f"Session {session_id} not found.")
+            raise NotFoundError(f"Session {session_id} not found.")
 
         if session.status == "finished":
-            raise ValueError(f"Session {session_id} is already finished.")
+            raise RuleViolationError(f"Session {session_id} is already finished.")
 
-        # ----------------------------------------
+        # ---------------------------------------
         # 2. Evaluate verdict
         # ----------------------------------------
         verdict = evaluate_verdict(

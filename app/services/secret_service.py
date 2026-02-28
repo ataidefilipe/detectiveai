@@ -7,6 +7,7 @@ from app.infra.db_models import (
     SessionSuspectStateModel,
     SuspectModel
 )
+from app.core.exceptions import NotFoundError
 
 
 def apply_evidence_to_suspect(
@@ -37,7 +38,7 @@ def apply_evidence_to_suspect(
         ).first()
 
         if not state:
-            raise ValueError(f"Suspect {suspect_id} not part of session {session_id}.")
+            raise NotFoundError(f"Suspect {suspect_id} not part of session {session_id}.")
 
         # ---------------------------------------
         # 2. Find secrets revealed by this evidence
@@ -89,8 +90,11 @@ def apply_evidence_to_suspect(
         if total_core > 0 and state.progress == 1.0:
             state.is_closed = True
 
-        db.commit()
+        db.flush()
         db.refresh(state)
+
+        if close_session:
+            db.commit()
 
         return revealed_now
 

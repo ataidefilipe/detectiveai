@@ -1,0 +1,112 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.13.5, pytest-8.4.1, pluggy-1.6.0
+rootdir: D:\Python Projetos\detective_ai
+plugins: anyio-4.9.0, asyncio-1.1.0
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 9 items / 5 errors
+
+=================================== ERRORS ====================================
+________________ ERROR collecting tests/test_add_npc_reply.py _________________
+tests\test_add_npc_reply.py:4: in <module>
+    player_msg = add_player_message(
+app\services\chat_service.py:41: in add_player_message
+    raise ValueError(f"Session {session_id} not found.")
+E   ValueError: Session 1 not found.
+------------------------------- Captured stdout -------------------------------
+[AI] NPC_AI_PROVIDER = dummy
+[AI] Using Dummy adapter
+______________ ERROR collecting tests/test_add_player_message.py ______________
+tests\test_add_player_message.py:3: in <module>
+    msg = add_player_message(
+app\services\chat_service.py:41: in add_player_message
+    raise ValueError(f"Session {session_id} not found.")
+E   ValueError: Session 1 not found.
+________________ ERROR collecting tests/test_apply_evidence.py ________________
+tests\test_apply_evidence.py:3: in <module>
+    result = apply_evidence_to_suspect(
+app\services\secret_service.py:40: in apply_evidence_to_suspect
+    raise ValueError(f"Suspect {suspect_id} not part of session {session_id}.")
+E   ValueError: Suspect 1 not part of session 1.
+_____________ ERROR collecting tests/test_get_session_overview.py _____________
+tests\test_get_session_overview.py:3: in <module>
+    ov = get_session_overview(1)
+         ^^^^^^^^^^^^^^^^^^^^^^^
+app\services\session_service.py:107: in get_session_overview
+    raise ValueError(f"Session with id {session_id} not found.")
+E   ValueError: Session with id 1 not found.
+___________________ ERROR collecting tests/test_session.py ____________________
+C:\Users\Filipe AtaÝde\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py:1967: in _exec_single_context
+    self.dialect.do_execute(
+C:\Users\Filipe AtaÝde\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\default.py:951: in do_execute
+    cursor.execute(statement, parameters)
+E   sqlite3.OperationalError: no such column: scenarios.case_summary
+
+The above exception was the direct cause of the following exception:
+tests\test_session.py:5: in <module>
+    scenario = load_scenario_from_json("scenarios/piloto.json")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app\services\scenario_loader.py:52: in load_scenario_from_json
+    .first()
+     ^^^^^^^
+C:\Users\Filipe AtaÝde\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\query.py:2759: in first
+    return self.limit(1)._iter().first()  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Filipe AtaÝde\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\query.py:2857: in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+C:\Users\Filipe AtaÝde\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py:2351: in execute
+    return self._execute_internal(
+C:\Users\Filipe AtaÝde\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py:2249: in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+C:\Users\Filipe AtaÝde\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\context.py:306: in orm_execute_statement
+    result = conn.execute(
+C:\Users\Filipe AtaÝde\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py:1419: in execute
+    return meth(
+C:\Users\Filipe AtaÝde\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\sql\elements.py:526: in _execute_on_connection
+    return connection._execute_clauseelement(
+C:\Users\Filipe AtaÝde\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py:1641: in _execute_clauseelement
+    ret = self._execute_context(
+C:\Users\Filipe AtaÝde\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py:1846: in _execute_context
+    return self._exec_single_context(
+C:\Users\Filipe AtaÝde\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py:1986: in _exec_single_context
+    self._handle_dbapi_exception(
+C:\Users\Filipe AtaÝde\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py:2355: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+C:\Users\Filipe AtaÝde\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py:1967: in _exec_single_context
+    self.dialect.do_execute(
+C:\Users\Filipe AtaÝde\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\default.py:951: in do_execute
+    cursor.execute(statement, parameters)
+E   sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such column: scenarios.case_summary
+E   [SQL: SELECT scenarios.id AS scenarios_id, scenarios.title AS scenarios_title, scenarios.description AS scenarios_description, scenarios.case_summary AS scenarios_case_summary, scenarios.culprit_id AS scenarios_culprit_id, scenarios.required_evidence_ids AS scenarios_required_evidence_ids, scenarios.partial_evidence_ids AS scenarios_partial_evidence_ids 
+E   FROM scenarios 
+E   WHERE scenarios.title = ?
+E    LIMIT ? OFFSET ?]
+E   [parameters: ('O Caso do Escrit¾rio Trancado', 1, 0)]
+E   (Background on this error at: https://sqlalche.me/e/20/e3q8)
+============================== warnings summary ===============================
+app\main.py:14
+  D:\Python Projetos\detective_ai\app\main.py:14: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("startup")
+
+C:\Users\Filipe AtaÝde\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\applications.py:4574
+  C:\Users\Filipe AtaÝde\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\applications.py:4574: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    return self.router.on_event(event_type)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+ERROR tests/test_add_npc_reply.py - ValueError: Session 1 not found.
+ERROR tests/test_add_player_message.py - ValueError: Session 1 not found.
+ERROR tests/test_apply_evidence.py - ValueError: Suspect 1 not part of sessio...
+ERROR tests/test_get_session_overview.py - ValueError: Session with id 1 not ...
+ERROR tests/test_session.py - sqlalchemy.exc.OperationalError: (sqlite3.Opera...
+!!!!!!!!!!!!!!!!!!! Interrupted: 5 errors during collection !!!!!!!!!!!!!!!!!!!
+======================== 2 warnings, 5 errors in 2.44s ========================

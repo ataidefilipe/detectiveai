@@ -7,8 +7,7 @@ from app.api.schemas.verdict import AccuseRequest, AccuseResponse
 from app.api.schemas.evidence import EvidenceResponse
 from app.api.schemas.suspect import SuspectSessionResponse
 
-from app.services.chat_service import add_player_message, add_npc_reply
-from app.services.secret_service import apply_evidence_to_suspect
+from app.services.interrogation_turn_service import run_interrogation_turn
 from app.services.session_finalize_service import finalize_session
 from app.services.session_service import create_session, get_session_overview, get_suspect_state
 
@@ -40,10 +39,7 @@ class CreateSessionResponse(BaseModel):
 # -----------------------------
 @router.post("/sessions", response_model=CreateSessionResponse)
 def api_create_session(payload: CreateSessionRequest):
-    try:
-        session_data = create_session(payload.scenario_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    session_data = create_session(payload.scenario_id)
 
     return CreateSessionResponse(
         session_id=session_data["id"],
@@ -54,50 +50,24 @@ def api_create_session(payload: CreateSessionRequest):
 @router.post("/sessions/{session_id}/suspects/{suspect_id}/messages")
 def send_message_to_suspect(session_id: int, suspect_id: int, payload: PlayerChatInput):
     """
-    Handles a full interrogation turn:
-    - save player message
-    - apply evidence (if any)
-    - generate NPC reply
-    - return everything combined
+    Handles a full interrogation turn atomically.
     """
-
-    # 1. Player message
-    player_msg = add_player_message(
-        session_id=session_id,
-        suspect_id=suspect_id,
-        text=payload.text,
-        evidence_id=payload.evidence_id
-    )
-
-    # 2. Evidence logic (may reveal secrets)
-    revealed_secrets = []
-    if payload.evidence_id is not None:
-        revealed_secrets = apply_evidence_to_suspect(
+    db = SessionLocal()
+    try:
+        result = run_interrogation_turn(
             session_id=session_id,
             suspect_id=suspect_id,
-            evidence_id=payload.evidence_id
+            text=payload.text,
+            evidence_id=payload.evidence_id,
+            db=db
         )
-
-    # 3. NPC reply
-    npc_msg = add_npc_reply(
-        session_id=session_id,
-        suspect_id=suspect_id,
-        player_message_id=player_msg["id"]
-    )
-
-    # 4. Fetch updated suspect state (snapshot for UX)
-    suspect_state = get_suspect_state(
-        session_id=session_id,
-        suspect_id=suspect_id
-    )
-
-    # 5. Output combined response
-    return {
-        "player_message": player_msg,
-        "npc_message": npc_msg,
-        "revealed_secrets": revealed_secrets,
-        "suspect_state": suspect_state
-    }
+        db.commit()
+        return result
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        db.close()
 
 
 @router.post(
@@ -172,10 +142,7 @@ class SessionOverviewResponse(BaseModel):
 
 @router.get("/sessions/{session_id}", response_model=SessionOverviewResponse)
 def api_get_session_overview(session_id: int):
-    try:
-        overview = get_session_overview(session_id)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+    overview = get_session_overview(session_id)
 
     # get_session_overview já retorna progress e is_closed por suspeito
     return overview

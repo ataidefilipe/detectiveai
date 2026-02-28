@@ -83,7 +83,7 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
                 initial_statement=s.initial_statement,
                 final_phrase=s.final_phrase,
                 true_timeline=s.true_timeline,
-                lies=s.lies
+                lies=[lie.dict() for lie in s.lies] if s.lies else None
             )
             db.add(suspect)
             db.commit()

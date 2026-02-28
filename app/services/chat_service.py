@@ -10,8 +10,10 @@ from app.infra.db_models import (
     SessionEvidenceUsageModel,
     SecretModel,
     EvidenceModel,
+    EvidenceModel,
     ScenarioModel
 )
+from app.core.exceptions import NotFoundError, RuleViolationError
 
 from app.services.ai_adapter_factory import get_npc_ai_adapter
 from app.services.npc_context_builder import build_npc_context
@@ -38,7 +40,10 @@ def add_player_message(
         # Validate session
         session = db.query(SessionModel).filter(SessionModel.id == session_id).first()
         if not session:
-            raise ValueError(f"Session {session_id} not found.")
+            raise NotFoundError(f"Session {session_id} not found.")
+
+        if session.status == "finished":
+            raise RuleViolationError(f"Session {session_id} is already finished.")
 
         # Validate suspect
         suspect = db.query(SuspectModel).filter(
@@ -46,7 +51,7 @@ def add_player_message(
             SuspectModel.scenario_id == session.scenario_id
         ).first()
         if not suspect:
-            raise ValueError(f"Suspect {suspect_id} is not part of scenario {session.scenario_id}.")
+            raise NotFoundError(f"Suspect {suspect_id} is not part of scenario {session.scenario_id}.")
 
         # Validate evidence
         if evidence_id is not None:
@@ -56,7 +61,7 @@ def add_player_message(
             ).first()
 
             if not evidence:
-                raise ValueError(
+                raise NotFoundError(
                     f"Evidence {evidence_id} is not valid for scenario {session.scenario_id}."
                 )
 
@@ -70,7 +75,7 @@ def add_player_message(
         )
 
         db.add(msg)
-        db.commit()
+        db.flush()
         db.refresh(msg)
 
         # Log evidence usage
@@ -89,8 +94,10 @@ def add_player_message(
                     evidence_id=evidence_id
                 )
                 db.add(usage)
-                db.commit()
+                db.flush()
 
+        if close_session:
+            db.commit()
 
         # Convert ORM → dict before closing session
         result = {
@@ -127,10 +134,10 @@ def add_npc_reply(
     6. Return that DB object
     """
 
-    close_db = False
+    close_session = False
     if db is None:
         db = SessionLocal()
-        close_db = True
+        close_session = True
 
     try:
         # ----------------------------------------
@@ -142,7 +149,7 @@ def add_npc_reply(
         ).first()
 
         if not state:
-            raise ValueError(f"Suspect {suspect_id} not part of session {session_id}.")
+            raise NotFoundError(f"Suspect {suspect_id} not part of session {session_id}.")
 
         # Load suspect model (for personality, final phrase, etc.)
         suspect = db.query(SuspectModel).filter(
@@ -178,7 +185,7 @@ def add_npc_reply(
         ).first()
 
         if not player_msg:
-            raise ValueError(f"Player message {player_message_id} not found.")
+            raise NotFoundError(f"Player message {player_message_id} not found.")
 
         player_message_dict = {
             "text": player_msg.text,
@@ -236,7 +243,7 @@ def add_npc_reply(
         )
 
         if not session:
-            raise ValueError(f"Session {session_id} not found")        
+            raise NotFoundError(f"Session {session_id} not found")        
 
         scenario = (
             db.query(ScenarioModel)
@@ -245,7 +252,7 @@ def add_npc_reply(
         )
 
         if not scenario:
-            raise ValueError("Scenario not found for session")
+            raise NotFoundError("Scenario not found for session")
 
         # ----------------------------------------
         # Build pressure points (MVP)
@@ -288,8 +295,11 @@ def add_npc_reply(
         )
 
         db.add(npc_msg)
-        db.commit()
+        db.flush()
         db.refresh(npc_msg)
+
+        if close_session:
+            db.commit()
 
         return {
             "id": npc_msg.id,
@@ -302,5 +312,5 @@ def add_npc_reply(
         }
 
     finally:
-        if close_db:
+        if close_session:
             db.close()

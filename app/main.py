@@ -5,8 +5,12 @@ from fastapi import FastAPI
 from app.api.sessions import router as sessions_router
 from app.api.scenarios import router as scenarios_router
 from app.services.bootstrap_service import bootstrap_game
+from app.core.exception_handlers import register_exception_handlers
 
 app = FastAPI(title="Detective AI Game")
+
+# Register global exception handlers
+register_exception_handlers(app)
 
 # -----------------------------
 # Startup bootstrap (MVP)

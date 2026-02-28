@@ -20,8 +20,19 @@ def patch_db_to_memory_sqlite():
 
     TestingSessionLocal = sessionmaker(bind=engine)
 
+    import app.api.sessions as api_sessions
+    import app.services.chat_service as chat_service
+    import app.services.secret_service as secret_service
+    import app.services.session_service as session_service
+    import app.services.session_finalize_service as session_finalize_service
+
     db_module.engine = engine
     db_module.SessionLocal = TestingSessionLocal
+    api_sessions.SessionLocal = TestingSessionLocal
+    chat_service.SessionLocal = TestingSessionLocal
+    secret_service.SessionLocal = TestingSessionLocal
+    session_service.SessionLocal = TestingSessionLocal
+    session_finalize_service.SessionLocal = TestingSessionLocal
 
     Base.metadata.create_all(bind=engine)
     return TestingSessionLocal

@@ -9,6 +9,7 @@ from app.infra.db_models import (
     SuspectModel,
     SecretModel
 )
+from app.core.exceptions import NotFoundError
 
 
 def create_session(scenario_id: int, db: Optional[Session] = None) -> SessionModel:
@@ -36,7 +37,7 @@ def create_session(scenario_id: int, db: Optional[Session] = None) -> SessionMod
         scenario = db.query(ScenarioModel).filter(ScenarioModel.id == scenario_id).first()
 
         if not scenario:
-            raise ValueError(f"Scenario with id {scenario_id} does not exist.")
+            raise NotFoundError(f"Scenario with id {scenario_id} does not exist.")
 
         # -------------------------
         # 2. Create session
@@ -104,7 +105,7 @@ def get_session_overview(session_id: int, db: Optional[Session] = None) -> Dict[
         session = db.query(SessionModel).filter(SessionModel.id == session_id).first()
 
         if not session:
-            raise ValueError(f"Session with id {session_id} not found.")
+            raise NotFoundError(f"Session with id {session_id} not found.")
 
         # -------------------------
         # 2. Load scenario
@@ -197,7 +198,7 @@ def calculate_suspect_progress(
         ).first()
 
         if not state:
-            raise ValueError(
+            raise NotFoundError(
                 f"Suspect {suspect_id} does not belong to session {session_id}."
             )
 
@@ -238,7 +239,7 @@ def get_suspect_state(session_id: int, suspect_id: int, db: Optional[Session] = 
         ).first()
 
         if not state:
-            raise ValueError(f"Suspect {suspect_id} not part of session {session_id}.")
+            raise NotFoundError(f"Suspect {suspect_id} not part of session {session_id}.")
 
         return {
             "progress": state.progress,
