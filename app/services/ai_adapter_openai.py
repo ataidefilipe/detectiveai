@@ -28,7 +28,8 @@ class OpenAINpcAIAdapter(NpcAIAdapter):
         suspect_state: dict,
         chat_history: list,
         player_message: dict,
-        npc_context: dict | None = None
+        npc_context: dict | None = None,
+        revealed_now: list | None = None
     ) -> str:
         if not npc_context:
             raise ValueError("npc_context is required for OpenAI adapter")

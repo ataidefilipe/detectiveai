@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.services.chat_service import add_player_message, add_npc_reply
 from app.services.secret_service import apply_evidence_to_suspect
 from app.services.session_service import get_suspect_state
+from app.infra.db_models import SessionEvidenceUsageModel
 
 
 def run_interrogation_turn(
@@ -37,11 +38,35 @@ def run_interrogation_turn(
             db=db
         )
 
+        # Log evidence usage and update was_effective if applicable
+        usage = db.query(SessionEvidenceUsageModel).filter(
+            SessionEvidenceUsageModel.session_id == session_id,
+            SessionEvidenceUsageModel.suspect_id == suspect_id,
+            SessionEvidenceUsageModel.evidence_id == evidence_id
+        ).first()
+
+        is_effective = len(revealed_secrets) > 0
+
+        if not usage:
+            usage = SessionEvidenceUsageModel(
+                session_id=session_id,
+                suspect_id=suspect_id,
+                evidence_id=evidence_id,
+                was_effective=is_effective
+            )
+            db.add(usage)
+        else:
+            if is_effective and not usage.was_effective:
+                usage.was_effective = True
+        
+        db.flush()
+
     # 3. NPC reply
     npc_msg = add_npc_reply(
         session_id=session_id,
         suspect_id=suspect_id,
         player_message_id=player_msg["id"],
+        revealed_now=revealed_secrets,
         db=db
     )
 

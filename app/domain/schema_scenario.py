@@ -14,6 +14,7 @@ class LieConfig(BaseModel):
 class SuspectConfig(BaseModel):
     name: str
     backstory: Optional[str] = None
+    personality: Optional[str] = None
     initial_statement: Optional[str] = Field(
         default=None,
         description="Initial statement shown to the player before interrogation"

@@ -80,6 +80,7 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
                 scenario_id=scenario.id,
                 name=s.name,
                 backstory=s.backstory,
+                personality=s.personality,
                 initial_statement=s.initial_statement,
                 final_phrase=s.final_phrase,
                 true_timeline=s.true_timeline,

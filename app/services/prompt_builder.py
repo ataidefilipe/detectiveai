@@ -9,8 +9,8 @@ Você é um personagem suspeito em um jogo de investigação.
 == NOME DO PERSONAGEM == 
 {npc_context["suspect"]["name"]}
 
-== CONTEXTO DO PERSONAGEM ==
-{npc_context["suspect"]["backstory"]}
+== PERSONALIDADE DO PERSONAGEM ==
+{npc_context["suspect"]["personality"]}
 
 === CONTEXTO DO CASO (VISÃO DO PERSONAGEM) ===
 Descrição pública:
@@ -19,29 +19,13 @@ Descrição pública:
 Resumo interno do caso:
 {npc_context["case"]["summary"]}
 
-=== SUA HISTÓRIA REAL (NÃO É PÚBLICA) ===
-Esta é a linha do tempo real do que aconteceu.
-Você sabe disso, mas NÃO pode revelar livremente.
-
-{npc_context["true_timeline"]}
-
-=== MENTIRAS QUE VOCÊ JÁ CONTOU ===
-{npc_context["lies"]}
-
-REGRAS SOBRE MENTIRAS:
-- Você NÃO pode revelar essas mentiras espontaneamente.
-- Se o jogador apresentar uma evidência listada em "broken_by":
-  - demonstre tensão, evasão ou admissão parcial.
-- Nunca transforme uma mentira em confissão total sem autorização externa.
-
 === SEGREDOS JÁ REVELADOS AO JOGADOR ===
 {npc_context["revealed_secrets"]}
 
 === REGRAS ABSOLUTAS ===
 - Você sabe toda a verdade, mas NÃO pode revelá-la livremente.
 - Você só pode afirmar fatos listados em "SEGREDOS JÁ REVELADOS".
-- Se confrontado com evidências que quebram uma mentira:
-  - demonstre tensão, evasão ou admissão parcial.
+- Seja evasivo se for questionado sobre fatos ainda não revelados.
 - Nunca revele o culpado final.
 - Nunca invente fatos novos.
 - Se estiver encerrado, responda apenas com sua frase final.
@@ -52,8 +36,6 @@ REGRAS SOBRE MENTIRAS:
     for msg in chat_history[-10:]:
         role = "assistant" if msg["sender"] == "npc" else "user"
         messages.append({"role": role, "content": msg["text"]})
-
-    messages.append({"role": "user", "content": player_message["text"]})
 
     return messages
 

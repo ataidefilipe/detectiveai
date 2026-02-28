@@ -32,6 +32,7 @@ class SuspectModel(Base):
     scenario_id = Column(Integer, ForeignKey("scenarios.id"), nullable=False)
     name = Column(String, nullable=False)
     backstory = Column(String)
+    personality = Column(String)
     initial_statement = Column(String)
     final_phrase = Column(String, nullable=True)
     true_timeline = Column(JSON) 
@@ -114,6 +115,7 @@ class SessionEvidenceUsageModel(Base):
     suspect_id = Column(Integer, ForeignKey("suspects.id"), primary_key=True)
     evidence_id = Column(Integer, ForeignKey("evidences.id"), primary_key=True)
     used_at = Column(DateTime, default=datetime.now)
+    was_effective = Column(Boolean, default=False)
 
     session = relationship("SessionModel", back_populates="evidence_usages")
     suspect = relationship("SuspectModel", back_populates="evidence_usages")

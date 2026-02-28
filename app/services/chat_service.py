@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from sqlalchemy.orm import Session
 
 from app.infra.db import SessionLocal
@@ -78,24 +78,6 @@ def add_player_message(
         db.flush()
         db.refresh(msg)
 
-        # Log evidence usage
-
-        if evidence_id is not None:
-            existing = db.query(SessionEvidenceUsageModel).filter(
-                SessionEvidenceUsageModel.session_id == session_id,
-                SessionEvidenceUsageModel.suspect_id == suspect_id,
-                SessionEvidenceUsageModel.evidence_id == evidence_id
-            ).first()
-
-            if not existing:
-                usage = SessionEvidenceUsageModel(
-                    session_id=session_id,
-                    suspect_id=suspect_id,
-                    evidence_id=evidence_id
-                )
-                db.add(usage)
-                db.flush()
-
         if close_session:
             db.commit()
 
@@ -120,6 +102,7 @@ def add_npc_reply(
     session_id: int,
     suspect_id: int,
     player_message_id: int,
+    revealed_now: Optional[List[Dict[str, Any]]] = None,
     db: Optional[Session] = None
 ) -> NpcChatMessageModel:
     """
@@ -221,7 +204,7 @@ def add_npc_reply(
         suspect_state = {
             "suspect_id": suspect_id,
             "name": suspect.name if suspect else "O suspeito",
-            "personality": suspect.backstory or "neutro",
+            "personality": suspect.personality or "neutro",
             "revealed_secrets": revealed_secrets,
             "hidden_secrets": hidden_list,
             "is_closed": state.is_closed,
@@ -281,7 +264,8 @@ def add_npc_reply(
             suspect_state=suspect_state,
             npc_context=npc_context,
             chat_history=chat_history,
-            player_message=player_message_dict
+            player_message=player_message_dict,
+            revealed_now=revealed_now
         )
 
         # ----------------------------------------

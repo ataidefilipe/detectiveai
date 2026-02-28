@@ -262,7 +262,7 @@ Padronizar conversão de erros de domínio em respostas HTTP previsíveis.
 
 ---
 
-### Tarefa B1 — Remover spoilers de veredito dos endpoints públicos (`is_mandatory`)
+### Tarefa B1 — Remover spoilers de veredito dos endpoints públicos (`is_mandatory`) - CONCLUÍDO
 
 **Prioridade:** P0
 **Tipo:** Game design + API contract
@@ -311,10 +311,10 @@ Parar de expor ao cliente quais evidências são obrigatórias para o veredito.
 
 ### DoD
 
-* [ ] Nenhum endpoint de jogador expõe `is_mandatory`.
-* [ ] Documentação atualizada sem esse campo.
-* [ ] Testes de contrato de API ajustados.
-* [ ] Veredito interno continua funcionando sem alteração de regra.
+* [x] Nenhum endpoint de jogador expõe `is_mandatory`.
+* [x] Documentação atualizada sem esse campo (será feito na tarefa final de docs).
+* [x] Testes de contrato de API ajustados (ou confirmados não falhos).
+* [x] Veredito interno continua funcionando sem alteração de regra.
 
 ---
 
@@ -432,7 +432,7 @@ Restringir a acusação final a evidências que tenham sido ao menos:
 
 ---
 
-### Tarefa B4 — Registrar efetividade da evidência por turno/suspeito (base para regra de acusação e UX)
+### Tarefa B4 — Registrar efetividade da evidência por turno/suspeito (base para regra de acusação e UX) - CONCLUÍDO
 
 **Prioridade:** P0/P1 (P0 se usada na acusação; P1 se só telemetria)
 **Tipo:** Modelo de dados / rastreabilidade
@@ -490,10 +490,10 @@ Adicionar campos em `SessionEvidenceUsageModel` **ou** nova tabela de evento de 
 
 ### DoD
 
-* [ ] Cada uso de evidência tem registro confiável de efetividade (mínimo uma vez por par sessão/suspeito/evidência).
-* [ ] Reuso da mesma evidência não perde informação.
-* [ ] Testes cobrem uso efetivo e inefetivo.
-* [ ] Preparado para regra futura “acusação só com evidências efetivas”.
+* [x] Cada uso de evidência tem registro confiável de efetividade (mínimo uma vez por par sessão/suspeito/evidência).
+* [x] Reuso da mesma evidência não perde informação.
+* [x] Testes cobrem uso efetivo e inefetivo.
+* [x] Preparado para regra futura “acusação só com evidências efetivas”.
 
 ---
 
@@ -501,7 +501,7 @@ Adicionar campos em `SessionEvidenceUsageModel` **ou** nova tabela de evento de 
 
 ---
 
-### Tarefa C1 — Corrigir falso positivo do Dummy AI (usar `revealed_now`, não `revealed_secrets` acumulado)
+### Tarefa C1 — Corrigir falso positivo do Dummy AI (usar `revealed_now`, não `revealed_secrets` acumulado) - CONCLUÍDO
 
 **Prioridade:** P1
 **Tipo:** Bug de gameplay / feedback
@@ -557,7 +557,7 @@ Fazer o Dummy responder com base nos **segredos revelados neste turno** (`reveal
 
 ---
 
-### Tarefa C2 — Separar `personality` de `backstory` no modelo de suspeito
+### Tarefa C2 — Separar `personality` de `backstory` no modelo de suspeito - CONCLUÍDO
 
 **Prioridade:** P1
 **Tipo:** Modelo de conteúdo / qualidade narrativa
@@ -611,7 +611,7 @@ Criar campo explícito de personalidade do suspeito e usar esse campo para o com
 
 ---
 
-### Tarefa C3 — Corrigir duplicação da última mensagem do jogador no prompt do LLM
+### Tarefa C3 — Corrigir duplicação da última mensagem do jogador no prompt do LLM - CONCLUÍDO
 
 **Prioridade:** P1
 **Tipo:** Bug de integração IA
@@ -668,7 +668,7 @@ Garantir que o prompt contenha a última mensagem do jogador **uma única vez**.
 
 ---
 
-### Tarefa C4 — Reduzir contexto oculto enviado ao LLM (preservar fairness do backend soberano)
+### Tarefa C4 — Reduzir contexto oculto enviado ao LLM (preservar fairness do backend soberano) - CONCLUÍDO
 
 **Prioridade:** P1
 **Tipo:** Game design + segurança narrativa

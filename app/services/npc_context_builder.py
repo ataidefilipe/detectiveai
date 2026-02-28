@@ -14,14 +14,11 @@ def build_npc_context(
         "suspect": {
             "id": suspect.id,
             "name": suspect.name,
-            "backstory": suspect.backstory,
+            "personality": suspect.personality,
             "final_phrase": suspect.final_phrase,
             "is_closed": suspect_state.get("is_closed", False),
             "progress": suspect_state.get("progress", 0.0),
         },
-        # 🔴 CONHECIMENTO INTERNO
-        "true_timeline": suspect.true_timeline or [],
-        "lies": suspect.lies or [],
         # 🔴 CONTROLE DO BACKEND
         "revealed_secrets": revealed_secrets,
         "pressure_points": pressure_points,

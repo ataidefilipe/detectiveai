@@ -12,7 +12,7 @@ It produces deterministic responses based on:
 Useful for testing the entire interrogation flow before integrating a real LLM.
 """
 
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from app.services.ai_adapter import NpcAIAdapter
 
 
@@ -24,14 +24,14 @@ class DummyNpcAIAdapter(NpcAIAdapter):
         suspect_state: Dict[str, Any],
         chat_history: List[Dict[str, Any]],
         player_message: Dict[str, Any],
-        npc_context: Dict[str, Any] | None = None
+        npc_context: Dict[str, Any] | None = None,
+        revealed_now: Optional[List[Dict[str, Any]]] = None
     ) -> str:
 
         name = suspect_state.get("name", "O suspeito")
         personality = suspect_state.get("personality", "neutro")
         is_closed = suspect_state.get("is_closed", False)
         final_phrase = suspect_state.get("final_phrase", "Já falei tudo que sabia.")
-        revealed_secrets = suspect_state.get("revealed_secrets", [])
         hidden_secrets = suspect_state.get("hidden_secrets", [])
         evidence_id = player_message.get("evidence_id")
 
@@ -46,8 +46,8 @@ class DummyNpcAIAdapter(NpcAIAdapter):
         # ----------------------------------------------------------------------
         if evidence_id is not None:
             # Se essa evidência revelou algum segredo recém descoberto...
-            if revealed_secrets:
-                revealed_texts = [s["content"] for s in revealed_secrets]
+            if revealed_now:
+                revealed_texts = [s["content"] for s in revealed_now]
                 combined = " ".join(revealed_texts)
                 return (
                     f"...Tá bom, tá bom! Essa evidência me incrimina. "

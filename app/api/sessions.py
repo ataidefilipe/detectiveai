@@ -250,15 +250,11 @@ def get_session_evidences(session_id: int):
             EvidenceModel.scenario_id == session.scenario_id
         ).all()
 
-        # 3. Mapear obrigatórias
-        mandatory_ids = session.scenario.required_evidence_ids
-
         return [
             EvidenceResponse(
                 id=e.id,
                 name=e.name,
-                description=e.description,
-                is_mandatory=e.id in mandatory_ids
+                description=e.description
             )
             for e in evidences
         ]

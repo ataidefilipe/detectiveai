@@ -8,7 +8,7 @@ Claude, etc.) should inherit from `NpcAIAdapter` and override `generate_reply`.
 No actual AI calls are performed in this interface.
 """
 
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 
 class NpcAIAdapter:
@@ -55,7 +55,8 @@ class NpcAIAdapter:
         suspect_state: Dict[str, Any],
         chat_history: List[Dict[str, Any]],
         player_message: Dict[str, Any],
-        npc_context: Dict[str, Any] | None = None
+        npc_context: Dict[str, Any] | None = None,
+        revealed_now: Optional[List[Dict[str, Any]]] = None
     ) -> str:
         """
         npc_context:

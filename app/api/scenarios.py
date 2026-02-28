@@ -66,8 +66,7 @@ def get_scenario_detail(scenario_id: int):
                 {
                     "id": e.id,
                     "name": e.name,
-                    "description": e.description,
-                    "is_mandatory": e.id in (scenario.required_evidence_ids or [])
+                    "description": e.description
                 }
                 for e in evidences
             ]
