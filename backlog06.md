@@ -368,10 +368,7 @@ Garantir que a acusação só aceite entidades pertencentes ao cenário da sess�
 
 ### DoD
 
-* [ ] Acusação com suspeito de outro cenário é rejeitada.
-* [ ] Acusação com evidência de outro cenário é rejeitada.
-* [ ] Duplicatas em `evidence_ids` são tratadas (rejeitadas ou normalizadas explicitamente).
-* [ ] Testes de integração cobrem casos inválidos.
+* [x] **B2: Validação de IDs da acusação:** Validar `suspect_id` e itens em `evidence_ids` contra o `scenario_id` da sessão.
 
 ---
 

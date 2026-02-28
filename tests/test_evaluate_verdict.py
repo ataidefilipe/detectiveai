@@ -6,7 +6,8 @@ from app.infra.db_models import (
     ScenarioModel,
     SuspectModel,
     EvidenceModel,
-    SessionModel
+    SessionModel,
+    SessionEvidenceUsageModel
 )
 from app.services.verdict_service import evaluate_verdict
 
@@ -76,6 +77,20 @@ def seed_verdict_scenario(db):
     db.add(session)
     db.commit()
     db.refresh(session)
+    
+    # Simulate usage of evidences to comply with B3 validation
+    usage1 = SessionEvidenceUsageModel(
+        session_id=session.id,
+        suspect_id=suspect_guilty.id,
+        evidence_id=evidence_1.id
+    )
+    usage2 = SessionEvidenceUsageModel(
+        session_id=session.id,
+        suspect_id=suspect_guilty.id,
+        evidence_id=evidence_2.id
+    )
+    db.add_all([usage1, usage2])
+    db.commit()
 
     return {
         "session_id": session.id,

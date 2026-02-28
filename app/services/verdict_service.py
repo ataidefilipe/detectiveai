@@ -4,8 +4,12 @@ from sqlalchemy.orm import Session
 from app.infra.db import SessionLocal
 from app.infra.db_models import (
     SessionModel,
-    ScenarioModel
+    ScenarioModel,
+    SuspectModel,
+    EvidenceModel,
+    SessionEvidenceUsageModel
 )
+from app.core.exceptions import NotFoundError, RuleViolationError
 
 
 def evaluate_verdict(
@@ -64,6 +68,41 @@ def evaluate_verdict(
         required_evidence_ids = scenario.required_evidence_ids or []
 
         # ----------------------------------------
+        # 2.5. Validate User Input (B2)
+        # ----------------------------------------
+        suspect = db.query(SuspectModel).filter(
+            SuspectModel.id == chosen_suspect_id,
+            SuspectModel.scenario_id == scenario.id
+        ).first()
+
+        if not suspect:
+            raise NotFoundError(f"Suspect {chosen_suspect_id} not found in scenario {scenario.id}.")
+
+        provided = list(set(evidence_ids or []))
+        
+        if provided:
+            valid_evidences = db.query(EvidenceModel).filter(
+                EvidenceModel.id.in_(provided),
+                EvidenceModel.scenario_id == scenario.id
+            ).all()
+
+            if len(valid_evidences) != len(provided):
+                raise NotFoundError(f"One or more evidence ids are invalid or do not belong to scenario {scenario.id}.")
+
+            # ----------------------------------------
+            # 2.6. Validate Evidence Usage (B3)
+            # ----------------------------------------
+            used_evidences = db.query(SessionEvidenceUsageModel.evidence_id).filter(
+                SessionEvidenceUsageModel.session_id == session_id,
+                SessionEvidenceUsageModel.evidence_id.in_(provided)
+            ).all()
+            used_evidence_ids = {row[0] for row in used_evidences}
+
+            for ev_id in provided:
+                if ev_id not in used_evidence_ids:
+                    raise RuleViolationError(f"Evidence {ev_id} was not used during the session.")
+
+        # ----------------------------------------
         # 3. Wrong culprit → immediate fail
         # ----------------------------------------
         if chosen_suspect_id != real_culprit_id:
@@ -78,10 +117,9 @@ def evaluate_verdict(
         # ----------------------------------------
         # 4. Culprit correct → check evidences
         # ----------------------------------------
-        provided = set(evidence_ids or [])
         required = set(required_evidence_ids)
 
-        missing = list(required - provided)
+        missing = list(required - set(provided))
 
         if not missing:
             result_type = "correct"
