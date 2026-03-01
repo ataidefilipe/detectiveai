@@ -94,13 +94,14 @@ def evaluate_verdict(
             # ----------------------------------------
             used_evidences = db.query(SessionEvidenceUsageModel.evidence_id).filter(
                 SessionEvidenceUsageModel.session_id == session_id,
+                SessionEvidenceUsageModel.suspect_id == chosen_suspect_id,
                 SessionEvidenceUsageModel.evidence_id.in_(provided)
             ).all()
             used_evidence_ids = {row[0] for row in used_evidences}
 
             for ev_id in provided:
                 if ev_id not in used_evidence_ids:
-                    raise RuleViolationError(f"Evidence {ev_id} was not used during the session.")
+                    raise RuleViolationError(f"Evidence {ev_id} was not used against the accused suspect {chosen_suspect_id} during the session.")
 
         # ----------------------------------------
         # 3. Wrong culprit → immediate fail

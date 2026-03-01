@@ -120,7 +120,7 @@ def test_cannot_accuse_with_unused_evidence():
     )
 
     assert resp.status_code == 409
-    assert "was not used during the session" in resp.json()["detail"]
+    assert "was not used against the accused suspect" in resp.json()["detail"]
 
 
 def test_can_accuse_with_used_evidence():

@@ -112,6 +112,12 @@ def test_verdict_wrong_culprit():
     """
     db = setup_test_db()
     data = seed_verdict_scenario(db)
+    
+    # We must use the evidences against the wrong suspect to bypass B3 validation and hit the Wrong Culprit return
+    usage1 = SessionEvidenceUsageModel(session_id=data["session_id"], suspect_id=data["wrong_suspect_id"], evidence_id=data["evidence_1_id"])
+    usage2 = SessionEvidenceUsageModel(session_id=data["session_id"], suspect_id=data["wrong_suspect_id"], evidence_id=data["evidence_2_id"])
+    db.add_all([usage1, usage2])
+    db.commit()
 
     result = evaluate_verdict(
         session_id=data["session_id"],
