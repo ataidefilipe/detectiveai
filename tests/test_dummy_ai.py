@@ -13,9 +13,18 @@ suspect_state = {
 
 chat_history = []
 
+from app.api.schemas.render_context import NpcResponseRenderContext
+
 msg = {
     "text": "Onde você estava?",
     "evidence_id": None
 }
 
-print(ai.generate_reply(suspect_state, chat_history, msg))
+rc = NpcResponseRenderContext()
+
+print(ai.generate_reply(
+    suspect_state=suspect_state,
+    chat_history=chat_history,
+    player_message=msg,
+    render_context=rc
+))

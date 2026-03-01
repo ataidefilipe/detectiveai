@@ -17,6 +17,8 @@ from app.core.exceptions import NotFoundError, RuleViolationError
 
 from app.services.ai_adapter_factory import get_npc_ai_adapter
 from app.services.npc_context_builder import build_npc_context
+from app.services.npc_response_render_context_builder import build_render_context
+from app.api.schemas.chat import MessageAnalysisResult, StateTransitionResult
 
 ai = get_npc_ai_adapter()
 
@@ -102,6 +104,8 @@ def add_npc_reply(
     session_id: int,
     suspect_id: int,
     player_message_id: int,
+    msg_analysis: MessageAnalysisResult,
+    state_transition: StateTransitionResult,
     revealed_now: Optional[List[Dict[str, Any]]] = None,
     db: Optional[Session] = None
 ) -> NpcChatMessageModel:
@@ -260,11 +264,21 @@ def add_npc_reply(
             pressure_points=pressure_points,
         )
 
+        # ----------------------------------------
+        # Build Render Context
+        # ----------------------------------------
+        render_context = build_render_context(
+            state_transition=state_transition,
+            msg_analysis=msg_analysis,
+            revealed_secrets=revealed_secrets
+        )
+
         reply_text = ai.generate_reply(
             suspect_state=suspect_state,
             npc_context=npc_context,
             chat_history=chat_history,
             player_message=player_message_dict,
+            render_context=render_context,
             revealed_now=revealed_now
         )
 

@@ -14,6 +14,7 @@ Useful for testing the entire interrogation flow before integrating a real LLM.
 
 from typing import Dict, Any, List, Optional
 from app.services.ai_adapter import NpcAIAdapter
+from app.api.schemas.render_context import NpcResponseRenderContext, ResponseMode
 
 
 class DummyNpcAIAdapter(NpcAIAdapter):
@@ -24,6 +25,7 @@ class DummyNpcAIAdapter(NpcAIAdapter):
         suspect_state: Dict[str, Any],
         chat_history: List[Dict[str, Any]],
         player_message: Dict[str, Any],
+        render_context: NpcResponseRenderContext,
         npc_context: Dict[str, Any] | None = None,
         revealed_now: Optional[List[Dict[str, Any]]] = None
     ) -> str:
@@ -37,8 +39,9 @@ class DummyNpcAIAdapter(NpcAIAdapter):
 
         # ----------------------------------------------------------------------
         # 1. Se o suspeito está "fechado", só devolve a frase final.
+        #    Ou se o response_mode ditou final_phrase.
         # ----------------------------------------------------------------------
-        if is_closed:
+        if is_closed or render_context.response_mode == ResponseMode.final_phrase:
             return final_phrase
 
         # ----------------------------------------------------------------------

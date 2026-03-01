@@ -4,6 +4,7 @@ from typing import Dict, Any, List
 from openai import OpenAI
 from app.services.ai_adapter import NpcAIAdapter
 from app.services.prompt_builder import build_npc_prompt
+from app.api.schemas.render_context import NpcResponseRenderContext
 
 
 class OpenAINpcAIAdapter(NpcAIAdapter):
@@ -28,6 +29,7 @@ class OpenAINpcAIAdapter(NpcAIAdapter):
         suspect_state: dict,
         chat_history: list,
         player_message: dict,
+        render_context: NpcResponseRenderContext,
         npc_context: dict | None = None,
         revealed_now: list | None = None
     ) -> str:

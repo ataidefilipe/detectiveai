@@ -1,0 +1,24 @@
+from pydantic import BaseModel, Field
+from typing import List, Optional
+from enum import Enum
+
+class ResponseMode(str, Enum):
+    evasive = "evasive"
+    neutral_answer = "neutral_answer"
+    clarify = "clarify"
+    partial_admission = "partial_admission"
+    deny = "deny"
+    final_phrase = "final_phrase"
+
+class NpcResponseRenderContext(BaseModel):
+    """
+    Contrato que o backend envia para a IA.
+    A IA não decide mais lógicas do jogo, apenas verbaliza o que este contexto manda.
+    """
+    response_mode: ResponseMode = ResponseMode.neutral_answer
+    npc_stance: str = "neutral"
+    allowed_facts: List[str] = Field(default_factory=list)
+    forbidden_topics: List[str] = Field(default_factory=list)
+    must_not_reveal: List[str] = Field(default_factory=list)
+    tone_hint: Optional[str] = None
+    player_intent: str = "unknown"

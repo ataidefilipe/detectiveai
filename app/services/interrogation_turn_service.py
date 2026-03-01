@@ -74,6 +74,8 @@ def run_interrogation_turn(
         session_id=session_id,
         suspect_id=suspect_id,
         player_message_id=player_msg["id"],
+        msg_analysis=msg_analysis,
+        state_transition=state_transition,
         revealed_now=revealed_secrets,
         db=db
     )

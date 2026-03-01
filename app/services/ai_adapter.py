@@ -9,6 +9,7 @@ No actual AI calls are performed in this interface.
 """
 
 from typing import List, Dict, Any, Optional
+from app.api.schemas.render_context import NpcResponseRenderContext
 
 
 class NpcAIAdapter:
@@ -55,6 +56,7 @@ class NpcAIAdapter:
         suspect_state: Dict[str, Any],
         chat_history: List[Dict[str, Any]],
         player_message: Dict[str, Any],
+        render_context: NpcResponseRenderContext,
         npc_context: Dict[str, Any] | None = None,
         revealed_now: Optional[List[Dict[str, Any]]] = None
     ) -> str:
