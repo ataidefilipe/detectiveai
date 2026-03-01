@@ -92,6 +92,14 @@ class SessionSuspectStateModel(Base):
     is_closed = Column(Boolean, default=False)
     progress = Column(Float, default=0.0)
 
+    # Campos Conversacionais (Epic B)
+    stance = Column(String, default="neutral")
+    patience = Column(Float, default=50.0)
+    pressure = Column(Float, default=0.0)
+    rapport = Column(Float, default=0.0)
+    repetition_score = Column(Float, default=0.0)
+    last_topic_id = Column(String, nullable=True)
+
     session = relationship("SessionModel", back_populates="session_states")
     suspect = relationship("SuspectModel", back_populates="session_states")
 

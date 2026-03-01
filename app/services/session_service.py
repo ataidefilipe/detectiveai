@@ -81,7 +81,13 @@ def create_session(scenario_id: int, db: Optional[Session] = None) -> SessionMod
                 suspect_id=suspect.id,
                 revealed_secret_ids=[],
                 is_closed=initial_closed,
-                progress=initial_progress
+                progress=initial_progress,
+                stance="neutral",
+                patience=50.0,
+                pressure=0.0,
+                rapport=0.0,
+                repetition_score=0.0,
+                last_topic_id=None
             )
             db.add(state)
 
@@ -262,7 +268,11 @@ def get_suspect_state(session_id: int, suspect_id: int, db: Optional[Session] = 
 
         return {
             "progress": state.progress,
-            "is_closed": state.is_closed
+            "is_closed": state.is_closed,
+            "stance": state.stance,
+            "patience": state.patience,
+            "pressure": state.pressure,
+            "rapport": state.rapport
         }
     finally:
         if close_session:
