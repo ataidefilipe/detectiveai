@@ -24,9 +24,10 @@ class MessageAnalysisService:
             MessageIntent.ask: re.compile(r'\b(onde|quem|quando|por que|porque|como|o que|qual)\b', re.IGNORECASE)
         }
     
-    def analyze_message(self, text: str) -> MessageAnalysisResult:
+    def analyze_message(self, text: str, available_topics: List[dict] = None) -> MessageAnalysisResult:
         """
-        Analisa a mensagem de texto do jogador e retorna a classificação estruturada.
+        Analisa a mensagem de texto do jogador e retorna a classificação estruturada,
+        além de cruzar com tópicos conhecidos do cenário.
         """
         text_lower = text.lower().strip()
         
@@ -54,12 +55,38 @@ class MessageAnalysisService:
         else:
             specificity = SpecificityLevel.low
             
-        # 3. Novelty e Sensitivity virão por padrão seguros no MVP
-        # O histórico real precisa vir pelo modelo em tarefas futuras (Tarefa C3/B2)
-        novelty = NoveltyLevel.new 
+        # 3. Extração de Tópicos
+        detected_topic_ids = []
+        primary_topic_id = None
         sensitivity_hit = SensitivityLevel.none
 
+        if available_topics:
+            for topic in available_topics:
+                aliases = topic.get("aliases", [])
+                
+                # Create a simple \b word \b matcher for all aliases
+                if aliases:
+                    # Escape aliases to be safe, join with |
+                    pattern_str = r'\b(' + '|'.join(re.escape(a.strip()) for a in aliases) + r')\b'
+                    matcher = re.compile(pattern_str, re.IGNORECASE)
+                    
+                    if matcher.search(text_lower):
+                        detected_topic_ids.append(topic["id"])
+                        
+                        if topic.get("is_sensitive"):
+                            sensitivity_hit = SensitivityLevel.high
+                            
+            if detected_topic_ids:
+                # Naive primary assignment for MVP
+                primary_topic_id = detected_topic_ids[0]
+
+        # 4. Novelty padrão seguro no MVP
+        # O histórico real precisa vir pelo modelo em tarefas futuras (Tarefa C3/B2)
+        novelty = NoveltyLevel.new 
+
         return MessageAnalysisResult(
+            primary_topic_id=primary_topic_id,
+            detected_topic_ids=detected_topic_ids,
             intent=detected_intent,
             specificity=specificity,
             novelty=novelty,
@@ -71,6 +98,6 @@ class MessageAnalysisService:
 # Instância padrão do serviço para uso nos turnos da API 
 default_message_analyzer = MessageAnalysisService()
 
-def analyze_message(text: str) -> MessageAnalysisResult:
+def analyze_message(text: str, available_topics: List[dict] = None) -> MessageAnalysisResult:
     """Wrapper prático para o serviço de análise padrão."""
-    return default_message_analyzer.analyze_message(text)
+    return default_message_analyzer.analyze_message(text, available_topics)

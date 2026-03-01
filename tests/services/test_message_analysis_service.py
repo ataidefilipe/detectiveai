@@ -48,3 +48,27 @@ def test_analyze_message_defaults():
     assert result.sensitivity_hit == SensitivityLevel.none
     assert result.primary_topic_id is None
     assert len(result.detected_topic_ids) == 0
+
+def test_analyze_message_topic_detection():
+    available_topics = [
+        {"id": "knife", "aliases": ["faca", "adaga", "lâmina"], "is_sensitive": True},
+        {"id": "wife", "aliases": ["esposa", "mulher"], "is_sensitive": False}
+    ]
+    
+    # Test sensitive topic
+    res_sens = analyze_message("eu sei que você usou a faca nela", available_topics=available_topics)
+    assert res_sens.primary_topic_id == "knife"
+    assert res_sens.sensitivity_hit == SensitivityLevel.high
+    assert "knife" in res_sens.detected_topic_ids
+
+    # Test normal topic
+    res_norm = analyze_message("sua mulher estava lá?", available_topics=available_topics)
+    assert res_norm.primary_topic_id == "wife"
+    assert res_norm.sensitivity_hit == SensitivityLevel.none
+    assert "wife" in res_norm.detected_topic_ids
+
+    # Test both
+    res_both = analyze_message("a faca era da sua esposa?", available_topics=available_topics)
+    assert "knife" in res_both.detected_topic_ids
+    assert "wife" in res_both.detected_topic_ids
+    assert res_both.sensitivity_hit == SensitivityLevel.high

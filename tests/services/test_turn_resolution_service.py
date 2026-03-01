@@ -57,3 +57,17 @@ def test_resolve_turn_state_defensive_shift():
     
     assert transition.npc_shift == NpcShift.more_defensive
     assert transition.state_deltas["stance"] == "defensive"
+
+def test_resolve_turn_state_sensitive_topic():
+    from app.api.schemas.chat import SensitivityLevel
+    analysis = MessageAnalysisResult(
+        intent=MessageIntent.unknown,
+        sensitivity_hit=SensitivityLevel.high
+    )
+    current_state = {"patience": 50.0, "pressure": 0.0, "stance": "neutral"}
+    transition = resolve_turn_state(analysis, current_state)
+    
+    assert transition.conversation_effect == ConversationEffect.sensitive_touch
+    assert transition.state_deltas["patience"] == -10.0
+    assert transition.state_deltas["pressure"] == 10.0
+    assert "sensitive_topic_touched" in transition.debug_reason_codes

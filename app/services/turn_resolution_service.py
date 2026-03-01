@@ -4,7 +4,8 @@ from app.api.schemas.chat import (
     StateTransitionResult,
     ConversationEffect,
     NpcShift,
-    NoveltyLevel
+    NoveltyLevel,
+    SensitivityLevel
 )
 
 def resolve_turn_state(
@@ -40,7 +41,14 @@ def resolve_turn_state(
         deltas["pressure"] = -5.0
         reason_codes.append("intent_calm_detected")
 
-    # 3. Simulate future state to decide NpcShift & Stance change
+    # 3. Evaluate Sensitive Topic Impact
+    if analysis.sensitivity_hit == SensitivityLevel.high:
+        deltas["pressure"] = deltas.get("pressure", 0.0) + 10.0
+        deltas["patience"] = deltas.get("patience", 0.0) - 10.0
+        conversation_effect = ConversationEffect.sensitive_touch
+        reason_codes.append("sensitive_topic_touched")
+
+    # 4. Simulate future state to decide NpcShift & Stance change
     future_patience = current_patience + deltas.get("patience", 0.0)
     future_pressure = current_pressure + deltas.get("pressure", 0.0)
     
