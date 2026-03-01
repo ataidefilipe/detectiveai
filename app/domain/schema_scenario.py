@@ -9,6 +9,13 @@ class TopicConfig(BaseModel):
     description: Optional[str] = Field(default=None, description="Internal description of the topic")
     priority: int = Field(default=0, description="Priority weight for conflict resolution")
 
+class KnowledgeItemConfig(BaseModel):
+    id: str = Field(..., description="Unique identifier for this knowledge item")
+    topic_id: str = Field(..., description="The slug of the Topic it relates to")
+    kind: str = Field(default="observed", description="Enum: observed, heard, inferred, rumor, lie")
+    reliability: str = Field(default="high", description="Enum: high, medium, low")
+    content_layers: List[str] = Field(..., description="List of facts/phrases revealed gradually")
+
 class SecretConfig(BaseModel):
     suspect: str = Field(..., description="Name of the suspect this secret belongs to")
     evidence: str = Field(..., description="Name of the evidence that reveals this secret")
@@ -35,7 +42,10 @@ class SuspectConfig(BaseModel):
         default="I've told you everything I know."
     )
     lies: Optional[List[LieConfig]] = None
-
+    knowledge: Optional[List[KnowledgeItemConfig]] = Field(
+        default=None,
+        description="Local knowledge instances the suspect holds"
+    )
 
 class EvidenceConfig(BaseModel):
     name: str = Field(..., description="Name of the evidence")
