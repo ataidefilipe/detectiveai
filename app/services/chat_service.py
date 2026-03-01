@@ -1,5 +1,8 @@
 from typing import Optional, Dict, Any, List
+import logging
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 from app.infra.db import SessionLocal
 from app.infra.db_models import (
@@ -277,14 +280,27 @@ def add_npc_reply(
             suspect=suspect
         )
 
-        reply_text = ai.generate_reply(
-            suspect_state=suspect_state,
-            npc_context=npc_context,
-            chat_history=chat_history,
-            player_message=player_message_dict,
-            render_context=render_context,
-            revealed_now=revealed_now
-        )
+        try:
+            reply_text = ai.generate_reply(
+                suspect_state=suspect_state,
+                npc_context=npc_context,
+                chat_history=chat_history,
+                player_message=player_message_dict,
+                render_context=render_context,
+                revealed_now=revealed_now
+            )
+        except Exception as e:
+            logger.error(f"LLM Adapter failed for suspect {suspect_id}. Falling back to Dummy adapter. Error: {e}", exc_info=True)
+            from app.services.ai_adapter_dummy import DummyNpcAIAdapter
+            dummy_adapter = DummyNpcAIAdapter()
+            reply_text = dummy_adapter.generate_reply(
+                suspect_state=suspect_state,
+                npc_context=npc_context,
+                chat_history=chat_history,
+                player_message=player_message_dict,
+                render_context=render_context,
+                revealed_now=revealed_now
+            )
 
         # ----------------------------------------
         # 6. Save NPC message
