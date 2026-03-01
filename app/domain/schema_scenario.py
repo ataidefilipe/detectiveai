@@ -49,7 +49,8 @@ class SuspectConfig(BaseModel):
 
 class EvidenceConfig(BaseModel):
     name: str = Field(..., description="Name of the evidence")
-    description: Optional[str] = None
+    description: Optional[str] = Field(default=None, description="Internal usage desc")
+    related_topic_id: Optional[str] = Field(default=None, description="Topic slug it synergizes with to avoid out-of-context")
     is_mandatory: bool = Field(default=False, description="Whether this evidence is required for correct verdict")
 
 class ChronologyEvent(BaseModel):

@@ -79,13 +79,25 @@ def run_interrogation_turn(
 
     # 2. Evidence logic (may reveal secrets)
     revealed_secrets = []
+    evidence_effect = "none"
+    
     if evidence_id is not None:
-        revealed_secrets = apply_evidence_to_suspect(
+        revealed_secrets, evidence_effect = apply_evidence_to_suspect(
             session_id=session_id,
             suspect_id=suspect_id,
             evidence_id=evidence_id,
+            detected_topics=msg_analysis.detected_topic_ids,
             db=db
         )
+        
+        # Penalize for out_of_context
+        if evidence_effect == "out_of_context":
+            update_suspect_state_from_deltas(
+                session_id=session_id,
+                suspect_id=suspect_id,
+                deltas={"patience": -10.0},
+                db=db
+            )
 
         # Log evidence usage and update was_effective if applicable
         usage = db.query(SessionEvidenceUsageModel).filter(
@@ -138,11 +150,11 @@ def run_interrogation_turn(
     )
 
     # Calculate evidence effect for UI feedback
-    evidence_effect = "none"
     if evidence_id is not None:
-        if is_effective:
-            evidence_effect = "revealed_secret"
-        elif usage and usage.was_effective:
+        # Override evidence_effect mapped from SecretService if it was a duplicate hit tracking
+        if evidence_effect == "duplicate" and usage and usage.was_effective:
+            evidence_effect = "duplicate"
+        elif evidence_effect == "none" and usage and usage.was_effective:
             evidence_effect = "duplicate"
 
     return {

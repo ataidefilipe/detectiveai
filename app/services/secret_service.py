@@ -1,11 +1,12 @@
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
 from sqlalchemy.orm import Session
 
 from app.infra.db import SessionLocal
 from app.infra.db_models import (
     SecretModel,
     SessionSuspectStateModel,
-    SuspectModel
+    SuspectModel,
+    EvidenceModel
 )
 from app.core.exceptions import NotFoundError
 
@@ -14,13 +15,16 @@ def apply_evidence_to_suspect(
     session_id: int,
     suspect_id: int,
     evidence_id: int,
+    detected_topics: Optional[List[str]] = None,
     db: Optional[Session] = None
-) -> List[Dict[str, Any]]:
+) -> Tuple[List[Dict[str, Any]], str]:
     """
     Applies evidence to a suspect:
+      - Validates if the evidence matches the current context (out_of_context check)
       - Reveals secrets associated with that evidence
       - Updates progress
       - If all core secrets are revealed, marks suspect as 'closed'
+    Returns: (revealed_now_list, evidence_effect_string)
     """
 
     close_session = False
@@ -49,7 +53,24 @@ def apply_evidence_to_suspect(
         ).all()
 
         if not secrets:
-            return []
+            return [], "none"
+
+        # ---------------------------------------
+        # Context validation for E1
+        # ---------------------------------------
+        evidence = db.query(EvidenceModel).filter(EvidenceModel.id == evidence_id).first()
+        is_context_valid = True
+        
+        if evidence and evidence.related_topic_id:
+            msg_topics = detected_topics or []
+            if evidence.related_topic_id not in msg_topics:
+                # Se a evidência exige um tópico e esse tópico não está na conversa atual,
+                # e a pressão do suspeito não for absurdamente alta (fallback), é fora de contexto.
+                if state.pressure < 80.0:
+                    is_context_valid = False
+
+        if not is_context_valid:
+            return [], "out_of_context"
 
         revealed_now = []
 
@@ -113,7 +134,9 @@ def apply_evidence_to_suspect(
         if close_session:
             db.commit()
 
-        return revealed_now
+        # Se não há novos segredos, mas chegamos até aqui, é duplicate. Se há, é revealed_secret.
+        effect = "revealed_secret" if revealed_now else "duplicate"
+        return revealed_now, effect
 
     finally:
         if close_session:

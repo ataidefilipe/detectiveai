@@ -103,7 +103,8 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
             evidence = EvidenceModel(
                 scenario_id=scenario.id,
                 name=e.name,
-                description=e.description
+                description=e.description,
+                related_topic_id=e.related_topic_id
             )
             db.add(evidence)
             db.flush()

@@ -79,7 +79,7 @@ class PlayerTurnResponse(BaseModel):
     player_message: ChatMessageInfo
     npc_message: ChatMessageInfo
     revealed_secrets: list[dict]
-    evidence_effect: str  # "none" | "revealed_secret" | "duplicate"
+    evidence_effect: str  # "none" | "revealed_secret" | "duplicate" | "out_of_context"
     suspect_state: dict
     message_analysis: Optional[MessageAnalysisResult] = None
     state_transition: Optional[StateTransitionResult] = None

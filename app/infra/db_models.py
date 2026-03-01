@@ -54,7 +54,8 @@ class EvidenceModel(Base):
     id = Column(Integer, primary_key=True, index=True)
     scenario_id = Column(Integer, ForeignKey("scenarios.id"), nullable=False)
     name = Column(String, nullable=False)
-    description = Column(String)
+    description = Column(String, nullable=True)
+    related_topic_id = Column(String, nullable=True)
 
     scenario = relationship("ScenarioModel", back_populates="evidences")
     secrets = relationship("SecretModel", back_populates="evidence")
