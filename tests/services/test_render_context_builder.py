@@ -15,9 +15,9 @@ def test_build_render_context_evasive():
     msg_analysis = MessageAnalysisResult(intent=MessageIntent.pressure)
     
     context = build_render_context(
-        state_transition=state_trans,
-        msg_analysis=msg_analysis,
-        revealed_secrets=[]
+        transition=state_trans,
+        analysis=msg_analysis,
+        revealed_facts=[]
     )
     
     assert context.response_mode == ResponseMode.evasive
@@ -30,9 +30,9 @@ def test_build_render_context_deny():
     msg_analysis = MessageAnalysisResult(intent=MessageIntent.confront)
     
     context = build_render_context(
-        state_transition=state_trans,
-        msg_analysis=msg_analysis,
-        revealed_secrets=[{"content": "A faca estava na mesa"}]
+        transition=state_trans,
+        analysis=msg_analysis,
+        revealed_facts=["A faca estava na mesa"]
     )
     
     assert context.response_mode == ResponseMode.deny
@@ -44,9 +44,9 @@ def test_build_render_context_clarify():
     msg_analysis = MessageAnalysisResult(intent=MessageIntent.calm)
     
     context = build_render_context(
-        state_transition=state_trans,
-        msg_analysis=msg_analysis,
-        revealed_secrets=[]
+        transition=state_trans,
+        analysis=msg_analysis,
+        revealed_facts=[]
     )
     
     assert context.response_mode == ResponseMode.clarify

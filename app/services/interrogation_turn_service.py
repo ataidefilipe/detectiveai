@@ -5,6 +5,7 @@ from app.services.chat_service import add_player_message, add_npc_reply
 from app.services.secret_service import apply_evidence_to_suspect
 from app.services.session_service import get_suspect_state, update_suspect_state_from_deltas
 from app.services.topic_state_service import update_topic_hit
+from app.services.reveal_policy_service import get_allowed_knowledge_facts
 from app.services.message_analysis_service import analyze_message
 from app.services.turn_resolution_service import resolve_turn_state
 from app.infra.db_models import SessionEvidenceUsageModel, SessionModel, ScenarioModel
@@ -109,6 +110,14 @@ def run_interrogation_turn(
         
         db.flush()
 
+    # 2.5 Extract Allowed Knowledge Layers based on Topics Touched
+    allowed_knowledge = get_allowed_knowledge_facts(
+        session_id=session_id,
+        suspect_id=suspect_id,
+        detected_topics=msg_analysis.detected_topic_ids,
+        db=db
+    )
+
     # 3. NPC reply
     npc_msg = add_npc_reply(
         session_id=session_id,
@@ -117,6 +126,7 @@ def run_interrogation_turn(
         msg_analysis=msg_analysis,
         state_transition=state_transition,
         revealed_now=revealed_secrets,
+        allowed_knowledge=allowed_knowledge,
         db=db
     )
 

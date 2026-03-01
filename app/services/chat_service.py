@@ -104,11 +104,12 @@ def add_npc_reply(
     session_id: int,
     suspect_id: int,
     player_message_id: int,
-    msg_analysis: MessageAnalysisResult,
-    state_transition: StateTransitionResult,
-    revealed_now: Optional[List[Dict[str, Any]]] = None,
-    db: Optional[Session] = None
-) -> NpcChatMessageModel:
+    msg_analysis: MessageAnalysisResult = None,
+    state_transition: StateTransitionResult = None,
+    revealed_now: List[str] = None,
+    allowed_knowledge: List[str] = None,
+    db: Session = None
+) -> dict:
     """
     Generates an NPC reply after a player sends a message.
 
@@ -264,13 +265,16 @@ def add_npc_reply(
             pressure_points=pressure_points,
         )
 
-        # ----------------------------------------
-        # Build Render Context
-        # ----------------------------------------
+        # Fetch the suspect entity for the final phrase fallback
+        suspect = db.query(SuspectModel).filter(SuspectModel.id == suspect_id).first()
+        
+        # 3. Prepare Context for LLM Prompts
         render_context = build_render_context(
-            state_transition=state_transition,
-            msg_analysis=msg_analysis,
-            revealed_secrets=revealed_secrets
+            transition=state_transition,
+            analysis=msg_analysis,
+            revealed_facts=revealed_now,
+            allowed_knowledge=allowed_knowledge,
+            suspect=suspect
         )
 
         reply_text = ai.generate_reply(

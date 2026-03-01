@@ -17,7 +17,14 @@ class NpcResponseRenderContext(BaseModel):
     """
     response_mode: ResponseMode = ResponseMode.neutral_answer
     npc_stance: str = "neutral"
-    allowed_facts: List[str] = Field(default_factory=list)
+    allowed_facts: List[str] = Field(
+        default_factory=list,
+        description="Fatos confirmados/vazados através de evidência"
+    )
+    allowed_knowledge: List[str] = Field(
+        default_factory=list,
+        description="Camadas de conhecimento local que o NPC tem permissão de contar neste turno baseado na política de retenção."
+    )
     forbidden_topics: List[str] = Field(default_factory=list)
     must_not_reveal: List[str] = Field(default_factory=list)
     tone_hint: Optional[str] = None
