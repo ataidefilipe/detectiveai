@@ -37,6 +37,29 @@ class MessageAnalysisResult(BaseModel):
     confidence: float = 0.0
     notes: Optional[str] = None
 
+class ConversationEffect(str, Enum):
+    none = "none"
+    new_topic = "new_topic"
+    deeper_topic = "deeper_topic"
+    sensitive_touch = "sensitive_touch"
+    repeat = "repeat"
+    out_of_context = "out_of_context"
+    claim_commit = "claim_commit"
+    partial_reveal = "partial_reveal"
+
+class NpcShift(str, Enum):
+    none = "none"
+    more_defensive = "more_defensive"
+    more_cooperative = "more_cooperative"
+    pressured = "pressured"
+    irritated = "irritated"
+
+class StateTransitionResult(BaseModel):
+    conversation_effect: ConversationEffect = ConversationEffect.none
+    npc_shift: NpcShift = NpcShift.none
+    state_deltas: dict = Field(default_factory=dict)
+    debug_reason_codes: list[str] = Field(default_factory=list)
+
 class PlayerChatInput(BaseModel):
     text: str
     evidence_id: Optional[int] = None
@@ -59,3 +82,4 @@ class PlayerTurnResponse(BaseModel):
     evidence_effect: str  # "none" | "revealed_secret" | "duplicate"
     suspect_state: dict
     message_analysis: Optional[MessageAnalysisResult] = None
+    state_transition: Optional[StateTransitionResult] = None

@@ -5,6 +5,7 @@ from app.services.chat_service import add_player_message, add_npc_reply
 from app.services.secret_service import apply_evidence_to_suspect
 from app.services.session_service import get_suspect_state
 from app.services.message_analysis_service import analyze_message
+from app.services.turn_resolution_service import resolve_turn_state
 from app.infra.db_models import SessionEvidenceUsageModel
 
 
@@ -31,6 +32,9 @@ def run_interrogation_turn(
 
     # 1.1 Analyze player message
     msg_analysis = analyze_message(text)
+
+    # 1.2 Resolve turn mechanics (State Transition)
+    state_transition = resolve_turn_state(msg_analysis)
 
     # 2. Evidence logic (may reveal secrets)
     revealed_secrets = []
@@ -95,5 +99,6 @@ def run_interrogation_turn(
         "revealed_secrets": revealed_secrets,
         "evidence_effect": evidence_effect,
         "suspect_state": suspect_state,
-        "message_analysis": msg_analysis
+        "message_analysis": msg_analysis,
+        "state_transition": state_transition
     }
