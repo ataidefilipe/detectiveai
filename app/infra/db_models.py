@@ -107,6 +107,19 @@ class SessionSuspectStateModel(Base):
     session = relationship("SessionModel", back_populates="session_states")
     suspect = relationship("SuspectModel", back_populates="session_states")
 
+class SessionSuspectTopicStateModel(Base):
+    __tablename__ = "session_suspect_topic_states"
+    session_id = Column(Integer, ForeignKey("sessions.id"), primary_key=True)
+    suspect_id = Column(Integer, ForeignKey("suspects.id"), primary_key=True)
+    topic_id = Column(String, primary_key=True)
+    
+    status = Column(String, default="untouched") # untouched, touched, active, cooled, resolved
+    times_touched = Column(Integer, default=0)
+    sensitive_heat = Column(Float, default=0.0)
+
+    session = relationship("SessionModel")
+    suspect = relationship("SuspectModel")
+
 class NpcChatMessageModel(Base):
     __tablename__ = "npc_chat_messages"
     id = Column(Integer, primary_key=True, index=True)

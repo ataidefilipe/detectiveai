@@ -6,6 +6,7 @@ from app.infra.db_models import (
     ScenarioModel,
     SessionModel,
     SessionSuspectStateModel,
+    SessionSuspectTopicStateModel,
     SuspectModel,
     SecretModel
 )
@@ -90,6 +91,19 @@ def create_session(scenario_id: int, db: Optional[Session] = None) -> SessionMod
                 last_topic_id=None
             )
             db.add(state)
+
+            # --- Epic C: Initialize Topic States ---
+            if scenario.topics:
+                for topic in scenario.topics:
+                    topic_state = SessionSuspectTopicStateModel(
+                        session_id=session.id,
+                        suspect_id=suspect.id,
+                        topic_id=topic["id"],
+                        status="untouched",
+                        times_touched=0,
+                        sensitive_heat=0.0
+                    )
+                    db.add(topic_state)
 
         db.commit()
 
