@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.services.chat_service import add_player_message, add_npc_reply
 from app.services.secret_service import apply_evidence_to_suspect
 from app.services.session_service import get_suspect_state
+from app.services.message_analysis_service import analyze_message
 from app.infra.db_models import SessionEvidenceUsageModel
 
 
@@ -27,6 +28,9 @@ def run_interrogation_turn(
         evidence_id=evidence_id,
         db=db
     )
+
+    # 1.1 Analyze player message
+    msg_analysis = analyze_message(text)
 
     # 2. Evidence logic (may reveal secrets)
     revealed_secrets = []
@@ -90,5 +94,6 @@ def run_interrogation_turn(
         "npc_message": npc_msg,
         "revealed_secrets": revealed_secrets,
         "evidence_effect": evidence_effect,
-        "suspect_state": suspect_state
+        "suspect_state": suspect_state,
+        "message_analysis": msg_analysis
     }
