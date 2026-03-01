@@ -3,13 +3,16 @@ from app.api.schemas.chat import (
     MessageAnalysisResult,
     MessageIntent,
     ConversationEffect,
-    NpcShift
+    NpcShift,
+    NoveltyLevel
 )
 from app.services.turn_resolution_service import resolve_turn_state
 
 def test_resolve_turn_state_pressure():
     analysis = MessageAnalysisResult(intent=MessageIntent.pressure)
-    transition = resolve_turn_state(analysis)
+    # Start at 70 pressure so the +15 from intent crosses the 80 threshold
+    current_state = {"patience": 50.0, "pressure": 70.0, "stance": "neutral"}
+    transition = resolve_turn_state(analysis, current_state)
     
     assert transition.conversation_effect == ConversationEffect.none
     assert transition.npc_shift == NpcShift.pressured
@@ -18,7 +21,9 @@ def test_resolve_turn_state_pressure():
 
 def test_resolve_turn_state_calm():
     analysis = MessageAnalysisResult(intent=MessageIntent.calm)
-    transition = resolve_turn_state(analysis)
+    # Start pressured, with pressure 35, calm (-5) drops it to 30, which triggers cooperative
+    current_state = {"patience": 50.0, "pressure": 35.0, "stance": "pressured"}
+    transition = resolve_turn_state(analysis, current_state)
     
     assert transition.npc_shift == NpcShift.more_cooperative
     assert "rapport" in transition.state_deltas
@@ -28,9 +33,27 @@ def test_resolve_turn_state_calm():
 
 def test_resolve_turn_state_neutral():
     analysis = MessageAnalysisResult(intent=MessageIntent.unknown)
-    transition = resolve_turn_state(analysis)
+    current_state = {"patience": 50.0, "pressure": 0.0, "stance": "neutral"}
+    transition = resolve_turn_state(analysis, current_state)
     
     assert transition.conversation_effect == ConversationEffect.none
     assert transition.npc_shift == NpcShift.none
     assert transition.state_deltas == {}
     assert "mock_turn_resolution_mvp" in transition.debug_reason_codes
+
+def test_resolve_turn_state_repetition_penalty():
+    analysis = MessageAnalysisResult(intent=MessageIntent.unknown, novelty=NoveltyLevel.repeat)
+    current_state = {"patience": 50.0, "pressure": 0.0, "stance": "neutral"}
+    transition = resolve_turn_state(analysis, current_state)
+    
+    assert transition.state_deltas["patience"] == -15.0
+    assert "penalized_for_repetition" in transition.debug_reason_codes
+
+def test_resolve_turn_state_defensive_shift():
+    analysis = MessageAnalysisResult(intent=MessageIntent.pressure, novelty=NoveltyLevel.repeat)
+    # Start at 20 patience, repetition will drop it to 5 <= 10 threshold -> triggers defensive
+    current_state = {"patience": 20.0, "pressure": 0.0, "stance": "neutral"}
+    transition = resolve_turn_state(analysis, current_state)
+    
+    assert transition.npc_shift == NpcShift.more_defensive
+    assert transition.state_deltas["stance"] == "defensive"

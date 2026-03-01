@@ -279,6 +279,45 @@ def get_suspect_state(session_id: int, suspect_id: int, db: Optional[Session] = 
             db.close()
 
 
+def update_suspect_state_from_deltas(
+    session_id: int, 
+    suspect_id: int, 
+    deltas: Dict[str, Any], 
+    db: Session
+) -> Dict[str, Any]:
+    """
+    Applies calculated systemic deltas (pressure, patience, rapport) to the
+    suspect state in the database, clamping values appropriately.
+    """
+    state = db.query(SessionSuspectStateModel).filter(
+        SessionSuspectStateModel.session_id == session_id,
+        SessionSuspectStateModel.suspect_id == suspect_id
+    ).first()
 
+    if not state:
+        raise NotFoundError(f"State not found for session {session_id}, suspect {suspect_id}")
 
+    # Apply Deltas and Clamp
+    if "patience" in deltas:
+        state.patience = max(0.0, min(100.0, float(state.patience) + float(deltas["patience"])))
+    
+    if "pressure" in deltas:
+        state.pressure = max(0.0, min(100.0, float(state.pressure) + float(deltas["pressure"])))
+        
+    if "rapport" in deltas:
+        state.rapport = max(0.0, min(100.0, float(state.rapport) + float(deltas["rapport"])))
+
+    if "stance" in deltas:
+        state.stance = deltas["stance"]
+
+    db.flush()
+
+    return {
+        "progress": state.progress,
+        "is_closed": state.is_closed,
+        "stance": state.stance,
+        "patience": state.patience,
+        "pressure": state.pressure,
+        "rapport": state.rapport
+    }
 

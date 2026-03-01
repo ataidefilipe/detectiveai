@@ -3,37 +3,62 @@ from app.api.schemas.chat import (
     MessageIntent,
     StateTransitionResult,
     ConversationEffect,
-    NpcShift
+    NpcShift,
+    NoveltyLevel
 )
 
-def resolve_turn_state(analysis: MessageAnalysisResult) -> StateTransitionResult:
+def resolve_turn_state(
+    analysis: MessageAnalysisResult, 
+    current_state: dict
+) -> StateTransitionResult:
     """
-    Função MVP que resolve o impacto sistêmico do turno.
-    No MVP, a resolução é simples e heursítica com base na `MessageAnalysisResult`.
+    Função MVP que resolve o impacto sistêmico do turno calculando deltas.
     
-    Recebe a análise estruturada da mensagem e cospe a transição de estado.
+    Recebe a análise estruturada e o estado atual e cospe a transição de estado.
     Isso serve de ponte mecânica antes da IA verbalizar a resposta.
     """
-    
     conversation_effect = ConversationEffect.none
     npc_shift = NpcShift.none
     deltas = {}
     reason_codes = ["mock_turn_resolution_mvp"]
     
-    # 1. Resolver NpcShift baseado na Intent (Mock MVP)
-    if analysis.intent == MessageIntent.pressure:
-        npc_shift = NpcShift.pressured
-        deltas["pressure"] = +10
-    elif analysis.intent == MessageIntent.calm:
-        npc_shift = NpcShift.more_cooperative
-        deltas["rapport"] = +10
-        deltas["pressure"] = -5
+    current_patience = float(current_state.get("patience", 50.0))
+    current_pressure = float(current_state.get("pressure", 0.0))
+    current_stance = current_state.get("stance", "neutral")
     
-    # Em tarefas futuras (Epic C e B), a resolução avaliará:
-    # - repetition_score
-    # - last_topic_id
-    # - sensitivity
-    # Por ora, retorna a estrutura básica instanciada
+    # 1. Evaluate Message Analysis traits (Novelty)
+    if analysis.novelty == NoveltyLevel.repeat:
+        deltas["patience"] = -15.0
+        reason_codes.append("penalized_for_repetition")
+
+    # 2. Evaluate Intent heuristics for Deltas
+    if analysis.intent == MessageIntent.pressure:
+        deltas["pressure"] = 15.0
+        reason_codes.append("intent_pressure_detected")
+    elif analysis.intent == MessageIntent.calm:
+        deltas["rapport"] = +10.0
+        deltas["pressure"] = -5.0
+        reason_codes.append("intent_calm_detected")
+
+    # 3. Simulate future state to decide NpcShift & Stance change
+    future_patience = current_patience + deltas.get("patience", 0.0)
+    future_pressure = current_pressure + deltas.get("pressure", 0.0)
+    
+    if future_patience <= 10.0 and current_stance != "defensive":
+        npc_shift = NpcShift.more_defensive
+        deltas["stance"] = "defensive"
+        reason_codes.append("shifted_defensive_due_to_patience")
+        
+    elif future_pressure >= 80.0 and current_stance != "pressured":
+        npc_shift = NpcShift.pressured
+        deltas["stance"] = "pressured"
+        reason_codes.append("shifted_pressured")
+    
+    # Example backward transitions for cooperation
+    elif future_patience >= 40.0 and future_pressure <= 30.0 and current_stance in ["defensive", "pressured"]:
+        npc_shift = NpcShift.more_cooperative
+        deltas["stance"] = "neutral"
+        reason_codes.append("shifted_cooperative_due_to_deescalation")
 
     return StateTransitionResult(
         conversation_effect=conversation_effect,

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.services.chat_service import add_player_message, add_npc_reply
 from app.services.secret_service import apply_evidence_to_suspect
-from app.services.session_service import get_suspect_state
+from app.services.session_service import get_suspect_state, update_suspect_state_from_deltas
 from app.services.message_analysis_service import analyze_message
 from app.services.turn_resolution_service import resolve_turn_state
 from app.infra.db_models import SessionEvidenceUsageModel
@@ -30,11 +30,30 @@ def run_interrogation_turn(
         db=db
     )
 
-    # 1.1 Analyze player message
+    # 1.1 Fetch current suspect conversational state
+    initial_suspect_state = get_suspect_state(
+        session_id=session_id,
+        suspect_id=suspect_id,
+        db=db
+    )
+
+    # 1.2 Analyze player message
     msg_analysis = analyze_message(text)
 
-    # 1.2 Resolve turn mechanics (State Transition)
-    state_transition = resolve_turn_state(msg_analysis)
+    # 1.3 Resolve turn mechanics (State Transition)
+    state_transition = resolve_turn_state(
+        analysis=msg_analysis,
+        current_state=initial_suspect_state
+    )
+
+    # 1.4 Apply state deltas to DB
+    if state_transition.state_deltas:
+        update_suspect_state_from_deltas(
+            session_id=session_id,
+            suspect_id=suspect_id,
+            deltas=state_transition.state_deltas,
+            db=db
+        )
 
     # 2. Evidence logic (may reveal secrets)
     revealed_secrets = []
