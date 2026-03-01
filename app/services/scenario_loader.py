@@ -62,7 +62,8 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
         scenario = ScenarioModel(
             title=config.title,
             description=config.description,
-            case_summary=config.case_summary
+            case_summary=config.case_summary,
+            topics=[t.model_dump() for t in config.topics] if config.topics else []
         )
         db.add(scenario)
         db.flush()

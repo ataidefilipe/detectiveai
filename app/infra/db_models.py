@@ -22,6 +22,10 @@ class ScenarioModel(Base):
         MutableList.as_mutable(JSON), default=list
     )
 
+    topics = Column(
+        MutableList.as_mutable(JSON), default=list
+    )
+
     suspects = relationship("SuspectModel", back_populates="scenario")
     evidences = relationship("EvidenceModel", back_populates="scenario")
     sessions = relationship("SessionModel", back_populates="scenario")

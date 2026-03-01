@@ -1,6 +1,14 @@
 from typing import List, Optional
 from pydantic import BaseModel, Field
 
+class TopicConfig(BaseModel):
+    id: str = Field(..., description="Unique slug for the topic, e.g., 'knife', 'victim_relationship'")
+    label: str = Field(..., description="Human-readable label for the UI")
+    aliases: List[str] = Field(default_factory=list, description="Synonyms, keywords, or phrases related to this topic")
+    is_sensitive: bool = Field(default=False, description="Whether this topic is a sensitive touch point")
+    description: Optional[str] = Field(default=None, description="Internal description of the topic")
+    priority: int = Field(default=0, description="Priority weight for conflict resolution")
+
 class SecretConfig(BaseModel):
     suspect: str = Field(..., description="Name of the suspect this secret belongs to")
     evidence: str = Field(..., description="Name of the evidence that reveals this secret")
@@ -52,5 +60,6 @@ class ScenarioConfig(BaseModel):
     evidences: List[EvidenceConfig] = Field(..., description="List of evidences")
     secrets: List[SecretConfig] = Field(..., description="List of secrets")
     chronology: Optional[List[ChronologyEvent]] = None
+    topics: Optional[List[TopicConfig]] = Field(default=None, description="Optional list of tracked topics in the scenario")
 
 
