@@ -80,6 +80,7 @@ def run_interrogation_turn(
     # 2. Evidence logic (may reveal secrets)
     revealed_secrets = []
     evidence_effect = "none"
+    was_previously_used = False
     
     if evidence_id is not None:
         revealed_secrets, evidence_effect = apply_evidence_to_suspect(
@@ -109,6 +110,7 @@ def run_interrogation_turn(
         is_effective = len(revealed_secrets) > 0
 
         if not usage:
+            was_previously_used = False
             usage = SessionEvidenceUsageModel(
                 session_id=session_id,
                 suspect_id=suspect_id,
@@ -117,6 +119,7 @@ def run_interrogation_turn(
             )
             db.add(usage)
         else:
+            was_previously_used = True
             if is_effective and not usage.was_effective:
                 usage.was_effective = True
         
@@ -151,11 +154,11 @@ def run_interrogation_turn(
 
     # Calculate evidence effect for UI feedback
     if evidence_id is not None:
-        # Override evidence_effect mapped from SecretService if it was a duplicate hit tracking
-        if evidence_effect == "duplicate" and usage and usage.was_effective:
-            evidence_effect = "duplicate"
-        elif evidence_effect == "none" and usage and usage.was_effective:
-            evidence_effect = "duplicate"
+        if evidence_effect not in ("out_of_context", "revealed_secret"):
+            # Se a evidência não foi reveladora agora, e não bateu na trave do contexto,
+            # mas ela já existia no histórico de uso (usage table) ANTES deste turno, então é duplicate.
+            if was_previously_used:
+                evidence_effect = "duplicate"
 
     return {
         "player_message": player_msg,

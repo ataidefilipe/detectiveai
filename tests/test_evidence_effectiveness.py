@@ -40,10 +40,11 @@ def test_evidence_was_effective_flag():
         db.add(state)
         db.commit()
 
-        # 1. Turn with bad evidence (no secrets)
-        run_interrogation_turn(
+        # 1. Turn with bad evidence (no secrets, first time)
+        turn_bad_1 = run_interrogation_turn(
             session_id=session.id, suspect_id=suspect.id, text="...", evidence_id=evidence_bad.id, db=db
         )
+        assert turn_bad_1["evidence_effect"] == "none"
 
         bad_usage = db.query(SessionEvidenceUsageModel).filter_by(
             session_id=session.id, suspect_id=suspect.id, evidence_id=evidence_bad.id
@@ -51,11 +52,18 @@ def test_evidence_was_effective_flag():
 
         assert bad_usage is not None
         assert bad_usage.was_effective is False
+        
+        # 1.5 Turn with bad evidence (second time)
+        turn_bad_2 = run_interrogation_turn(
+            session_id=session.id, suspect_id=suspect.id, text="...", evidence_id=evidence_bad.id, db=db
+        )
+        assert turn_bad_2["evidence_effect"] == "duplicate"
 
         # 2. Turn with good evidence (reveals secret)
-        run_interrogation_turn(
+        turn_good_1 = run_interrogation_turn(
             session_id=session.id, suspect_id=suspect.id, text="...", evidence_id=evidence_good.id, db=db
         )
+        assert turn_good_1["evidence_effect"] == "revealed_secret"
 
         good_usage = db.query(SessionEvidenceUsageModel).filter_by(
             session_id=session.id, suspect_id=suspect.id, evidence_id=evidence_good.id
@@ -65,9 +73,10 @@ def test_evidence_was_effective_flag():
         assert good_usage.was_effective is True
 
         # 3. Turn with good evidence again (no NEW secrets)
-        run_interrogation_turn(
+        turn_good_2 = run_interrogation_turn(
             session_id=session.id, suspect_id=suspect.id, text="Again...", evidence_id=evidence_good.id, db=db
         )
+        assert turn_good_2["evidence_effect"] == "duplicate"
 
         good_usage_again = db.query(SessionEvidenceUsageModel).filter_by(
             session_id=session.id, suspect_id=suspect.id, evidence_id=evidence_good.id
