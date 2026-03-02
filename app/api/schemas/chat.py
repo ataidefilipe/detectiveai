@@ -81,6 +81,11 @@ class ChatMessageInfo(BaseModel):
     timestamp: str
 
 
+class TurnDebugTrace(BaseModel):
+    message_analysis: Optional[MessageAnalysisResult] = None
+    state_transition: Optional[StateTransitionResult] = None
+    allowed_knowledge: list[dict] = Field(default_factory=list)
+
 class PlayerTurnResponse(BaseModel):
     player_message: ChatMessageInfo
     npc_message: ChatMessageInfo
@@ -95,3 +100,5 @@ class PlayerTurnResponse(BaseModel):
     npc_shift: str = "none"
     topic_signal: TopicSignal = TopicSignal.none
     feedback_hints: List[str] = Field(default_factory=list)
+    
+    debug_trace: Optional[TurnDebugTrace] = None

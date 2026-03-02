@@ -9,7 +9,13 @@ from app.services.reveal_policy_service import get_allowed_knowledge_facts
 from app.services.message_analysis_service import analyze_message
 from app.services.turn_resolution_service import resolve_turn_state
 from app.infra.db_models import SessionEvidenceUsageModel, SessionModel, ScenarioModel
-from app.api.schemas.chat import TopicSignal
+from app.api.schemas.chat import (
+    MessageAnalysisResult,
+    StateTransitionResult,
+    TopicSignal,
+    TurnDebugTrace
+)
+from app.core.config import settings
 
 
 def run_interrogation_turn(
@@ -190,6 +196,14 @@ def run_interrogation_turn(
         hints.append("pergunta muito vaga")
         t_signal = TopicSignal.weak
 
+    debug_trace = None
+    if settings.DEBUG_TURN_TRACE:
+        debug_trace = TurnDebugTrace(
+            message_analysis=msg_analysis,
+            state_transition=state_transition,
+            allowed_knowledge=allowed_knowledge
+        )
+
     return {
         "player_message": player_msg,
         "npc_message": npc_msg,
@@ -201,5 +215,6 @@ def run_interrogation_turn(
         "conversation_effect": state_transition.conversation_effect.value,
         "npc_shift": state_transition.npc_shift.value,
         "topic_signal": t_signal,
-        "feedback_hints": hints
+        "feedback_hints": hints,
+        "debug_trace": debug_trace
     }
