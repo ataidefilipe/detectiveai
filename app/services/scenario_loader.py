@@ -32,6 +32,7 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
         db = SessionLocal()
         close_session = True
 
+    data = {}
     try:
         # -------------------------
         # 1. Load JSON
