@@ -10,6 +10,7 @@ from app.infra.db_models import (
     EvidenceModel,
     SecretModel
 )
+from app.core.exceptions import DomainError
 
 
 def load_scenario_from_json(path: str, db: Optional[Session] = None) -> ScenarioModel:
@@ -129,7 +130,7 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
         # 7. Set culprit
         # -------------------------
         if config.culprit not in suspect_map:
-            raise ValueError(
+            raise DomainError(
                 f"Culprit '{config.culprit}' not found among suspects."
             )
 
@@ -142,12 +143,12 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
         # -------------------------
         for sec in config.secrets:
             if sec.suspect not in suspect_map:
-                raise ValueError(
+                raise DomainError(
                     f"Secret references unknown suspect '{sec.suspect}'"
                 )
 
             if sec.evidence not in evidence_map:
-                raise ValueError(
+                raise DomainError(
                     f"Secret references unknown evidence '{sec.evidence}'"
                 )
 

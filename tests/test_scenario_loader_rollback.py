@@ -7,6 +7,7 @@ from app.main import app
 from tests.conftest import TestingSessionLocal
 from app.services.scenario_loader import load_scenario_from_json
 from app.infra.db_models import ScenarioModel, SuspectModel
+from app.core.exceptions import DomainError
 
 def test_scenario_loader_rollback_on_invalid_culprit():
     db = TestingSessionLocal()
@@ -32,7 +33,7 @@ def test_scenario_loader_rollback_on_invalid_culprit():
             tmp_path = tmp.name
 
         # 3. Attempt to load
-        with pytest.raises(ValueError, match="not found among suspects"):
+        with pytest.raises(DomainError, match="not found among suspects"):
              load_scenario_from_json(tmp_path, db=db)
 
         # 4. Verify DB is perfectly clean

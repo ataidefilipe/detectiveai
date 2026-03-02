@@ -50,7 +50,7 @@ def evaluate_verdict(
         ).first()
 
         if not session:
-            raise ValueError(f"Session {session_id} not found.")
+            raise NotFoundError(f"Session {session_id} not found.")
 
         # ----------------------------------------
         # 2. Load scenario
@@ -60,7 +60,7 @@ def evaluate_verdict(
         ).first()
 
         if not scenario:
-            raise ValueError(
+            raise NotFoundError(
                 f"Scenario {session.scenario_id} not found for session {session_id}."
             )
 

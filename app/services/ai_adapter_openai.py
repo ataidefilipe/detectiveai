@@ -5,6 +5,7 @@ from openai import OpenAI
 from app.services.ai_adapter import NpcAIAdapter
 from app.services.prompt_builder import build_npc_prompt
 from app.api.schemas.render_context import NpcResponseRenderContext
+from app.core.exceptions import DomainError
 
 
 class OpenAINpcAIAdapter(NpcAIAdapter):
@@ -34,7 +35,7 @@ class OpenAINpcAIAdapter(NpcAIAdapter):
         revealed_now: list | None = None
     ) -> str:
         if not npc_context:
-            raise ValueError("npc_context is required for OpenAI adapter")
+            raise DomainError("npc_context is required for OpenAI adapter")
 
         prompt = build_npc_prompt(
             npc_context=npc_context,

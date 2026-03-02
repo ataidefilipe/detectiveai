@@ -2,6 +2,7 @@ from typing import List
 from sqlalchemy.orm import Session
 from app.infra.db_models import ScenarioModel
 from app.infra.db import SessionLocal
+from app.core.exceptions import NotFoundError
 
 
 def get_required_evidences_for_scenario(
@@ -22,7 +23,7 @@ def get_required_evidences_for_scenario(
         ).first()
 
         if not scenario:
-            raise ValueError(f"Scenario {scenario_id} not found.")
+            raise NotFoundError(f"Scenario {scenario_id} not found.")
 
         return scenario.required_evidence_ids or []
 
