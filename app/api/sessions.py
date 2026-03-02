@@ -66,9 +66,9 @@ def send_message_to_suspect(session_id: int, suspect_id: int, payload: PlayerCha
         )
         db.commit()
         return result
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise e
+        raise
     finally:
         db.close()
 
