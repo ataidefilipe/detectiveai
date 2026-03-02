@@ -9,6 +9,7 @@ from app.services.reveal_policy_service import get_allowed_knowledge_facts
 from app.services.message_analysis_service import analyze_message
 from app.services.turn_resolution_service import resolve_turn_state
 from app.infra.db_models import SessionEvidenceUsageModel, SessionModel, ScenarioModel
+from app.api.schemas.chat import TopicSignal
 
 
 def run_interrogation_turn(
@@ -159,6 +160,35 @@ def run_interrogation_turn(
             # mas ela já existia no histórico de uso (usage table) ANTES deste turno, então é duplicate.
             if was_previously_used:
                 evidence_effect = "duplicate"
+                
+    # Feedback Sistêmico (Epic G)
+    hints = []
+    t_signal = TopicSignal.none
+
+    # Se usou evidência fora de escopo
+    if evidence_effect == "out_of_context":
+        hints.append("evidência fora de contexto")
+    
+    # Sensibilidade
+    if msg_analysis.sensitivity_hit.value in ["high", "medium"]:
+        if state_transition.npc_shift.value in ["more_cooperative", "pressured"]:
+            hints.append("tema sensível tocado adequadamente")
+            t_signal = TopicSignal.strong
+        elif state_transition.npc_shift.value == "more_defensive":
+            hints.append("suspeito recuou ao tocar em tema sensível")
+            t_signal = TopicSignal.weak
+    else:
+        # Se detectou algum tópico normal
+        if msg_analysis.detected_topic_ids:
+            t_signal = TopicSignal.good
+            if state_transition.conversation_effect.value == "repeat":
+                hints.append("tópico já explorado")
+                t_signal = TopicSignal.weak
+
+    # Se não detectou nada ("None" ou topics vazios)
+    if not msg_analysis.detected_topic_ids and evidence_id is None:
+        hints.append("pergunta muito vaga")
+        t_signal = TopicSignal.weak
 
     return {
         "player_message": player_msg,
@@ -167,5 +197,9 @@ def run_interrogation_turn(
         "evidence_effect": evidence_effect,
         "suspect_state": suspect_state,
         "message_analysis": msg_analysis,
-        "state_transition": state_transition
+        "state_transition": state_transition,
+        "conversation_effect": state_transition.conversation_effect.value,
+        "npc_shift": state_transition.npc_shift.value,
+        "topic_signal": t_signal,
+        "feedback_hints": hints
     }

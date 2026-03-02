@@ -60,6 +60,12 @@ class StateTransitionResult(BaseModel):
     state_deltas: dict = Field(default_factory=dict)
     debug_reason_codes: list[str] = Field(default_factory=list)
 
+class TopicSignal(str, Enum):
+    none = "none"
+    weak = "weak"
+    good = "good"
+    strong = "strong"
+
 class PlayerChatInput(BaseModel):
     text: str
     evidence_id: Optional[int] = None
@@ -83,3 +89,9 @@ class PlayerTurnResponse(BaseModel):
     suspect_state: dict
     message_analysis: Optional[MessageAnalysisResult] = None
     state_transition: Optional[StateTransitionResult] = None
+    
+    # Systemic Discrete Feedback
+    conversation_effect: str = "none"
+    npc_shift: str = "none"
+    topic_signal: TopicSignal = TopicSignal.none
+    feedback_hints: List[str] = Field(default_factory=list)
