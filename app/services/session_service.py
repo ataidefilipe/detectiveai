@@ -241,20 +241,26 @@ def calculate_suspect_progress(
                 f"Suspect {suspect_id} does not belong to session {session_id}."
             )
 
-        core_secrets = db.query(SecretModel).filter(
-            SecretModel.suspect_id == suspect_id,
-            SecretModel.is_core == True
+        all_secrets = db.query(SecretModel).filter(
+            SecretModel.suspect_id == suspect_id
         ).all()
 
-        total_core = len(core_secrets)
-        if total_core == 0:
+        cores = [s for s in all_secrets if s.is_core]
+        regulars = [s for s in all_secrets if not s.is_core]
+
+        total_core = len(cores)
+        total_regular = len(regulars)
+
+        if total_core > 0:
+            revealed_core = sum(1 for s in cores if s.id in state.revealed_secret_ids)
+            return revealed_core / total_core
+            
+        elif total_regular > 0:
+            revealed_regular = sum(1 for s in regulars if s.id in state.revealed_secret_ids)
+            return revealed_regular / total_regular
+            
+        else:
             return 1.0
-
-        revealed_core = sum(
-            1 for s in core_secrets if s.id in state.revealed_secret_ids
-        )
-
-        return revealed_core / total_core
 
     finally:
         if close_session:
