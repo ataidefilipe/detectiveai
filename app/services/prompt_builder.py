@@ -3,7 +3,6 @@ from app.api.schemas.render_context import NpcResponseRenderContext
 def build_npc_prompt(
     npc_context,
     chat_history,
-    player_message,
     render_context: NpcResponseRenderContext
 ):
     

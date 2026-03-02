@@ -23,7 +23,6 @@ def test_prompt_builder_injects_render_context_correctly():
     messages = build_npc_prompt(
         npc_context=npc_context,
         chat_history=chat_history,
-        player_message=player_message,
         render_context=render_context
     )
     
@@ -58,7 +57,6 @@ def test_prompt_builder_without_facts():
     messages = build_npc_prompt(
         npc_context=npc_context,
         chat_history=[],
-        player_message={},
         render_context=render_context
     )
     

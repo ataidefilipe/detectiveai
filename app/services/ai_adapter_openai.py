@@ -40,7 +40,6 @@ class OpenAINpcAIAdapter(NpcAIAdapter):
         prompt = build_npc_prompt(
             npc_context=npc_context,
             chat_history=chat_history,
-            player_message=player_message,
             render_context=render_context
         )
 
