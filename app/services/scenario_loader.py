@@ -168,7 +168,7 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
     except Exception as e:
         db.rollback()
         print(f"[loader] Transaction failed! Rolling back scenario '{data.get('title', 'Unknown')}'. Reason: {e}")
-        raise e
+        raise
 
     finally:
         if close_session:

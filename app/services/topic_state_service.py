@@ -93,10 +93,10 @@ def update_topic_hit(
             "times_touched": topic_state.times_touched,
             "sensitive_heat": topic_state.sensitive_heat
         }
-    except Exception as e:
+    except Exception:
         if close_session:
             db.rollback()
-        raise e
+        raise
     finally:
         if close_session:
             db.close()
