@@ -63,9 +63,45 @@ class DummyNpcAIAdapter(NpcAIAdapter):
                 )
 
         # ----------------------------------------------------------------------
-        # 3. Se a pergunta não tem evidência, retornar algo genérico.
+        # 3. Response mode handling (Mock deterministic responses)
         # ----------------------------------------------------------------------
+        mode = render_context.response_mode
+        
+        # Helper to extract a single piece of allowed content
+        def get_allowed_content():
+            if render_context.allowed_knowledge:
+                return f"[Conhecimento: {render_context.allowed_knowledge[0]}]"
+            if render_context.allowed_facts:
+                return f"[Fato: {render_context.allowed_facts[0]}]"
+            return ""
 
+        allowed_txt = get_allowed_content()
+
+        if mode == ResponseMode.deny:
+            return f"{name} balança a cabeça negativamente. “Eu não sei nada sobre isso. É mentira.”"
+            
+        elif mode == ResponseMode.evasive:
+            return f"{name} desvia o olhar. “Não tenho certeza... Eu não lembro direito.”"
+            
+        elif mode == ResponseMode.clarify:
+            if allowed_txt:
+                return f"{name} suspira. “Vou ser claro com você. {allowed_txt}”"
+            return f"{name} tenta explicar. “Veja bem, a verdade é que as coisas são complicadas.”"
+            
+        elif mode == ResponseMode.partial_admission:
+            if revealed_now:
+                return f"{name} cede um pouco. “Ok, você me pegou nisso. {[s['content'] for s in revealed_now][0]}”"
+            if allowed_txt:
+                return f"{name} concorda parcialmente. “Sim, isso é parte da verdade. {allowed_txt}”"
+            return f"{name} abaixa a cabeça. “Ok, você tem um ponto, mas não é toda a história...”"
+            
+        elif mode == ResponseMode.neutral_answer:
+            if allowed_txt:
+                return f"{name} responde de forma contida: “Posso confirmar que {allowed_txt}”"
+
+        # ----------------------------------------------------------------------
+        # 4. Personality Fallback (if no explicit mode match)
+        # ----------------------------------------------------------------------
         if personality == "agressivo":
             return (
                 f"{name} cruza os braços. “Por que eu perderia meu tempo respondendo isso? "
@@ -82,7 +118,7 @@ class DummyNpcAIAdapter(NpcAIAdapter):
                 "Perguntam demais e entendem de menos.”"
             )
 
-        # Personalidade neutra / fallback
+        # Personalidade neutra / fallback genérico
         return (
             f"{name} responde calmamente: "
             "“Olha, estou cooperando. Mas você precisa ser mais específico.”"

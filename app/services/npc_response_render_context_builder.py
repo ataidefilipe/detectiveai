@@ -8,7 +8,8 @@ def build_render_context(
     analysis: MessageAnalysisResult,
     revealed_facts: Optional[List[str]] = None,
     allowed_knowledge: Optional[List[str]] = None,
-    suspect: Optional[SuspectModel] = None
+    suspect: Optional[SuspectModel] = None,
+    evidence_effect: str = "none"
 ) -> NpcResponseRenderContext:
     """
     Constrói o NpcResponseRenderContext, decidindo a diretriz de atuação da LLM
@@ -26,10 +27,29 @@ def build_render_context(
         allowed_facts = []
 
     # Map state transitions to strict LLM directives
-    if transition.npc_shift == NpcShift.more_defensive:
-        response_mode = ResponseMode.deny
+    # 1. Se revealed_facts tiver itens novos -> partial_admission
+    if revealed_facts:
+        response_mode = ResponseMode.partial_admission
+        
+    # 2. Se evidence_effect == "out_of_context"
+    elif evidence_effect == "out_of_context":
+        if transition.npc_shift == NpcShift.more_defensive:
+            response_mode = ResponseMode.deny
+        else:
+            response_mode = ResponseMode.evasive
+            
+    # 3. Se pressured E houver allowed_knowledge -> partial_admission
     elif transition.npc_shift == NpcShift.pressured:
-        response_mode = ResponseMode.evasive
+        if allowed_knowledge:
+            response_mode = ResponseMode.partial_admission
+        else:
+            response_mode = ResponseMode.evasive
+            
+    # 4. Se more_defensive SEM novos conteúdos -> deny
+    elif transition.npc_shift == NpcShift.more_defensive:
+        response_mode = ResponseMode.deny
+        
+    # 5. Fallbacks pro humor/stance normal
     elif transition.npc_shift == NpcShift.more_cooperative:
         response_mode = ResponseMode.clarify
 

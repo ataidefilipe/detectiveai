@@ -45,17 +45,6 @@ def apply_evidence_to_suspect(
             raise NotFoundError(f"Suspect {suspect_id} not part of session {session_id}.")
 
         # ---------------------------------------
-        # 2. Find secrets revealed by this evidence
-        # ---------------------------------------
-        secrets = db.query(SecretModel).filter(
-            SecretModel.suspect_id == suspect_id,
-            SecretModel.evidence_id == evidence_id
-        ).all()
-
-        if not secrets:
-            return [], "none"
-
-        # ---------------------------------------
         # Context validation for E1
         # ---------------------------------------
         evidence = db.query(EvidenceModel).filter(EvidenceModel.id == evidence_id).first()
@@ -71,6 +60,17 @@ def apply_evidence_to_suspect(
 
         if not is_context_valid:
             return [], "out_of_context"
+
+        # ---------------------------------------
+        # 2. Find secrets revealed by this evidence
+        # ---------------------------------------
+        secrets = db.query(SecretModel).filter(
+            SecretModel.suspect_id == suspect_id,
+            SecretModel.evidence_id == evidence_id
+        ).all()
+
+        if not secrets:
+            return [], "none"
 
         revealed_now = []
 

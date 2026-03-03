@@ -8,7 +8,7 @@ from app.services.topic_state_service import update_topic_hit
 from app.services.reveal_policy_service import get_allowed_knowledge_facts
 from app.services.message_analysis_service import analyze_message
 from app.services.turn_resolution_service import resolve_turn_state
-from app.infra.db_models import SessionEvidenceUsageModel, SessionModel, ScenarioModel
+from app.infra.db_models import SessionEvidenceUsageModel, SessionModel, ScenarioModel, NpcChatMessageModel
 from app.api.schemas.chat import (
     MessageAnalysisResult,
     StateTransitionResult,
@@ -51,8 +51,18 @@ def run_interrogation_turn(
     scenario = db.query(ScenarioModel).filter(ScenarioModel.id == session.scenario_id).first()
     available_topics = scenario.topics if scenario and scenario.topics else []
 
+    # Fetch recent player messages for novelty check
+    recent_player_msgs = [
+        row[0] for row in db.query(NpcChatMessageModel.text).filter(
+            NpcChatMessageModel.session_id == session_id,
+            NpcChatMessageModel.suspect_id == suspect_id,
+            NpcChatMessageModel.sender_type == "player",
+            NpcChatMessageModel.id < player_msg["id"]
+        ).order_by(NpcChatMessageModel.id.desc()).limit(3).all()
+    ]
+
     # 1.2 Analyze player message against known topics
-    msg_analysis = analyze_message(text, available_topics=available_topics)
+    msg_analysis = analyze_message(text, available_topics=available_topics, player_history=recent_player_msgs)
 
     # 1.3 Resolve turn mechanics (State Transition)
     state_transition = resolve_turn_state(
@@ -71,9 +81,8 @@ def run_interrogation_turn(
 
     # 1.5 Update topic hits
     for topic_id in msg_analysis.detected_topic_ids:
-        # Check if it was this topic that caused the sensitive hit (MVP simplified check)
-        is_sens_hit = msg_analysis.sensitivity_hit.value == "high" 
-        # Optional: could check if this *specific* topic is sensitive from available_topics
+        # Verifica se o tópico ESPECÍFICO detectado é sensível 
+        is_sens_hit = topic_id in msg_analysis.sensitive_topic_ids
         heat_delta = 15.0 if is_sens_hit else 0.0
 
         update_topic_hit(
@@ -149,6 +158,7 @@ def run_interrogation_turn(
         state_transition=state_transition,
         revealed_now=revealed_secrets,
         allowed_knowledge=allowed_knowledge,
+        evidence_effect=evidence_effect,
         db=db
     )
 

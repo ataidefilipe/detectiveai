@@ -111,6 +111,7 @@ def add_npc_reply(
     state_transition: StateTransitionResult = None,
     revealed_now: List[str] = None,
     allowed_knowledge: List[str] = None,
+    evidence_effect: str = "none",
     db: Session = None
 ) -> dict:
     """
@@ -277,7 +278,8 @@ def add_npc_reply(
             analysis=msg_analysis,
             revealed_facts=revealed_now,
             allowed_knowledge=allowed_knowledge,
-            suspect=suspect
+            suspect=suspect,
+            evidence_effect=evidence_effect
         )
 
         try:
