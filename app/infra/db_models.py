@@ -147,3 +147,13 @@ class SessionEvidenceUsageModel(Base):
     session = relationship("SessionModel", back_populates="evidence_usages")
     suspect = relationship("SuspectModel", back_populates="evidence_usages")
     evidence = relationship("EvidenceModel", back_populates="evidence_usages")
+
+class SessionSuspectKnowledgeStateModel(Base):
+    __tablename__ = "session_suspect_knowledge_states"
+    session_id = Column(Integer, ForeignKey("sessions.id"), primary_key=True)
+    suspect_id = Column(Integer, ForeignKey("suspects.id"), primary_key=True)
+    knowledge_id = Column(String, primary_key=True)
+    max_revealed_depth = Column(Integer, default=0)
+
+    session = relationship("SessionModel")
+    suspect = relationship("SuspectModel")

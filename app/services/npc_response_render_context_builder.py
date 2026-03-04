@@ -8,6 +8,7 @@ def build_render_context(
     analysis: MessageAnalysisResult,
     revealed_facts: Optional[List[str]] = None,
     allowed_knowledge: Optional[List[str]] = None,
+    new_knowledge_this_turn: Optional[List[str]] = None,
     suspect: Optional[SuspectModel] = None,
     evidence_effect: str = "none"
 ) -> NpcResponseRenderContext:
@@ -40,7 +41,7 @@ def build_render_context(
             
     # 3. Se pressured E houver allowed_knowledge -> partial_admission
     elif transition.npc_shift == NpcShift.pressured:
-        if allowed_knowledge:
+        if allowed_knowledge or new_knowledge_this_turn:
             response_mode = ResponseMode.partial_admission
         else:
             response_mode = ResponseMode.evasive
@@ -60,6 +61,7 @@ def build_render_context(
         npc_stance=npc_stance,
         allowed_facts=allowed_facts,
         allowed_knowledge=allowed_knowledge or [],
+        new_knowledge_this_turn=new_knowledge_this_turn or [],
         player_intent=analysis.intent.value,
         tone_hint=None, # Definido para testes no MVP
         forbidden_topics=["alibi_contradiction"] if transition.npc_shift == NpcShift.more_defensive else []

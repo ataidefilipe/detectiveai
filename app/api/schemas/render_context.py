@@ -25,6 +25,10 @@ class NpcResponseRenderContext(BaseModel):
         default_factory=list,
         description="Camadas de conhecimento local que o NPC tem permissão de contar neste turno baseado na política de retenção."
     )
+    new_knowledge_this_turn: List[str] = Field(
+        default_factory=list,
+        description="Fatos ou camadas de conhecimento que estão sendo revelados pela *primeira vez* neste turno."
+    )
     forbidden_topics: List[str] = Field(default_factory=list)
     must_not_reveal: List[str] = Field(default_factory=list)
     tone_hint: Optional[str] = None

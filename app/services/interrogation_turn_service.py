@@ -4,10 +4,11 @@ from sqlalchemy.orm import Session
 from app.services.chat_service import add_player_message, add_npc_reply
 from app.services.secret_service import apply_evidence_to_suspect
 from app.services.session_service import get_suspect_state, update_suspect_state_from_deltas
-from app.services.topic_state_service import update_topic_hit
+from app.services.topic_state_service import update_topic_hit, get_topic_state
 from app.services.reveal_policy_service import get_allowed_knowledge_facts
 from app.services.message_analysis_service import analyze_message
 from app.services.turn_resolution_service import resolve_turn_state
+from app.services.turn_feedback_service import build_turn_feedback
 from app.infra.db_models import SessionEvidenceUsageModel, SessionModel, ScenarioModel, NpcChatMessageModel
 from app.api.schemas.chat import (
     MessageAnalysisResult,
@@ -65,9 +66,22 @@ def run_interrogation_turn(
     msg_analysis = analyze_message(text, available_topics=available_topics, player_history=recent_player_msgs)
 
     # 1.3 Resolve turn mechanics (State Transition)
+    primary_topic_state = None
+    if msg_analysis.primary_topic_id:
+        try:
+            primary_topic_state = get_topic_state(
+                session_id=session_id,
+                suspect_id=suspect_id,
+                topic_id=msg_analysis.primary_topic_id,
+                db=db
+            )
+        except Exception:
+            pass # Ignora se não achar estado anterior
+            
     state_transition = resolve_turn_state(
         analysis=msg_analysis,
-        current_state=initial_suspect_state
+        current_state=initial_suspect_state,
+        topic_state=primary_topic_state
     )
 
     # 1.4 Apply state deltas to DB
@@ -142,12 +156,14 @@ def run_interrogation_turn(
         db.flush()
 
     # 2.5 Extract Allowed Knowledge Layers based on Topics Touched
-    allowed_knowledge = get_allowed_knowledge_facts(
+    knowledge_facts = get_allowed_knowledge_facts(
         session_id=session_id,
         suspect_id=suspect_id,
         detected_topics=msg_analysis.detected_topic_ids,
         db=db
     )
+    allowed_knowledge = knowledge_facts.get("known_knowledge", [])
+    new_knowledge = knowledge_facts.get("new_knowledge_this_turn", [])
 
     # 3. NPC reply
     npc_msg = add_npc_reply(
@@ -158,6 +174,7 @@ def run_interrogation_turn(
         state_transition=state_transition,
         revealed_now=revealed_secrets,
         allowed_knowledge=allowed_knowledge,
+        new_knowledge_this_turn=new_knowledge,
         evidence_effect=evidence_effect,
         db=db
     )
@@ -177,41 +194,21 @@ def run_interrogation_turn(
             if was_previously_used:
                 evidence_effect = "duplicate"
                 
-    # Feedback Sistêmico (Epic G)
-    hints = []
-    t_signal = TopicSignal.none
-
-    # Se usou evidência fora de escopo
-    if evidence_effect == "out_of_context":
-        hints.append("evidência fora de contexto")
-    
-    # Sensibilidade
-    if msg_analysis.sensitivity_hit.value in ["high", "medium"]:
-        if state_transition.npc_shift.value in ["more_cooperative", "pressured"]:
-            hints.append("tema sensível tocado adequadamente")
-            t_signal = TopicSignal.strong
-        elif state_transition.npc_shift.value == "more_defensive":
-            hints.append("suspeito recuou ao tocar em tema sensível")
-            t_signal = TopicSignal.weak
-    else:
-        # Se detectou algum tópico normal
-        if msg_analysis.detected_topic_ids:
-            t_signal = TopicSignal.good
-            if state_transition.conversation_effect.value == "repeat":
-                hints.append("tópico já explorado")
-                t_signal = TopicSignal.weak
-
-    # Se não detectou nada ("None" ou topics vazios)
-    if not msg_analysis.detected_topic_ids and evidence_id is None:
-        hints.append("pergunta muito vaga")
-        t_signal = TopicSignal.weak
+    # Feedback Sistêmico (Epic G) via service extraído
+    t_signal, hints = build_turn_feedback(
+        analysis=msg_analysis,
+        transition=state_transition,
+        evidence_effect=evidence_effect,
+        topic_state=primary_topic_state
+    )
 
     debug_trace = None
     if settings.DEBUG_TURN_TRACE:
         debug_trace = TurnDebugTrace(
             message_analysis=msg_analysis,
             state_transition=state_transition,
-            allowed_knowledge=allowed_knowledge
+            allowed_knowledge=allowed_knowledge,
+            new_knowledge_this_turn=new_knowledge
         )
 
     return {
@@ -220,8 +217,8 @@ def run_interrogation_turn(
         "revealed_secrets": revealed_secrets,
         "evidence_effect": evidence_effect,
         "suspect_state": suspect_state,
-        "message_analysis": msg_analysis,
-        "state_transition": state_transition,
+        "message_analysis": msg_analysis if settings.DEBUG_TURN_TRACE else None,
+        "state_transition": state_transition if settings.DEBUG_TURN_TRACE else None,
         "conversation_effect": state_transition.conversation_effect.value,
         "npc_shift": state_transition.npc_shift.value,
         "topic_signal": t_signal,

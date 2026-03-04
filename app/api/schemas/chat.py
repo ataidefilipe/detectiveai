@@ -30,6 +30,7 @@ class SpecificityLevel(str, Enum):
 class MessageAnalysisResult(BaseModel):
     primary_topic_id: Optional[str] = None
     detected_topic_ids: List[str] = Field(default_factory=list)
+    sensitive_topic_ids: List[str] = Field(default_factory=list)
     intent: MessageIntent = MessageIntent.unknown
     sensitivity_hit: SensitivityLevel = SensitivityLevel.none
     novelty: NoveltyLevel = NoveltyLevel.unknown
@@ -84,7 +85,8 @@ class ChatMessageInfo(BaseModel):
 class TurnDebugTrace(BaseModel):
     message_analysis: Optional[MessageAnalysisResult] = None
     state_transition: Optional[StateTransitionResult] = None
-    allowed_knowledge: list[dict] = Field(default_factory=list)
+    allowed_knowledge: list[str] = Field(default_factory=list)
+    new_knowledge_this_turn: list[str] = Field(default_factory=list)
 
 class PlayerTurnResponse(BaseModel):
     player_message: ChatMessageInfo

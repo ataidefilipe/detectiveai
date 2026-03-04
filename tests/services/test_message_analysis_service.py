@@ -60,15 +60,46 @@ def test_analyze_message_topic_detection():
     assert res_sens.primary_topic_id == "knife"
     assert res_sens.sensitivity_hit == SensitivityLevel.high
     assert "knife" in res_sens.detected_topic_ids
+    assert "knife" in res_sens.sensitive_topic_ids
 
     # Test normal topic
     res_norm = analyze_message("sua mulher estava lá?", available_topics=available_topics)
     assert res_norm.primary_topic_id == "wife"
     assert res_norm.sensitivity_hit == SensitivityLevel.none
     assert "wife" in res_norm.detected_topic_ids
+    assert len(res_norm.sensitive_topic_ids) == 0
 
     # Test both
     res_both = analyze_message("a faca era da sua esposa?", available_topics=available_topics)
     assert "knife" in res_both.detected_topic_ids
     assert "wife" in res_both.detected_topic_ids
     assert res_both.sensitivity_hit == SensitivityLevel.high
+    assert "knife" in res_both.sensitive_topic_ids
+    assert "wife" not in res_both.sensitive_topic_ids
+
+def test_analyze_message_novelty_repeat():
+    history = [
+        "onde você estava",
+        "quem é você"
+    ]
+    # Exact match after normalization
+    res1 = analyze_message("Quem é você?!", player_history=history)
+    assert res1.novelty == NoveltyLevel.repeat
+
+    # High Jaccard similarity
+    history2 = ["como você explica a faca"]
+    res2 = analyze_message("como você explica a faca suja", player_history=history2)
+    assert res2.novelty == NoveltyLevel.repeat
+
+def test_analyze_message_novelty_reframe():
+    history = ["onde estava"]
+    # Reframe: current message includes past message but is more specific
+    res = analyze_message("onde estava na noite do crime", player_history=history)
+    assert res.novelty == NoveltyLevel.reframe
+
+def test_analyze_message_novelty_new():
+    history = ["onde estava"]
+    # New message
+    res = analyze_message("qual a sua relação com a vítima?", player_history=history)
+    assert res.novelty == NoveltyLevel.new
+

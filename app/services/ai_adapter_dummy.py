@@ -69,8 +69,10 @@ class DummyNpcAIAdapter(NpcAIAdapter):
         
         # Helper to extract a single piece of allowed content
         def get_allowed_content():
+            if render_context.new_knowledge_this_turn:
+                return f"[Novo Conhecimento: {render_context.new_knowledge_this_turn[0]}]"
             if render_context.allowed_knowledge:
-                return f"[Conhecimento: {render_context.allowed_knowledge[0]}]"
+                return f"[Conhecimento Base: {render_context.allowed_knowledge[0]}]"
             if render_context.allowed_facts:
                 return f"[Fato: {render_context.allowed_facts[0]}]"
             return ""

@@ -13,7 +13,6 @@ from app.infra.db_models import (
     SessionEvidenceUsageModel,
     SecretModel,
     EvidenceModel,
-    EvidenceModel,
     ScenarioModel
 )
 from app.core.exceptions import NotFoundError, RuleViolationError
@@ -103,6 +102,140 @@ def add_player_message(
         if close_session:
             db.close()
 
+def _load_turn_context_for_npc_reply(
+    session_id: int, 
+    suspect_id: int, 
+    player_message_id: int, 
+    db: Session
+):
+    state = db.query(SessionSuspectStateModel).filter(
+        SessionSuspectStateModel.session_id == session_id,
+        SessionSuspectStateModel.suspect_id == suspect_id
+    ).first()
+
+    if not state:
+        raise NotFoundError(f"Suspect {suspect_id} not part of session {session_id}.")
+
+    suspect = db.query(SuspectModel).filter(
+        SuspectModel.id == suspect_id
+    ).first()
+
+    history_rows = db.query(NpcChatMessageModel).filter(
+        NpcChatMessageModel.session_id == session_id,
+        NpcChatMessageModel.suspect_id == suspect_id
+    ).order_by(NpcChatMessageModel.timestamp.asc()).all()
+
+    chat_history = [
+        {
+            "sender": row.sender_type,
+            "text": row.text,
+            "evidence_id": row.evidence_id,
+            "timestamp": row.timestamp.isoformat()
+        }
+        for row in history_rows
+    ]
+
+    player_msg = db.query(NpcChatMessageModel).filter(
+        NpcChatMessageModel.id == player_message_id
+    ).first()
+
+    if not player_msg:
+        raise NotFoundError(f"Player message {player_message_id} not found.")
+
+    player_message_dict = {
+        "text": player_msg.text,
+        "evidence_id": player_msg.evidence_id
+    }
+
+    session = db.query(SessionModel).filter(SessionModel.id == session_id).first()
+    if not session:
+        raise NotFoundError(f"Session {session_id} not found")
+
+    scenario = db.query(ScenarioModel).filter(ScenarioModel.id == session.scenario_id).first()
+    if not scenario:
+        raise NotFoundError("Scenario not found for session")
+
+    return state, suspect, session, scenario, chat_history, player_message_dict
+
+
+def _build_suspect_state_for_ai(
+    state: SessionSuspectStateModel, 
+    suspect: SuspectModel, 
+    suspect_id: int, 
+    db: Session
+):
+    revealed_secrets = []
+    if state.revealed_secret_ids:
+        secrets = db.query(SecretModel).filter(
+            SecretModel.id.in_(state.revealed_secret_ids)
+        ).all()
+        for sc in secrets:
+            revealed_secrets.append({
+                "secret_id": sc.id,
+                "content": sc.content,
+                "is_core": sc.is_core
+            })
+
+    hidden_secrets = db.query(SecretModel).filter(
+        SecretModel.suspect_id == suspect_id
+    ).all()
+
+    hidden_list = [
+        {"secret_id": sc.id, "content": sc.content, "is_core": sc.is_core}
+        for sc in hidden_secrets
+        if sc.id not in state.revealed_secret_ids
+    ]
+
+    suspect_state = {
+        "suspect_id": suspect_id,
+        "name": suspect.name if suspect else "O suspeito",
+        "personality": suspect.personality or "neutro",
+        "revealed_secrets": revealed_secrets,
+        "hidden_secrets": hidden_list,
+        "is_closed": state.is_closed,
+        "final_phrase": (
+            suspect.final_phrase
+            if suspect and suspect.final_phrase
+            else "Já falei tudo que sabia."
+        )
+    }
+    
+    return suspect_state, revealed_secrets
+
+
+def _generate_npc_text_with_fallback(
+    suspect_id: int,
+    suspect_state: dict,
+    npc_context: dict,
+    chat_history: list,
+    player_message_dict: dict,
+    render_context: dict,
+    revealed_now: list
+) -> str:
+    try:
+        reply_text = ai.generate_reply(
+            suspect_state=suspect_state,
+            npc_context=npc_context,
+            chat_history=chat_history,
+            player_message=player_message_dict,
+            render_context=render_context,
+            revealed_now=revealed_now
+        )
+    except Exception as e:
+        logger.error(f"LLM Adapter failed for suspect {suspect_id}. Falling back to Dummy adapter. Error: {e}", exc_info=True)
+        from app.services.ai_adapter_dummy import DummyNpcAIAdapter
+        dummy_adapter = DummyNpcAIAdapter()
+        reply_text = dummy_adapter.generate_reply(
+            suspect_state=suspect_state,
+            npc_context=npc_context,
+            chat_history=chat_history,
+            player_message=player_message_dict,
+            render_context=render_context,
+            revealed_now=revealed_now
+        )
+    return reply_text
+
+
 def add_npc_reply(
     session_id: int,
     suspect_id: int,
@@ -111,6 +244,7 @@ def add_npc_reply(
     state_transition: StateTransitionResult = None,
     revealed_now: List[str] = None,
     allowed_knowledge: List[str] = None,
+    new_knowledge_this_turn: List[str] = None,
     evidence_effect: str = "none",
     db: Session = None
 ) -> dict:
@@ -132,123 +266,15 @@ def add_npc_reply(
         close_session = True
 
     try:
-        # ----------------------------------------
-        # 1. Load suspect state for this session
-        # ----------------------------------------
-        state = db.query(SessionSuspectStateModel).filter(
-            SessionSuspectStateModel.session_id == session_id,
-            SessionSuspectStateModel.suspect_id == suspect_id
-        ).first()
-
-        if not state:
-            raise NotFoundError(f"Suspect {suspect_id} not part of session {session_id}.")
-
-        # Load suspect model (for personality, final phrase, etc.)
-        suspect = db.query(SuspectModel).filter(
-            SuspectModel.id == suspect_id
-        ).first()
-
-        true_timeline = suspect.true_timeline or []
-        lies = suspect.lies or []
-
-        # ----------------------------------------
-        # 2. Load chat history for this suspect/session
-        # ----------------------------------------
-        history_rows = db.query(NpcChatMessageModel).filter(
-            NpcChatMessageModel.session_id == session_id,
-            NpcChatMessageModel.suspect_id == suspect_id
-        ).order_by(NpcChatMessageModel.timestamp.asc()).all()
-
-        chat_history = [
-            {
-                "sender": row.sender_type,
-                "text": row.text,
-                "evidence_id": row.evidence_id,
-                "timestamp": row.timestamp.isoformat()
-            }
-            for row in history_rows
-        ]
-
-        # ----------------------------------------
-        # 3. Load the player message
-        # ----------------------------------------
-        player_msg = db.query(NpcChatMessageModel).filter(
-            NpcChatMessageModel.id == player_message_id
-        ).first()
-
-        if not player_msg:
-            raise NotFoundError(f"Player message {player_message_id} not found.")
-
-        player_message_dict = {
-            "text": player_msg.text,
-            "evidence_id": player_msg.evidence_id
-        }
-
-        # ----------------------------------------
-        # 4. Build suspect_state for AI
-        # ----------------------------------------
-        revealed_secrets = []
-        if state.revealed_secret_ids:
-            secrets = db.query(SecretModel).filter(
-                SecretModel.id.in_(state.revealed_secret_ids)
-            ).all()
-            for sc in secrets:
-                revealed_secrets.append({
-                    "secret_id": sc.id,
-                    "content": sc.content,
-                    "is_core": sc.is_core
-                })
-
-        # Hidden secrets (just for dummy AI)
-        hidden_secrets = db.query(SecretModel).filter(
-            SecretModel.suspect_id == suspect_id
-        ).all()
-
-        hidden_list = [
-            {"secret_id": sc.id, "content": sc.content, "is_core": sc.is_core}
-            for sc in hidden_secrets
-            if sc.id not in state.revealed_secret_ids
-        ]
-
-        suspect_state = {
-            "suspect_id": suspect_id,
-            "name": suspect.name if suspect else "O suspeito",
-            "personality": suspect.personality or "neutro",
-            "revealed_secrets": revealed_secrets,
-            "hidden_secrets": hidden_list,
-            "is_closed": state.is_closed,
-            "final_phrase": (
-                suspect.final_phrase
-                if suspect and suspect.final_phrase
-                else "Já falei tudo que sabia."
-            )
-        }
-
-        # ----------------------------------------
-        # Load scenario
-        # ----------------------------------------
-
-        session = (
-            db.query(SessionModel)
-            .filter(SessionModel.id == session_id)
-            .first()
+        state, suspect, session, scenario, chat_history, player_message_dict = _load_turn_context_for_npc_reply(
+            session_id, suspect_id, player_message_id, db
         )
 
-        if not session:
-            raise NotFoundError(f"Session {session_id} not found")        
-
-        scenario = (
-            db.query(ScenarioModel)
-            .filter(ScenarioModel.id == session.scenario_id)
-            .first()
+        suspect_state, revealed_secrets = _build_suspect_state_for_ai(
+            state, suspect, suspect_id, db
         )
 
-        if not scenario:
-            raise NotFoundError("Scenario not found for session")
-
-        # ----------------------------------------
         # Build pressure points (MVP)
-        # ----------------------------------------
         pressure_points = [
             {
                 "evidence_id": msg["evidence_id"],
@@ -258,9 +284,7 @@ def add_npc_reply(
             if msg.get("evidence_id") is not None
         ]
 
-        # ----------------------------------------
         # Call AI adapter
-        # ----------------------------------------
         npc_context = build_npc_context(
             scenario=scenario,
             suspect=suspect,
@@ -269,44 +293,28 @@ def add_npc_reply(
             pressure_points=pressure_points,
         )
 
-        # Fetch the suspect entity for the final phrase fallback
-        suspect = db.query(SuspectModel).filter(SuspectModel.id == suspect_id).first()
-        
-        # 3. Prepare Context for LLM Prompts
+        # Prepare Context for LLM Prompts
         render_context = build_render_context(
             transition=state_transition,
             analysis=msg_analysis,
             revealed_facts=revealed_now,
             allowed_knowledge=allowed_knowledge,
+            new_knowledge_this_turn=new_knowledge_this_turn,
             suspect=suspect,
             evidence_effect=evidence_effect
         )
 
-        try:
-            reply_text = ai.generate_reply(
-                suspect_state=suspect_state,
-                npc_context=npc_context,
-                chat_history=chat_history,
-                player_message=player_message_dict,
-                render_context=render_context,
-                revealed_now=revealed_now
-            )
-        except Exception as e:
-            logger.error(f"LLM Adapter failed for suspect {suspect_id}. Falling back to Dummy adapter. Error: {e}", exc_info=True)
-            from app.services.ai_adapter_dummy import DummyNpcAIAdapter
-            dummy_adapter = DummyNpcAIAdapter()
-            reply_text = dummy_adapter.generate_reply(
-                suspect_state=suspect_state,
-                npc_context=npc_context,
-                chat_history=chat_history,
-                player_message=player_message_dict,
-                render_context=render_context,
-                revealed_now=revealed_now
-            )
+        reply_text = _generate_npc_text_with_fallback(
+            suspect_id,
+            suspect_state,
+            npc_context,
+            chat_history,
+            player_message_dict,
+            render_context,
+            revealed_now
+        )
 
-        # ----------------------------------------
-        # 6. Save NPC message
-        # ----------------------------------------
+        # Save NPC message
         npc_msg = NpcChatMessageModel(
             session_id=session_id,
             suspect_id=suspect_id,

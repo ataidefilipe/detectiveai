@@ -1,6 +1,5 @@
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
-from datetime import datetime
 
 from app.infra.db_models import SessionSuspectTopicStateModel
 from app.infra.db import SessionLocal

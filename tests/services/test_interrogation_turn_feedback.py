@@ -25,7 +25,7 @@ def base_mocks():
         m_add_p.return_value = {"id": 1, "text": "Teste"}
         m_add_n.return_value = {"id": 2, "text": "Resposta"}
         m_state.return_value = {"stance": "neutral", "patience": 50.0, "pressure": 0.0}
-        m_know.return_value = []
+        m_know.return_value = {"known_knowledge": [], "new_knowledge_this_turn": []}
         m_evi.return_value = ([], "none")
         
         # Default analysis

@@ -10,7 +10,8 @@ from app.api.schemas.chat import (
 
 def resolve_turn_state(
     analysis: MessageAnalysisResult, 
-    current_state: dict
+    current_state: dict,
+    topic_state: dict = None
 ) -> StateTransitionResult:
     """
     Função MVP que resolve o impacto sistêmico do turno calculando deltas.
@@ -47,6 +48,24 @@ def resolve_turn_state(
         deltas["patience"] = deltas.get("patience", 0.0) - 10.0
         conversation_effect = ConversationEffect.sensitive_touch
         reason_codes.append("sensitive_topic_touched")
+        
+    # 3.5 Evaluate Topic State Heuristics (Task 6)
+    if topic_state:
+        times_touched = topic_state.get("times_touched", 0)
+        status = topic_state.get("status", "untouched")
+        sensitive_heat = topic_state.get("sensitive_heat", 0.0)
+        
+        if status == "untouched" and conversation_effect == ConversationEffect.none:
+            conversation_effect = ConversationEffect.new_topic
+            
+        if times_touched > 3:
+            # Penalidade maior para spam de tópico saturado
+            deltas["patience"] = deltas.get("patience", 0.0) - 20.0
+            reason_codes.append("penalized_topic_saturation")
+            
+        if sensitive_heat > 50.0:
+            # Tópico muito quente aumenta a chance de defesa
+            deltas["pressure"] = deltas.get("pressure", 0.0) + 5.0
 
     # 4. Simulate future state to decide NpcShift & Stance change
     future_patience = current_patience + deltas.get("patience", 0.0)

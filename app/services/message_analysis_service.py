@@ -16,17 +16,17 @@ class MessageAnalysisService:
         else:
             self.classifier = classifier
 
-    def analyze_message(self, text: str, available_topics: Optional[List[dict]] = None) -> MessageAnalysisResult:
+    def analyze_message(self, text: str, available_topics: Optional[List[dict]] = None, player_history: Optional[List[str]] = None) -> MessageAnalysisResult:
         """
         Delega a análise da mensagem de texto do jogador e cruzamento de tópicos
         para o classificador embutido (heurístico no MVP).
         """
-        return self.classifier.classify(text, available_topics=available_topics)
+        return self.classifier.classify(text, available_topics=available_topics, player_history=player_history)
 
 
 # Instância padrão do serviço para uso nos turnos da API 
 default_message_analyzer = MessageAnalysisService()
 
-def analyze_message(text: str, available_topics: Optional[List[dict]] = None) -> MessageAnalysisResult:
+def analyze_message(text: str, available_topics: Optional[List[dict]] = None, player_history: Optional[List[str]] = None) -> MessageAnalysisResult:
     """Wrapper prático para o serviço de análise padrão."""
-    return default_message_analyzer.analyze_message(text, available_topics)
+    return default_message_analyzer.analyze_message(text, available_topics, player_history)

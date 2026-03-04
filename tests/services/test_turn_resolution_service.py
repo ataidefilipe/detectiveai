@@ -71,3 +71,31 @@ def test_resolve_turn_state_sensitive_topic():
     assert transition.state_deltas["patience"] == -10.0
     assert transition.state_deltas["pressure"] == 10.0
     assert "sensitive_topic_touched" in transition.debug_reason_codes
+
+def test_resolve_turn_state_new_topic():
+    analysis = MessageAnalysisResult(intent=MessageIntent.unknown)
+    current_state = {"patience": 50.0, "pressure": 0.0, "stance": "neutral"}
+    topic_state = {"status": "untouched", "times_touched": 0, "sensitive_heat": 0.0}
+    
+    transition = resolve_turn_state(analysis, current_state, topic_state)
+    assert transition.conversation_effect == ConversationEffect.new_topic
+
+def test_resolve_turn_state_topic_saturation():
+    analysis = MessageAnalysisResult(intent=MessageIntent.unknown)
+    current_state = {"patience": 50.0, "pressure": 0.0, "stance": "neutral"}
+    topic_state = {"status": "active", "times_touched": 4, "sensitive_heat": 0.0}
+    
+    transition = resolve_turn_state(analysis, current_state, topic_state)
+    assert transition.state_deltas["patience"] == -20.0
+    assert "penalized_topic_saturation" in transition.debug_reason_codes
+
+def test_resolve_turn_state_warm_topic_defensive():
+    analysis = MessageAnalysisResult(intent=MessageIntent.unknown)
+    current_state = {"patience": 50.0, "pressure": 70.0, "stance": "neutral"}
+    topic_state = {"status": "active", "times_touched": 2, "sensitive_heat": 60.0}
+    
+    transition = resolve_turn_state(analysis, current_state, topic_state)
+    # The pressure increases due to heat: 70 + 5 = 75. 
+    # Not enough to reach 80.
+    assert transition.state_deltas["pressure"] == 5.0
+    assert transition.npc_shift == NpcShift.none

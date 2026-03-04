@@ -11,7 +11,15 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import logging
 
+from unittest.mock import patch
+
 # Set up an in-memory SQLite database for integration testing
+@pytest.fixture(autouse=True)
+def enable_debug_trace():
+    with patch("app.services.interrogation_turn_service.settings") as mock_settings:
+        mock_settings.DEBUG_TURN_TRACE = True
+        yield
+
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -32,7 +40,19 @@ def db_session():
     db.add(scenario)
     
     # Suspect
-    suspect = SuspectModel(id=1, scenario_id=1, name="John Doe", personality="nervoso")
+    suspect = SuspectModel(
+        id=1, 
+        scenario_id=1, 
+        name="John Doe", 
+        personality="nervoso",
+        knowledge_items=[
+             {
+                 "id": "faca_detail",
+                 "topic_id": "faca",
+                 "content_layers": ["A faca estava no chão.", "A faca tinha minhas digitais."]
+             }
+        ]
+    )
     db.add(suspect)
     
     # Session
@@ -40,7 +60,7 @@ def db_session():
     db.add(session)
     
     # Session Suspect State
-    state = SessionSuspectStateModel(session_id=1, suspect_id=1, stance="neutral", patience=50.0, pressure=0.0)
+    state = SessionSuspectStateModel(session_id=1, suspect_id=1, stance="neutral", patience=100.0, pressure=0.0)
     db.add(state)
     
     # Session Suspect Topic State
@@ -107,5 +127,29 @@ def test_integration_evidence_reveals_secret(db_session):
     assert len(res["revealed_secrets"]) == 1
     assert res["revealed_secrets"][0]["content"] == "Eu usei a faca"
     # Ensure Dummy adapter responded correctly. Since revealing the ONLY core secret closes the suspect,
-    # the dummy logic intercepts early and returns the final_phrase.
     assert "Já falei tudo que sabia" in res["npc_message"]["text"]
+
+from unittest.mock import patch
+
+def test_integration_knowledge_progression(db_session):
+    with patch("app.services.interrogation_turn_service.settings") as mock_settings:
+        mock_settings.DEBUG_TURN_TRACE = True
+        
+        # Turn 1: asks about faca
+        res1 = run_interrogation_turn(session_id=1, suspect_id=1, text="O que sabe sobre a faca?", evidence_id=None, db=db_session)
+        
+        print(f"Res1 Trace: {res1['debug_trace']}")
+        
+        # In the first touch, depth evaluates to 1
+        assert len(res1["debug_trace"].allowed_knowledge) == 0
+        assert "A faca estava no chão." in res1["debug_trace"].new_knowledge_this_turn
+        
+        # Turn 2: asks again. Times touched = 2. Pressure is updated.
+        res2 = run_interrogation_turn(session_id=1, suspect_id=1, text="E a faca de novo?", evidence_id=None, db=db_session)
+        
+        # Now "A faca estava no chão." should have moved to allowed_knowledge.
+        assert "A faca estava no chão." in res2["debug_trace"].allowed_knowledge
+        
+        # Depending on evaluate_reveal_layer(), either a new layer unlocks or we get 0 new knowledge.
+        # It's highly likely times_touched=1 vs times_touched=2 bumps depth, but either way it shouldn't repeat the first one in `new_knowledge_this_turn`.
+        assert "A faca estava no chão." not in res2["debug_trace"].new_knowledge_this_turn

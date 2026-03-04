@@ -11,7 +11,10 @@ def build_npc_prompt(
         if render_context.allowed_facts else "Nenhum segredo revelado até agora."
         
     allowed_knowledge_str = "\n".join(f"- {k}" for k in render_context.allowed_knowledge) \
-        if render_context.allowed_knowledge else "Nenhum tópico do cenário foi descoberto ou ativado ainda."
+        if render_context.allowed_knowledge else "Nenhum cenário já discutido."
+
+    new_knowledge_str = "\n".join(f"- {k}" for k in render_context.new_knowledge_this_turn) \
+        if render_context.new_knowledge_this_turn else "Nenhuma revelação *nova* nesta rodada."
 
     # 2. Map Response Mode to Prompt Instruction
     mode_instructions = {
@@ -37,9 +40,6 @@ Postura Atual com o Detetive: {render_context.npc_stance.upper()}
 História Pública:
 {npc_context["case"]["description"]}
 
-Sua versão dos fatos:
-{npc_context["case"]["summary"]}
-
 === DIRETRIZES DE ESTADO DO JOGO (OBRIGATÓRIO) ===
 Modo de Resposta: {mode_rule}
 
@@ -49,8 +49,11 @@ ATENÇÃO: Você SÓ PODE MENCIONAR os seguintes fatos se perguntarem. Se um fat
 Segredos Pessoais que você já revelou:
 {allowed_facts_str}
 
-Conhecimentos do Cenário que você tem permissão para expor agora:
+Conhecimento do Cenário (Já Revelado Anteriormente):
 {allowed_knowledge_str}
+
+Novo Conhecimento a Revelar NESTE TURNO (PRIORIDADE ALTA PARA MENCIONAR AGORA, SÓ FALE SE RELACIONADO À PERGUNTA):
+{new_knowledge_str}
 
 === REGRAS ABSOLUTAS ===
 - NUNCA invente fatos novos.

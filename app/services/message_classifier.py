@@ -17,9 +17,10 @@ class MessageClassifier(ABC):
     """
     
     @abstractmethod
-    def classify(self, text: str, available_topics: Optional[List[dict]] = None, **kwargs) -> MessageAnalysisResult:
+    def classify(self, text: str, available_topics: Optional[List[dict]] = None, player_history: Optional[List[str]] = None, **kwargs) -> MessageAnalysisResult:
         """
         Recebe o texto do jogador e tópicos para extrair a intenção e os hits.
+        O player_history opcional é uma lista das ultimas mensagens para calculo de novelty.
         """
         pass
 
@@ -38,7 +39,7 @@ class HeuristicMessageClassifier(MessageClassifier):
             MessageIntent.ask: re.compile(r'\b(onde|quem|quando|por que|porque|como|o que|qual)\b', re.IGNORECASE)
         }
 
-    def classify(self, text: str, available_topics: Optional[List[dict]] = None, **kwargs) -> MessageAnalysisResult:
+    def classify(self, text: str, available_topics: Optional[List[dict]] = None, player_history: Optional[List[str]] = None, **kwargs) -> MessageAnalysisResult:
         text_lower = text.lower().strip()
         
         # 1. Classificação de Intenção (Heurística simples)
@@ -67,6 +68,7 @@ class HeuristicMessageClassifier(MessageClassifier):
             
         # 3. Extração de Tópicos
         detected_topic_ids = []
+        sensitive_topic_ids = []
         primary_topic_id = None
         sensitivity_hit = SensitivityLevel.none
 
@@ -84,23 +86,63 @@ class HeuristicMessageClassifier(MessageClassifier):
                         detected_topic_ids.append(topic["id"])
                         
                         if topic.get("is_sensitive"):
+                            sensitive_topic_ids.append(topic["id"])
                             sensitivity_hit = SensitivityLevel.high
                             
             if detected_topic_ids:
                 # Naive primary assignment for MVP
                 primary_topic_id = detected_topic_ids[0]
 
-        # 4. Novelty padrão seguro no MVP
-        # O histórico real precisa vir pelo modelo em tarefas futuras
-        novelty = NoveltyLevel.new 
+        # 4. Novelty análise com histórico
+        novelty = NoveltyLevel.new
+        if player_history:
+            import string
+            def normalize(s: str) -> str:
+                return s.lower().translate(str.maketrans('', '', string.punctuation)).strip()
+            
+            norm_text = normalize(text)
+            current_words = set(norm_text.split())
+            
+            for past_msg in player_history:
+                norm_past = normalize(past_msg)
+                if not norm_past:
+                    continue
+                    
+                # Repetição exata
+                if norm_text == norm_past:
+                    novelty = NoveltyLevel.repeat
+                    break
+                
+                past_words = set(norm_past.split())
+                if not past_words or not current_words:
+                    continue
+                    
+                # Jaccard similarity para repetição quase exata
+                intersection = current_words.intersection(past_words)
+                union = current_words.union(past_words)
+                similarity = len(intersection) / len(union) if len(union) > 0 else 0
+                
+                if similarity > 0.8:
+                    novelty = NoveltyLevel.repeat
+                    break
+                
+                # Reframe: a mensagem atual engloba a passada, mas é mais específica
+                if past_words.issubset(current_words) and len(current_words) > len(past_words):
+                    if novelty != NoveltyLevel.repeat:
+                        novelty = NoveltyLevel.reframe
+
+        notes = "Heuristic analysis MVP"
+        if novelty != NoveltyLevel.new:
+            notes += f" | novelty={novelty.value}"
 
         return MessageAnalysisResult(
             primary_topic_id=primary_topic_id,
             detected_topic_ids=detected_topic_ids,
+            sensitive_topic_ids=sensitive_topic_ids,
             intent=detected_intent,
             specificity=specificity,
             novelty=novelty,
             sensitivity_hit=sensitivity_hit,
             confidence=confidence,
-            notes="Heuristic analysis MVP"
+            notes=notes
         )

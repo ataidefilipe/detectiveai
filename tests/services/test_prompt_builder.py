@@ -64,4 +64,4 @@ def test_prompt_builder_without_facts():
     
     # Should contain fallback texts
     assert "Nenhum segredo revelado até agora" in system_prompt
-    assert "Nenhum tópico do cenário foi descoberto" in system_prompt
+    assert "Nenhum cenário já discutido." in system_prompt
