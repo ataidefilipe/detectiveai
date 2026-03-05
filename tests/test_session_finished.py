@@ -27,7 +27,8 @@ def test_cannot_message_finished_session():
         f"/sessions/{session_id}/accuse",
         json={
             "suspect_id": marina.id,
-            "evidence_ids": []
+            "evidence_ids": [],
+            "motive_key": "financial_gain"
         }
     )
     assert resp.status_code == 200

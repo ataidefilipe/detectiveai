@@ -4,6 +4,25 @@
 
   "culprit": "Marina Souza",
 
+  "motives": [
+    {
+      "key": "financial_gain",
+      "label": "Ganho Financeiro",
+      "description": "Marina encobria as irregularidades contábeis para desviar dinheiro."
+    },
+    {
+      "key": "revenge",
+      "label": "Vingança",
+      "description": "Marina queria se vingar dos anos de pressão e humilhação."
+    },
+    {
+      "key": "protection",
+      "label": "Proteção de Terceiros",
+      "description": "Marina estava protegendo Clara, a estagiária."
+    }
+  ],
+  "true_motive_key": "financial_gain",
+
   "suspects": [
     {
       "name": "Marina Souza",

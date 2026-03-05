@@ -16,6 +16,7 @@ def evaluate_verdict(
     session_id: int,
     chosen_suspect_id: int,
     evidence_ids: List[int],
+    motive_key: str,
     db: Optional[Session] = None
 ) -> Dict[str, Any]:
     """
@@ -34,6 +35,8 @@ def evaluate_verdict(
             - required_evidence_ids
             - chosen_suspect_id
             - real_culprit_id
+            - chosen_motive_key
+            - motive_result
     """
 
     close_session = False
@@ -66,6 +69,13 @@ def evaluate_verdict(
 
         real_culprit_id = scenario.culprit_id
         required_evidence_ids = scenario.required_evidence_ids or []
+        true_motive_key = scenario.true_motive_key
+        
+        # Validate motive exists in scenario options
+        if scenario.motive_options:
+            valid_motive_keys = [m.get("key") for m in scenario.motive_options]
+            if motive_key not in valid_motive_keys:
+                raise NotFoundError(f"Motive {motive_key} is not valid for this scenario.")
 
         # ----------------------------------------
         # 2.5. Validate User Input (B2)
@@ -104,6 +114,11 @@ def evaluate_verdict(
                     raise RuleViolationError(f"Evidence {ev_id} was not used against the accused suspect {chosen_suspect_id} during the session.")
 
         # ----------------------------------------
+        # 3. Assess Motive Result
+        # ----------------------------------------
+        motive_result = "correct" if motive_key == true_motive_key else "wrong"
+
+        # ----------------------------------------
         # 3. Wrong culprit → immediate fail
         # ----------------------------------------
         if chosen_suspect_id != real_culprit_id:
@@ -113,6 +128,8 @@ def evaluate_verdict(
                 "required_evidence_ids": required_evidence_ids,
                 "chosen_suspect_id": chosen_suspect_id,
                 "real_culprit_id": real_culprit_id,
+                "chosen_motive_key": motive_key,
+                "motive_result": motive_result
             }
 
         # ----------------------------------------
@@ -122,7 +139,7 @@ def evaluate_verdict(
 
         missing = list(required - set(provided))
 
-        if not missing:
+        if not missing and motive_result == "correct":
             result_type = "correct"
         else:
             result_type = "partial"
@@ -133,6 +150,8 @@ def evaluate_verdict(
             "required_evidence_ids": required_evidence_ids,
             "chosen_suspect_id": chosen_suspect_id,
             "real_culprit_id": real_culprit_id,
+            "chosen_motive_key": motive_key,
+            "motive_result": motive_result
         }
 
     finally:

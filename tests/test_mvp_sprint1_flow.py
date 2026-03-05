@@ -197,9 +197,40 @@ def test_mvp_sprint1_flow_end_to_end():
         f"/sessions/{session_id}/accuse",
         json={
             "suspect_id": marina_id,
-            "evidence_ids": mandatory_ids
+            "evidence_ids": mandatory_ids,
+            "motive_key": "financial_gain"
         }
     )
 
     assert resp_accuse.status_code == 200
     assert resp_accuse.json()["result_type"] == "correct"
+
+    # -------------------------
+    # 8. Acusação Final (Erro de Motivação = Partial) MVP-007 + MVP-008
+    # -------------------------
+    # (Here we are mocking another session manually just to reuse the database variables or creating a second accuse logic if the session wasn't closed.
+    # Since in reality a session closes after one request, we will cheat and un-close it inside DB just for the test, or just test if we receive a partial result on a new session)
+    # Let's create a new quick session for the wrong motive check
+    resp2 = client.post("/sessions", json={"scenario_id": scenario_id})
+    session_id_2 = resp2.json()["session_id"]
+    
+    # We must mark all required evidences as used
+    db = SessionLocal()
+    from app.infra.db_models import SessionEvidenceUsageModel
+    for evid_id in mandatory_ids:
+        db.add(SessionEvidenceUsageModel(session_id=session_id_2, suspect_id=marina_id, evidence_id=evid_id))
+    db.commit()
+    db.close()
+    
+    resp_accuse_partial = client.post(
+        f"/sessions/{session_id_2}/accuse",
+        json={
+            "suspect_id": marina_id,
+            "evidence_ids": mandatory_ids,
+            "motive_key": "revenge" # Errado
+        }
+    )
+
+    assert resp_accuse_partial.status_code == 200
+    assert resp_accuse_partial.json()["result_type"] == "partial"
+    assert resp_accuse_partial.json()["motive_result"] == "wrong"

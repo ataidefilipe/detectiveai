@@ -203,7 +203,8 @@ def get_session_overview(session_id: int, db: Optional[Session] = None) -> Dict[
             "scenario": {
                 "title": scenario.title,
                 "description": scenario.description,
-                "objective": "find_culprit"  # placeholder objective for MVP
+                "objective": "find_culprit",  # placeholder objective for MVP
+                "motive_options": scenario.motive_options
             },
             "suspects": suspects_summary
         }

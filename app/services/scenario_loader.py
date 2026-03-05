@@ -59,13 +59,23 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
             return existing
 
         # -------------------------
+        # 3.5 Validate True Motive
+        # -------------------------
+        if config.true_motive_key and config.motives:
+            valid_motive_keys = [m.key for m in config.motives]
+            if config.true_motive_key not in valid_motive_keys:
+                raise DomainError(f"true_motive_key '{config.true_motive_key}' is not in motives list.")
+
+        # -------------------------
         # 4. Create Scenario
         # -------------------------
         scenario = ScenarioModel(
             title=config.title,
             description=config.description,
             case_summary=config.case_summary,
-            topics=[t.model_dump() for t in config.topics] if config.topics else []
+            topics=[t.model_dump() for t in config.topics] if config.topics else [],
+            motive_options=[m.model_dump() for m in config.motives] if config.motives else [],
+            true_motive_key=config.true_motive_key
         )
         db.add(scenario)
         db.flush()

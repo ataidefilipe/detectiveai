@@ -11,6 +11,7 @@ def finalize_session(
     session_id: int,
     chosen_suspect_id: int,
     evidence_ids: List[int],
+    motive_key: str,
     db: Optional[Session] = None
 ) -> Dict[str, Any]:
     """
@@ -49,6 +50,7 @@ def finalize_session(
             session_id=session_id,
             chosen_suspect_id=chosen_suspect_id,
             evidence_ids=evidence_ids,
+            motive_key=motive_key,
             db=db
         )
 

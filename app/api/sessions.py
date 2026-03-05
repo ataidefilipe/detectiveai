@@ -91,6 +91,7 @@ def accuse_session(session_id: int, payload: AccuseRequest):
             session_id=session_id,
             chosen_suspect_id=payload.suspect_id,
             evidence_ids=payload.evidence_ids,
+            motive_key=payload.motive_key,
             db=db
         )
 
@@ -125,6 +126,8 @@ def accuse_session(session_id: int, payload: AccuseRequest):
             real_culprit_id=verdict["real_culprit_id"],
             required_evidence_ids=verdict["required_evidence_ids"],
             missing_evidence_ids=verdict["missing_evidence_ids"],
+            chosen_motive_key=verdict["chosen_motive_key"],
+            motive_result=verdict["motive_result"],
             description=description
         )
 

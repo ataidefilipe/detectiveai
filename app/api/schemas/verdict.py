@@ -5,6 +5,7 @@ from typing import List
 class AccuseRequest(BaseModel):
     suspect_id: int
     evidence_ids: List[int]
+    motive_key: str
 
 
 class AccuseResponse(BaseModel):
@@ -15,4 +16,6 @@ class AccuseResponse(BaseModel):
     real_culprit_id: int
     required_evidence_ids: List[int]
     missing_evidence_ids: List[int]
+    chosen_motive_key: str
+    motive_result: str
     description: str

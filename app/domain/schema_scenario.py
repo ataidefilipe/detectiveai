@@ -1,6 +1,11 @@
 from typing import List, Optional
 from pydantic import BaseModel, Field
 
+class MotivationConfig(BaseModel):
+    key: str = Field(..., description="Stable unique key for the motivation (e.g., 'financial_gain')")
+    label: str = Field(..., description="Public label shown to the player")
+    description: Optional[str] = Field(default=None, description="Internal description for the author")
+
 class TopicConfig(BaseModel):
     id: str = Field(..., description="Unique slug for the topic, e.g., 'knife', 'victim_relationship'")
     label: str = Field(..., description="Human-readable label for the UI")
@@ -72,5 +77,7 @@ class ScenarioConfig(BaseModel):
     secrets: List[SecretConfig] = Field(..., description="List of secrets")
     chronology: Optional[List[ChronologyEvent]] = None
     topics: Optional[List[TopicConfig]] = Field(default=None, description="Optional list of tracked topics in the scenario")
+    motives: Optional[List[MotivationConfig]] = Field(default=None, description="List of possible motives for the crime")
+    true_motive_key: Optional[str] = Field(default=None, description="The key of the true motivation (must exist in motives)")
 
 
