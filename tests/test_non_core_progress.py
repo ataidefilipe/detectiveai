@@ -50,7 +50,7 @@ def test_non_core_progress_api():
         assert res_empty.status_code == 200
         data_empty = res_empty.json()
         assert data_empty["suspect_state"]["progress"] == 1.0
-        assert data_empty["suspect_state"]["is_closed"] is True
+        assert data_empty["suspect_state"]["is_closed"] is False
 
         # Test Suspect 1: Starts at 0, goes to 1 after revealing the single non-core secret
         res_reg_start = client.post(
@@ -68,7 +68,7 @@ def test_non_core_progress_api():
         assert res_reg_reveal.status_code == 200
         data_reg = res_reg_reveal.json()
         assert data_reg["suspect_state"]["progress"] == 1.0
-        assert data_reg["suspect_state"]["is_closed"] is True
+        assert data_reg["suspect_state"]["is_closed"] is False
 
     finally:
         db.close()

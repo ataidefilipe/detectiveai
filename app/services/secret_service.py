@@ -103,7 +103,7 @@ def apply_evidence_to_suspect(
             state.progress = revealed_core / total_core
             
             if state.progress >= 1.0:
-                state.is_closed = True
+                pass # T4: Removed automatic is_closed
         else:
             # ---------------------------------------
             # Fallback for Suspects without Core Secrets
@@ -122,11 +122,11 @@ def apply_evidence_to_suspect(
                 
                 # Suspect without core secrets closes when all minor secrets are found
                 if state.progress >= 1.0:
-                    state.is_closed = True
+                    pass # T4: Removed automatic is_closed
             else:
                 # No secrets at all = purely narrative NPC
                 state.progress = 1.0
-                state.is_closed = True
+                # T4: Removed automatic is_closed
 
         db.flush()
         db.refresh(state)

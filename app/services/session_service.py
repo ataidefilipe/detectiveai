@@ -73,7 +73,6 @@ def create_session(scenario_id: int, db: Optional[Session] = None) -> SessionMod
             if core_secrets == 0:
                 if regular_secrets == 0:
                     initial_progress = 1.0
-                    initial_closed = True
                 else:
                     initial_progress = 0.0
 
@@ -81,7 +80,7 @@ def create_session(scenario_id: int, db: Optional[Session] = None) -> SessionMod
                 session_id=session.id,
                 suspect_id=suspect.id,
                 revealed_secret_ids=[],
-                is_closed=initial_closed,
+                is_closed=False,
                 progress=initial_progress,
                 stance="neutral",
                 patience=50.0,

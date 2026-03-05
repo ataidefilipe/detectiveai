@@ -125,8 +125,8 @@ def test_integration_evidence_reveals_secret(db_session):
     assert res["evidence_effect"] == "revealed_secret"
     assert len(res["revealed_secrets"]) == 1
     assert res["revealed_secrets"][0]["content"] == "Eu usei a faca"
-    # Ensure Dummy adapter responded correctly. Since revealing the ONLY core secret closes the suspect,
-    assert "Já falei tudo que sabia" in res["npc_message"]["text"]
+    # Ensure Dummy adapter responded correctly. Since revealing the ONLY core secret NO LONGER closes the suspect,
+    assert "Tá bom, tá bom! Essa evidência me incrimina" in res["npc_message"]["text"]
 
 from unittest.mock import patch
 
