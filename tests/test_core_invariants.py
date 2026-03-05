@@ -15,7 +15,7 @@ def test_invariant_cannot_accuse_with_unused_evidence():
     """F1 - invariant: player cannot accuse using an evidence they never showed."""
     db = TestingSessionLocal()
     try:
-        scenario = ScenarioModel(title="Invariant Test Scenario")
+        scenario = ScenarioModel(scenario_code="inv1", title="Invariant Test Scenario")
         db.add(scenario)
         db.commit()
 
@@ -37,7 +37,7 @@ def test_invariant_cannot_accuse_with_unused_evidence():
         # Accuse directly without ever presenting evidence
         res_accuse = client.post(
             f"/sessions/{session_id}/accuse",
-            json={"suspect_id": suspect.id, "evidence_ids": [evidence.id]}
+            json={"suspect_id": suspect.id, "evidence_ids": [evidence.id], "motive_key": "motive"}
         )
 
         assert res_accuse.status_code == 409
@@ -51,7 +51,7 @@ def test_invariant_cannot_play_in_finished_session():
     """F1 - invariant: session locked after sending accusation."""
     db = TestingSessionLocal()
     try:
-        scenario = ScenarioModel(title="Finished Session Scenario")
+        scenario = ScenarioModel(scenario_code="inv2", title="Finished Session Scenario")
         db.add(scenario)
         db.commit()
 
@@ -77,7 +77,7 @@ def test_invariant_cannot_play_in_finished_session():
         # Accuse -> finishes session
         res_accuse = client.post(
             f"/sessions/{session_id}/accuse",
-            json={"suspect_id": suspect.id, "evidence_ids": [evidence.id]}
+            json={"suspect_id": suspect.id, "evidence_ids": [evidence.id], "motive_key": "motive"}
         )
         assert res_accuse.status_code == 200
 
@@ -98,7 +98,7 @@ def test_invariant_no_is_mandatory_spoiler_in_response():
     """F1 - invariant: evidence response must not leak the is_mandatory spoiler."""
     db = TestingSessionLocal()
     try:
-        scenario = ScenarioModel(title="Spoiler Test")
+        scenario = ScenarioModel(scenario_code="inv3", title="Spoiler Test")
         db.add(scenario)
         db.commit()
 
@@ -129,7 +129,7 @@ def test_invariant_atomic_turn_rollback_on_error(mock_add_npc_reply):
     """F1 - invariant: if a turn crashes mid-way (e.g. at the LLM adapter), the entire turn rolls back."""
     db = TestingSessionLocal()
     try:
-        scenario = ScenarioModel(title="Transaction Test")
+        scenario = ScenarioModel(scenario_code="inv4", title="Transaction Test")
         db.add(scenario)
         db.commit()
 

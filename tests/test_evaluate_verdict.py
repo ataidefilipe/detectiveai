@@ -32,8 +32,11 @@ def seed_verdict_scenario(db):
     - 1 session
     """
     scenario = ScenarioModel(
+        scenario_code="verd1",
         title="Verdict Test Scenario",
-        required_evidence_ids=[]
+        required_evidence_ids=[],
+        true_motive_key="some_motive",
+        motive_options=[{"key": "some_motive", "label": "Motive"}]
     )
     db.add(scenario)
     db.commit()
@@ -123,6 +126,7 @@ def test_verdict_wrong_culprit():
         session_id=data["session_id"],
         chosen_suspect_id=data["wrong_suspect_id"],
         evidence_ids=[data["evidence_1_id"], data["evidence_2_id"]],
+        motive_key="some_motive",
         db=db
     )
 
@@ -145,6 +149,7 @@ def test_verdict_correct_with_all_evidences():
         session_id=data["session_id"],
         chosen_suspect_id=data["culprit_id"],
         evidence_ids=[data["evidence_1_id"], data["evidence_2_id"]],
+        motive_key="some_motive",
         db=db
     )
 
@@ -166,6 +171,7 @@ def test_verdict_partial_missing_evidence():
         session_id=data["session_id"],
         chosen_suspect_id=data["culprit_id"],
         evidence_ids=[data["evidence_1_id"]],  # missing evidence_2
+        motive_key="some_motive",
         db=db
     )
 

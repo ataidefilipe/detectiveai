@@ -9,7 +9,7 @@ def test_evidence_was_effective_flag():
     db = TestingSessionLocal()
     try:
         # Create minimal scenario data
-        scenario = ScenarioModel(title="Effectiveness Test")
+        scenario = ScenarioModel(scenario_code="eff2", title="Effectiveness Test")
         db.add(scenario)
         db.commit()
 

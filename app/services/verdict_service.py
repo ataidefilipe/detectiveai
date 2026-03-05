@@ -10,6 +10,8 @@ from app.infra.db_models import (
     SessionEvidenceUsageModel
 )
 from app.core.exceptions import NotFoundError, RuleViolationError
+from app.core.telemetry import telemetry_logger
+import json
 
 
 def evaluate_verdict(
@@ -122,7 +124,7 @@ def evaluate_verdict(
         # 3. Wrong culprit → immediate fail
         # ----------------------------------------
         if chosen_suspect_id != real_culprit_id:
-            return {
+            result_dict = {
                 "result_type": "wrong",
                 "missing_evidence_ids": required_evidence_ids,
                 "required_evidence_ids": required_evidence_ids,
@@ -131,6 +133,13 @@ def evaluate_verdict(
                 "chosen_motive_key": motive_key,
                 "motive_result": motive_result
             }
+            telemetry_logger.info(json.dumps({
+                "event": "session_verdict",
+                "session_id": session_id,
+                "scenario_id": scenario.id,
+                **result_dict
+            }))
+            return result_dict
 
         # ----------------------------------------
         # 4. Culprit correct → check evidences
@@ -144,7 +153,7 @@ def evaluate_verdict(
         else:
             result_type = "partial"
 
-        return {
+        result_dict = {
             "result_type": result_type,
             "missing_evidence_ids": missing,
             "required_evidence_ids": required_evidence_ids,
@@ -153,6 +162,15 @@ def evaluate_verdict(
             "chosen_motive_key": motive_key,
             "motive_result": motive_result
         }
+        
+        telemetry_logger.info(json.dumps({
+            "event": "session_verdict",
+            "session_id": session_id,
+            "scenario_id": scenario.id,
+            **result_dict
+        }))
+
+        return result_dict
 
     finally:
         if close_session:

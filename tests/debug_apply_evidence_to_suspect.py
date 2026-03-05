@@ -33,7 +33,7 @@ def seed_basic_scenario(db):
     - 2 secrets (1 core, 1 non-core)
     - 1 session
     """
-    scenario = ScenarioModel(title="Test Scenario")
+    scenario = ScenarioModel(scenario_code="deb1", title="Test Scenario")
     db.add(scenario)
     db.commit()
     db.refresh(scenario)

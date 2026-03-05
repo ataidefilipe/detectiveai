@@ -3,4 +3,28 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     DEBUG_TURN_TRACE: bool = False
 
+    # --- Game Balance Thresholds ---
+    PENALTY_FOR_REPETITION: float = -15.0
+    
+    INTENT_PRESSURE_GAIN: float = 15.0
+    INTENT_CALM_RAPPORT_GAIN: float = 10.0
+    INTENT_CALM_PRESSURE_DROP: float = -5.0
+    
+    SENSITIVE_TOPIC_PRESSURE_GAIN: float = 10.0
+    SENSITIVE_TOPIC_PATIENCE_DROP: float = -10.0
+    SENSITIVE_HIT_HEAT_DELTA: float = 15.0
+    
+    TOPIC_SATURATION_TOUCH_COUNT: int = 3
+    TOPIC_SATURATION_PENALTY: float = -20.0
+    TOPIC_HOT_HEAT_THRESHOLD: float = 50.0
+    TOPIC_HOT_PRESSURE_GAIN: float = 5.0
+    
+    STANCE_DEFENSIVE_PATIENCE_THRESHOLD: float = 10.0
+    STANCE_PRESSURED_PRESSURE_THRESHOLD: float = 80.0
+    STANCE_COOPERATIVE_PATIENCE_THRESHOLD: float = 40.0
+    STANCE_COOPERATIVE_PRESSURE_THRESHOLD: float = 30.0
+    
+    OUT_OF_CONTEXT_PENALTY_DEFAULT: float = -10.0
+    OUT_OF_CONTEXT_PENALTY_SENSITIVE: float = -5.0
+
 settings = Settings()

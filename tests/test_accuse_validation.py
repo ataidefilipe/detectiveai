@@ -23,7 +23,7 @@ def test_cannot_accuse_invalid_suspect():
         scenario = load_scenario_from_json(scenario_path, db=db)
         
         # create a dummy suspect in another scenario
-        other_scenario = ScenarioModel(title="Dummy", culprit_id=999)
+        other_scenario = ScenarioModel(scenario_code="acc1", title="Dummy", culprit_id=999)
         db.add(other_scenario)
         db.flush()
         
@@ -43,7 +43,8 @@ def test_cannot_accuse_invalid_suspect():
         f"/sessions/{test_session_id}/accuse",
         json={
             "suspect_id": invalid_suspect_id,
-            "evidence_ids": []
+            "evidence_ids": [],
+            "motive_key": "financial_gain"
         }
     )
 
@@ -62,7 +63,7 @@ def test_cannot_accuse_invalid_evidence():
         marina = db.query(SuspectModel).filter(SuspectModel.name == "Marina Souza").first()
         
         # create a dummy evidence in another scenario
-        other_scenario = ScenarioModel(title="Dummy", culprit_id=999)
+        other_scenario = ScenarioModel(scenario_code="acc2", title="Dummy", culprit_id=999)
         db.add(other_scenario)
         db.flush()
         
@@ -83,7 +84,8 @@ def test_cannot_accuse_invalid_evidence():
         f"/sessions/{test_session_id}/accuse",
         json={
             "suspect_id": marina_id,
-            "evidence_ids": [invalid_evidence_id]
+            "evidence_ids": [invalid_evidence_id],
+            "motive_key": "financial_gain"
         }
     )
 
@@ -115,7 +117,8 @@ def test_cannot_accuse_with_unused_evidence():
         f"/sessions/{test_session_id}/accuse",
         json={
             "suspect_id": marina_id,
-            "evidence_ids": [relatorio_id]
+            "evidence_ids": [relatorio_id],
+            "motive_key": "financial_gain"
         }
     )
 
@@ -154,7 +157,8 @@ def test_can_accuse_with_used_evidence():
         f"/sessions/{test_session_id}/accuse",
         json={
             "suspect_id": marina_id,
-            "evidence_ids": [relatorio_id]
+            "evidence_ids": [relatorio_id],
+            "motive_key": "financial_gain"
         }
     )
 

@@ -24,12 +24,6 @@ def bootstrap_game():
 
     db: Session = SessionLocal()
     try:
-        # 2. Check if any scenario already exists
-        existing = db.query(ScenarioModel).first()
-        if existing:
-            print("[bootstrap] Scenario(s) already present. Skipping load.")
-            return
-
         # 3. Load all scenario JSON files
         if not SCENARIOS_DIR.exists():
             print("[bootstrap] No scenarios directory found. Skipping.")

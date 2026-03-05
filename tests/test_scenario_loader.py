@@ -15,6 +15,7 @@ def db_session():
 
 def test_load_scenario_valid_motive(db_session, monkeypatch):
     valid_json = {
+        "scenario_code": "test-valid",
         "title": "Cenário Válido Motivação",
         "description": "Teste",
         "culprit": "Fulano",
@@ -47,6 +48,7 @@ def test_load_scenario_valid_motive(db_session, monkeypatch):
 
 def test_load_scenario_invalid_motive_key(db_session, monkeypatch):
     invalid_json = {
+        "scenario_code": "test-invalid",
         "title": "Cenário Inválido Motivação",
         "description": "Teste",
         "culprit": "Fulano",

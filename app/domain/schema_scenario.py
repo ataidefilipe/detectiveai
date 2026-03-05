@@ -35,6 +35,10 @@ class SuspectConfig(BaseModel):
     name: str
     backstory: Optional[str] = None
     personality: Optional[str] = None
+    internal_note: Optional[str] = Field(
+        default=None,
+        description="Internal author note not exposed to the player"
+    )
     initial_statement: Optional[str] = Field(
         default=None,
         description="Initial statement shown to the player before interrogation"
@@ -54,7 +58,8 @@ class SuspectConfig(BaseModel):
 
 class EvidenceConfig(BaseModel):
     name: str = Field(..., description="Name of the evidence")
-    description: Optional[str] = Field(default=None, description="Internal usage desc")
+    description: Optional[str] = Field(default=None, description="Public description")
+    internal_note: Optional[str] = Field(default=None, description="Internal usage desc not exposed to players")
     related_topic_id: Optional[str] = Field(default=None, description="Topic slug it synergizes with to avoid out-of-context")
     is_mandatory: bool = Field(default=False, description="Whether this evidence is required for correct verdict")
 
@@ -63,6 +68,7 @@ class ChronologyEvent(BaseModel):
     description: str = Field(..., description="Description of the event")
 
 class ScenarioConfig(BaseModel):
+    scenario_code: str = Field(..., description="Stable unique code for the scenario")
     title: str = Field(..., description="Title of the scenario")
     description: Optional[str] = None
 

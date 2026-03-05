@@ -50,12 +50,12 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
         # -------------------------
         existing = (
             db.query(ScenarioModel)
-            .filter(ScenarioModel.title == config.title)
+            .filter(ScenarioModel.scenario_code == config.scenario_code)
             .first()
         )
 
         if existing:
-            print(f"[loader] Scenario '{config.title}' already exists. Skipping insert.")
+            print(f"[loader] Scenario '{config.scenario_code}' already exists. Skipping insert.")
             return existing
 
         # -------------------------
@@ -70,6 +70,7 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
         # 4. Create Scenario
         # -------------------------
         scenario = ScenarioModel(
+            scenario_code=config.scenario_code,
             title=config.title,
             description=config.description,
             case_summary=config.case_summary,
@@ -94,6 +95,7 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
                 name=s.name,
                 backstory=s.backstory,
                 personality=s.personality,
+                internal_note=s.internal_note,
                 initial_statement=s.initial_statement,
                 final_phrase=s.final_phrase,
                 true_timeline=s.true_timeline,
@@ -116,6 +118,7 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
                 scenario_id=scenario.id,
                 name=e.name,
                 description=e.description,
+                internal_note=e.internal_note,
                 related_topic_id=e.related_topic_id
             )
             db.add(evidence)

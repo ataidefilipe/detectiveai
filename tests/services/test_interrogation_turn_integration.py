@@ -16,8 +16,7 @@ from unittest.mock import patch
 # Set up an in-memory SQLite database for integration testing
 @pytest.fixture(autouse=True)
 def enable_debug_trace():
-    with patch("app.services.interrogation_turn_service.settings") as mock_settings:
-        mock_settings.DEBUG_TURN_TRACE = True
+    with patch("app.services.interrogation_turn_service.settings.DEBUG_TURN_TRACE", new=True):
         yield
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
@@ -36,7 +35,7 @@ def db_session():
         {"id": "local", "aliases": ["onde", "cidade"], "is_sensitive": False}
     ]
     
-    scenario = ScenarioModel(id=1, title="Test Scenario", description="A test scenario", topics=topics)
+    scenario = ScenarioModel(scenario_code="turn1", id=1, title="Test Scenario", description="A test scenario", topics=topics)
     db.add(scenario)
     
     # Suspect
@@ -132,8 +131,7 @@ def test_integration_evidence_reveals_secret(db_session):
 from unittest.mock import patch
 
 def test_integration_knowledge_progression(db_session):
-    with patch("app.services.interrogation_turn_service.settings") as mock_settings:
-        mock_settings.DEBUG_TURN_TRACE = True
+    with patch("app.services.interrogation_turn_service.settings.DEBUG_TURN_TRACE", new=True):
         
         # Turn 1: asks about faca
         res1 = run_interrogation_turn(session_id=1, suspect_id=1, text="O que sabe sobre a faca?", evidence_id=None, db=db_session)

@@ -18,6 +18,7 @@ def test_scenario_loader_rollback_on_invalid_culprit():
 
         # 2. Create an invalid JSON (culprit does not exist in suspects list)
         invalid_data = {
+            "scenario_code": "rollback-test",
             "title": "Invalid Story",
             "description": "Will crash half-way",
             "culprit": "Ghost",

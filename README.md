@@ -32,8 +32,9 @@ A IA é usada para **estilo, nuance e tensão dramática**, não para lógica de
 6. Evidências corretas podem revelar **segredos** controlados matematicamente.
 7. Quando se sentir pronto, o jogador faz uma **acusação final**:
    * escolhe o suspeito culpado
+   * escolhe a **motivação** (o porquê o suspeito cometeu o crime) baseando-se nas opções do cenário `motive_options`
    * seleciona as evidências (Que **obrigatoriamente** o jogador precisa já ter apresentado em alguma conversa anterior — Evidências não engatilhadas resultarão em erro HTTP `409 Conflict`)
-8. O sistema avalia o resultado e retorna `correct`, `partial` ou `wrong`. A Sessão é formalmente *bloqueada e encerrada*.
+8. O sistema avalia o resultado e retorna `correct`, `partial` (ex: errou a motivação ou esqueceu evidência) ou `wrong`. A Sessão é formalmente *bloqueada e encerrada*.
 
 ---
 
@@ -59,6 +60,7 @@ A IA é usada para **estilo, nuance e tensão dramática**, não para lógica de
 
 ### Evidências e Efeitividade
 * O frontend não depende de referências hardcoded de banco. Existe endpoint `/evidences` e as chaves `is_mandatory` (vital pra resolver o caso) são ocultas em produção.
+* A API esconde sistematicamente o preenchimento de `internal_note` no JSON de Scenarios, protegendo o jogador contra spoilers e reservando anotações para game designers do conteúdo.
 * No retorno do Turno, avaliamos o `evidence_effect` (o impacto que a fala gerou sobre o NPC), retornando se o usuário acabou de *revelar um novo segredo*, usar algo *duplicado* ou algo sem efeito (*none*). 
 
 ### IA e Limits
@@ -76,6 +78,11 @@ O motor de jogo foi drasticamente expandido para suportar conversas mais imersiv
 * **Política de Conhecimento Segregada (Episódios D e E):** O backend adota o conceito de "O que o NPC está autorizado a dizer agora". Segredos ligados a evidências (*Secrets*) e fofocas/contextos de história (*Knowledge Items*) são liberados em camadas pela `reveal_policy`. As evidências podem falhar silenciosamente se o assunto estiver fora de contexto (`out_of_context`).
 * **Segurança de LLM (Episódio F):** Prompts orientados a "Modos de Resposta" rígidos (evasivo, recusa, final). Adicionado um Fallback determinístico caso a API da LLM caia em produção.
 * **Feedback Sistêmico (Episódio G e H):** A API agora responde dicas visuais em tempo real (`npc_shift`, `topic_signal` e `conversation_effect`), guiando sutilmente o frontend. Exceções e erros são altamente tipados (DomainError e NotFoundError) blindando o backend.
+* **Ciclo Narrativo Avançado (Sprints 2 e 3):** 
+   - A Acusação Final agora pesa o _Motivo_. 
+   - O Bootstrapping de Scenarios é __Idempotente__ (via `scenario_code`), permitindo atualizar cenários on-the-fly sem dropar o DB.
+   - Thresholds de pressão e reações numéricas externalizadas num contêiner `app.core.config.Settings` fixo.
+   - Trillha de observabilidade estruturada (`telemetry_logger`) no terminal.
 
 ---
 
@@ -130,5 +137,13 @@ pytest tests
   }
 }
 ```
-4. `POST /sessions/{id}/accuse` 
+133. `POST /sessions/{id}/accuse` 
+> Body de Exemplo:
+```json
+{
+  "suspect_id": 1,
+  "motive_key": "financial_gain",
+  "evidence_ids": [1, 2]
+}
+```
 > Se tentada após já finalizada ou acusando com Evidências Id nunca levadas à interrogatório, o Backend bloqueará como `409 Conflict`.

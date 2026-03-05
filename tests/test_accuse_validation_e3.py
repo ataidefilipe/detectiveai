@@ -46,7 +46,8 @@ def test_cannot_accuse_with_evidence_used_on_wrong_suspect():
         f"/sessions/{test_session_id}/accuse",
         json={
             "suspect_id": outro_suspeito_id,
-            "evidence_ids": [relatorio_id]
+            "evidence_ids": [relatorio_id],
+            "motive_key": "financial_gain"
         }
     )
 

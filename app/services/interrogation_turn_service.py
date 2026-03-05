@@ -17,6 +17,8 @@ from app.api.schemas.chat import (
     TurnDebugTrace
 )
 from app.core.config import settings
+from app.core.telemetry import telemetry_logger
+import json
 
 
 def run_interrogation_turn(
@@ -97,7 +99,7 @@ def run_interrogation_turn(
     for topic_id in msg_analysis.detected_topic_ids:
         # Verifica se o tópico ESPECÍFICO detectado é sensível 
         is_sens_hit = topic_id in msg_analysis.sensitive_topic_ids
-        heat_delta = 15.0 if is_sens_hit else 0.0
+        heat_delta = settings.SENSITIVE_HIT_HEAT_DELTA if is_sens_hit else 0.0
 
         update_topic_hit(
             session_id=session_id,
@@ -124,9 +126,9 @@ def run_interrogation_turn(
         # Penalize for out_of_context
         if evidence_effect == "out_of_context":
             # MVP-004: Atenuate penalty if topic is sensitive
-            penalty = -10.0
+            penalty = settings.OUT_OF_CONTEXT_PENALTY_DEFAULT
             if msg_analysis.sensitivity_hit.value in ["high", "medium"]:
-                penalty = -5.0
+                penalty = settings.OUT_OF_CONTEXT_PENALTY_SENSITIVE
                 
             update_suspect_state_from_deltas(
                 session_id=session_id,
@@ -230,6 +232,28 @@ def run_interrogation_turn(
             allowed_knowledge=allowed_knowledge,
             new_knowledge_this_turn=new_knowledge
         )
+        
+    telemetry_logger.info(json.dumps({
+        "event": "interrogation_turn",
+        "session_id": session_id,
+        "suspect_id": suspect_id,
+        "msg_analysis": {
+            "intent": msg_analysis.intent.value,
+            "novelty": msg_analysis.novelty.value,
+            "sensitivity_hit": msg_analysis.sensitivity_hit.value,
+            "primary_topic_id": msg_analysis.primary_topic_id
+        },
+        "state_transition": {
+            "conversation_effect": state_transition.conversation_effect.value,
+            "npc_shift": state_transition.npc_shift.value,
+            "patience": suspect_state.get("patience", 0),
+            "pressure": suspect_state.get("pressure", 0)
+        },
+        "evidence_inserted": evidence_id is not None,
+        "evidence_effect": evidence_effect,
+        "topics_touched": len(msg_analysis.detected_topic_ids),
+        "revealed_secrets_count": len(revealed_secrets)
+    }))
 
     return {
         "player_message": player_msg,

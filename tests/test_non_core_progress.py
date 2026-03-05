@@ -11,7 +11,7 @@ client = TestClient(app)
 def test_non_core_progress_api():
     db = TestingSessionLocal()
     try:
-        scenario = ScenarioModel(title="Non Core Progress Test")
+        scenario = ScenarioModel(scenario_code="ncore1", title="Non Core Progress Test")
         db.add(scenario)
         db.commit()
 

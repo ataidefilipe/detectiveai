@@ -10,7 +10,7 @@ def evidence_scenario_db():
     db = TestingSessionLocal()
     
     # 1. Setup scenario
-    scenario = ScenarioModel(title="E1 Test Scenario", culprit_id=999)
+    scenario = ScenarioModel(scenario_code="ctxt1", title="E1 Test Scenario", culprit_id=999)
     db.add(scenario)
     db.flush()
     

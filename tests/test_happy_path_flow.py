@@ -80,7 +80,8 @@ def test_happy_path_piloto_end_to_end():
         f"/sessions/{session_id}/accuse",
         json={
             "suspect_id": marina.id,
-            "evidence_ids": mandatory_ids
+            "evidence_ids": mandatory_ids,
+            "motive_key": "financial_gain"
         }
     )
 

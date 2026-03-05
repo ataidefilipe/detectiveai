@@ -9,6 +9,7 @@ class ScenarioModel(Base):
     __tablename__ = "scenarios"
 
     id = Column(Integer, primary_key=True, index=True)
+    scenario_code = Column(String, unique=True, index=True, nullable=False)
     title = Column(String, nullable=False)
     description = Column(String)
     case_summary = Column(String)
@@ -43,6 +44,7 @@ class SuspectModel(Base):
     name = Column(String, nullable=False)
     backstory = Column(String)
     personality = Column(String)
+    internal_note = Column(String, nullable=True)
     initial_statement = Column(String)
     final_phrase = Column(String, nullable=True)
     true_timeline = Column(JSON) 
@@ -61,6 +63,7 @@ class EvidenceModel(Base):
     scenario_id = Column(Integer, ForeignKey("scenarios.id"), nullable=False)
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
+    internal_note = Column(String, nullable=True)
     related_topic_id = Column(String, nullable=True)
 
     scenario = relationship("ScenarioModel", back_populates="evidences")

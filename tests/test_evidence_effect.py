@@ -14,7 +14,7 @@ def test_evidence_effect_api():
     db = TestingSessionLocal()
     try:
         # Create minimal scenario data
-        scenario = ScenarioModel(title="Effectiveness API Test")
+        scenario = ScenarioModel(scenario_code="eff1", title="Effectiveness API Test")
         db.add(scenario)
         db.commit()
 

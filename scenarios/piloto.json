@@ -1,9 +1,8 @@
 {
+  "scenario_code": "piloto-01",
   "title": "O Caso do Escritório Trancado",
   "description": "Um funcionário importante da empresa Solarium Corp foi encontrado morto dentro de uma sala trancada por dentro. Apenas quatro pessoas tinham acesso ao andar no horário do crime.",
-
   "culprit": "Marina Souza",
-
   "motives": [
     {
       "key": "financial_gain",
@@ -22,11 +21,11 @@
     }
   ],
   "true_motive_key": "financial_gain",
-
   "suspects": [
     {
       "name": "Marina Souza",
       "backstory": "Assistente financeira. Trabalhou por cinco anos com a vítima, mas recentemente teve conflitos sobre relatórios contábeis. É meticulosa, ansiosa e tenta sempre parecer calma.",
+      "internal_note": "Atenção: A Marina tem um amante no escritório e estava roubando dinheiro para ele. Isso não deve ser revelado de imediato, e o jogador tem de pressioná-la.",
       "initial_statement": "Eu já disse tudo o que sei. Só quero ir embora logo.",
       "true_timeline": [
         "Chegou ao hotel às 20h",
@@ -34,10 +33,10 @@
         "Mentiu sobre estar sozinha"
       ],
       "lies": [
-      {
-        "statement": "Eu estava sozinha no meu quarto a noite toda.",
-        "broken_by": "Registro de acesso do cartão magnético"
-      }
+        {
+          "statement": "Eu estava sozinha no meu quarto a noite toda.",
+          "broken_by": "Registro de acesso do cartão magnético"
+        }
       ],
       "final_phrase": "Eu… já disse tudo que tinha pra dizer."
     },
@@ -57,11 +56,11 @@
       "final_phrase": "Não adianta insistir, já respondi tudo."
     }
   ],
-
   "evidences": [
     {
       "name": "Relatório Contábil Alterado",
       "description": "Documento encontrado na mesa da vítima com números adulterados.",
+      "internal_note": "Este documento foi impresso 1 hora antes do crime. Ele liga os desvios diretamente à conta bancária de Marina.",
       "is_mandatory": true
     },
     {
@@ -90,7 +89,6 @@
       "is_mandatory": false
     }
   ],
-
   "secrets": [
     {
       "suspect": "Marina Souza",
@@ -123,7 +121,6 @@
       "is_core": false
     }
   ],
-
   "chronology": [
     {
       "time": "21h40",

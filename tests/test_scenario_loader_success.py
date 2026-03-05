@@ -11,6 +11,7 @@ def test_scenario_loader_with_topics():
     tmp_path = None
     try:
         data = {
+            "scenario_code": "topic-case",
             "title": "Topic Case",
             "culprit": "Suspect A",
             "suspects": [{"name": "Suspect A"}],
@@ -51,6 +52,7 @@ def test_scenario_loader_with_knowledge_items():
     tmp_path = None
     try:
         data = {
+            "scenario_code": "know-case",
             "title": "Knowledge Case",
             "culprit": "Witness",
             "suspects": [{

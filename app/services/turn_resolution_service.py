@@ -7,6 +7,7 @@ from app.api.schemas.chat import (
     NoveltyLevel,
     SensitivityLevel
 )
+from app.core.config import settings
 
 def resolve_turn_state(
     analysis: MessageAnalysisResult, 
@@ -30,22 +31,22 @@ def resolve_turn_state(
     
     # 1. Evaluate Message Analysis traits (Novelty)
     if analysis.novelty == NoveltyLevel.repeat:
-        deltas["patience"] = -15.0
+        deltas["patience"] = settings.PENALTY_FOR_REPETITION
         reason_codes.append("penalized_for_repetition")
 
     # 2. Evaluate Intent heuristics for Deltas
     if analysis.intent == MessageIntent.pressure:
-        deltas["pressure"] = 15.0
+        deltas["pressure"] = settings.INTENT_PRESSURE_GAIN
         reason_codes.append("intent_pressure_detected")
     elif analysis.intent == MessageIntent.calm:
-        deltas["rapport"] = +10.0
-        deltas["pressure"] = -5.0
+        deltas["rapport"] = settings.INTENT_CALM_RAPPORT_GAIN
+        deltas["pressure"] = settings.INTENT_CALM_PRESSURE_DROP
         reason_codes.append("intent_calm_detected")
 
     # 3. Evaluate Sensitive Topic Impact
     if analysis.sensitivity_hit == SensitivityLevel.high:
-        deltas["pressure"] = deltas.get("pressure", 0.0) + 10.0
-        deltas["patience"] = deltas.get("patience", 0.0) - 10.0
+        deltas["pressure"] = deltas.get("pressure", 0.0) + settings.SENSITIVE_TOPIC_PRESSURE_GAIN
+        deltas["patience"] = deltas.get("patience", 0.0) + settings.SENSITIVE_TOPIC_PATIENCE_DROP
         conversation_effect = ConversationEffect.sensitive_touch
         reason_codes.append("sensitive_topic_touched")
         
@@ -58,31 +59,31 @@ def resolve_turn_state(
         if status == "untouched" and conversation_effect == ConversationEffect.none:
             conversation_effect = ConversationEffect.new_topic
             
-        if times_touched > 3:
+        if times_touched > settings.TOPIC_SATURATION_TOUCH_COUNT:
             # Penalidade maior para spam de tópico saturado
-            deltas["patience"] = deltas.get("patience", 0.0) - 20.0
+            deltas["patience"] = deltas.get("patience", 0.0) + settings.TOPIC_SATURATION_PENALTY
             reason_codes.append("penalized_topic_saturation")
             
-        if sensitive_heat > 50.0:
+        if sensitive_heat > settings.TOPIC_HOT_HEAT_THRESHOLD:
             # Tópico muito quente aumenta a chance de defesa
-            deltas["pressure"] = deltas.get("pressure", 0.0) + 5.0
+            deltas["pressure"] = deltas.get("pressure", 0.0) + settings.TOPIC_HOT_PRESSURE_GAIN
 
     # 4. Simulate future state to decide NpcShift & Stance change
     future_patience = current_patience + deltas.get("patience", 0.0)
     future_pressure = current_pressure + deltas.get("pressure", 0.0)
     
-    if future_patience <= 10.0 and current_stance != "defensive":
+    if future_patience <= settings.STANCE_DEFENSIVE_PATIENCE_THRESHOLD and current_stance != "defensive":
         npc_shift = NpcShift.more_defensive
         deltas["stance"] = "defensive"
         reason_codes.append("shifted_defensive_due_to_patience")
         
-    elif future_pressure >= 80.0 and current_stance != "pressured":
+    elif future_pressure >= settings.STANCE_PRESSURED_PRESSURE_THRESHOLD and current_stance != "pressured":
         npc_shift = NpcShift.pressured
         deltas["stance"] = "pressured"
         reason_codes.append("shifted_pressured")
     
     # Example backward transitions for cooperation
-    elif future_patience >= 40.0 and future_pressure <= 30.0 and current_stance in ["defensive", "pressured"]:
+    elif future_patience >= settings.STANCE_COOPERATIVE_PATIENCE_THRESHOLD and future_pressure <= settings.STANCE_COOPERATIVE_PRESSURE_THRESHOLD and current_stance in ["defensive", "pressured"]:
         npc_shift = NpcShift.more_cooperative
         deltas["stance"] = "neutral"
         reason_codes.append("shifted_cooperative_due_to_deescalation")
