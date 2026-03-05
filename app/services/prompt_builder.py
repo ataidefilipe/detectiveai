@@ -7,11 +7,17 @@ def build_npc_prompt(
 ):
     
     # 1. Format Allowed Facts and Knowledge
-    allowed_facts_str = "\n".join(f"- {fact}" for fact in render_context.allowed_facts) \
-        if render_context.allowed_facts else "Nenhum segredo revelado até agora."
+    all_secrets = npc_context.get("revealed_secrets", [])
+    allowed_facts_str = "\n".join(f"- {s['content']}" for s in all_secrets) \
+        if all_secrets else "Nenhum segredo revelado até agora."
         
-    allowed_knowledge_str = "\n".join(f"- {k}" for k in render_context.allowed_knowledge) \
-        if render_context.allowed_knowledge else "Nenhum cenário já discutido."
+    all_knowledge = npc_context.get("revealed_knowledge", [])
+    allowed_knowledge_str = "\n".join(f"- {k}" for k in all_knowledge) \
+        if all_knowledge else "Nenhum cenário já discutido."
+        
+    all_broken_claims = npc_context.get("broken_claims", [])
+    broken_claims_str = "\n".join(f"- {c}" for c in all_broken_claims) \
+        if all_broken_claims else "Nenhuma contradição apontada."
 
     new_knowledge_str = "\n".join(f"- {k}" for k in render_context.new_knowledge_this_turn) \
         if render_context.new_knowledge_this_turn else "Nenhuma revelação *nova* nesta rodada."
@@ -51,6 +57,9 @@ Segredos Pessoais que você já revelou:
 
 Conhecimento do Cenário (Já Revelado Anteriormente):
 {allowed_knowledge_str}
+
+Contradições/Mentiras suas que o detetive já quebrou com evidências:
+{broken_claims_str}
 
 Novo Conhecimento a Revelar NESTE TURNO (PRIORIDADE ALTA PARA MENCIONAR AGORA, SÓ FALE SE RELACIONADO À PERGUNTA):
 {new_knowledge_str}

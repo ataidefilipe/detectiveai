@@ -6,7 +6,9 @@ def test_prompt_builder_injects_render_context_correctly():
     # Mock context pieces
     npc_context = {
         "suspect": {"name": "Test Name", "personality": "Test Personality"},
-        "case": {"description": "Public Test", "summary": "Secret Test"}
+        "case": {"description": "Public Test", "summary": "Secret Test"},
+        "revealed_secrets": [{"content": "I like cheese"}, {"content": "I hate cats"}],
+        "revealed_knowledge": ["The key is under the mat"]
     }
     chat_history = []
     player_message = {"text": "Hello"}
@@ -14,9 +16,7 @@ def test_prompt_builder_injects_render_context_correctly():
     # Target Context with Evasive restriction
     render_context = NpcResponseRenderContext(
         npc_stance="hostile",
-        response_mode=ResponseMode.evasive,
-        allowed_facts=["I like cheese", "I hate cats"],
-        allowed_knowledge=["The key is under the mat"]
+        response_mode=ResponseMode.evasive
     )
     
     # Generate Prompt
@@ -46,7 +46,9 @@ def test_prompt_builder_injects_render_context_correctly():
 def test_prompt_builder_without_facts():
     npc_context = {
         "suspect": {"name": "X", "personality": "Y"},
-        "case": {"description": "D", "summary": "S"}
+        "case": {"description": "D", "summary": "S"},
+        "revealed_secrets": [],
+        "revealed_knowledge": []
     }
     
     render_context = NpcResponseRenderContext(

@@ -13,7 +13,8 @@ from app.infra.db_models import (
     SessionEvidenceUsageModel,
     SecretModel,
     EvidenceModel,
-    ScenarioModel
+    ScenarioModel,
+    SessionSuspectKnowledgeStateModel
 )
 from app.core.exceptions import NotFoundError, RuleViolationError
 
@@ -185,12 +186,30 @@ def _build_suspect_state_for_ai(
         for sc in hidden_secrets
         if sc.id not in state.revealed_secret_ids
     ]
+    
+    revealed_knowledge = []
+    k_states = db.query(SessionSuspectKnowledgeStateModel).filter(
+        SessionSuspectKnowledgeStateModel.session_id == state.session_id,
+        SessionSuspectKnowledgeStateModel.suspect_id == suspect_id,
+        SessionSuspectKnowledgeStateModel.max_revealed_depth > 0
+    ).all()
+
+    if suspect and suspect.knowledge_items:
+        k_dict = {str(k.get("id")): k for k in suspect.knowledge_items}
+        for ks in k_states:
+            item = k_dict.get(ks.knowledge_id)
+            if item:
+                layers = item.get("content_layers", [])
+                depth = min(ks.max_revealed_depth, len(layers))
+                for i in range(depth):
+                    revealed_knowledge.append(layers[i])
 
     suspect_state = {
         "suspect_id": suspect_id,
         "name": suspect.name if suspect else "O suspeito",
         "personality": suspect.personality or "neutro",
         "revealed_secrets": revealed_secrets,
+        "revealed_knowledge": revealed_knowledge,
         "hidden_secrets": hidden_list,
         "is_closed": state.is_closed,
         "final_phrase": (

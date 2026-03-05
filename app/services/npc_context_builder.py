@@ -21,6 +21,8 @@ def build_npc_context(
         },
         # 🔴 CONTROLE DO BACKEND
         "revealed_secrets": revealed_secrets,
+        "revealed_knowledge": suspect_state.get("revealed_knowledge", []),
+        "broken_claims": suspect_state.get("broken_claims", []),
         "pressure_points": pressure_points,
         "rules": {
             "can_only_use_revealed_secrets": True,
