@@ -60,6 +60,10 @@ def test_invariant_cannot_play_in_finished_session():
         db.add_all([suspect, evidence])
         db.commit()
 
+        secret = SecretModel(suspect_id=suspect.id, evidence_id=evidence.id, content="Mock Secret")
+        db.add(secret)
+        db.commit()
+
         scenario.culprit_id = suspect.id
         scenario.required_evidence_ids = [evidence.id]
         db.commit()

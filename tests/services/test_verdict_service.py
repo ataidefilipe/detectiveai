@@ -34,9 +34,9 @@ def test_evaluate_verdict_correct(db_session):
     db_session.commit()
     
     # We need to simulate that the player USED the evidences against Marina
-    usage1 = SessionEvidenceUsageModel(session_id=session.id, suspect_id=marina.id, evidence_id=relatorio.id)
-    usage2 = SessionEvidenceUsageModel(session_id=session.id, suspect_id=marina.id, evidence_id=cartao.id)
-    usage3 = SessionEvidenceUsageModel(session_id=session.id, suspect_id=marina.id, evidence_id=testemunho.id)
+    usage1 = SessionEvidenceUsageModel(session_id=session.id, suspect_id=marina.id, evidence_id=relatorio.id, was_effective=True)
+    usage2 = SessionEvidenceUsageModel(session_id=session.id, suspect_id=marina.id, evidence_id=cartao.id, was_effective=True)
+    usage3 = SessionEvidenceUsageModel(session_id=session.id, suspect_id=marina.id, evidence_id=testemunho.id, was_effective=True)
     db_session.add_all([usage1, usage2, usage3])
     db_session.commit()
 
@@ -50,6 +50,7 @@ def test_evaluate_verdict_correct(db_session):
 
     assert verdict["result_type"] == "correct"
     assert verdict["motive_result"] == "correct"
+    assert len(verdict["reason_codes"]) == 0
 
 def test_evaluate_verdict_partial_wrong_motivation(db_session):
     scenario = db_session.query(ScenarioModel).first()
@@ -67,7 +68,7 @@ def test_evaluate_verdict_partial_wrong_motivation(db_session):
     db_session.commit()
     
     for eid in req_evidence_ids:
-        usage = SessionEvidenceUsageModel(session_id=session.id, suspect_id=marina.id, evidence_id=eid)
+        usage = SessionEvidenceUsageModel(session_id=session.id, suspect_id=marina.id, evidence_id=eid, was_effective=True)
         db_session.add(usage)
     db_session.commit()
 
@@ -81,3 +82,48 @@ def test_evaluate_verdict_partial_wrong_motivation(db_session):
 
     assert verdict["result_type"] == "partial"
     assert verdict["motive_result"] == "wrong"
+    assert "wrong_motive" in verdict["reason_codes"]
+
+def test_evaluate_verdict_ineffective_evidence_raises_error(db_session):
+    scenario = db_session.query(ScenarioModel).first()
+    marina = db_session.query(SuspectModel).filter_by(name="Marina Souza", scenario_id=scenario.id).first()
+    relatorio = db_session.query(EvidenceModel).filter_by(name="Relatório Contábil Alterado", scenario_id=scenario.id).first()
+    
+    session = SessionModel(scenario_id=scenario.id, status="in_progress")
+    db_session.add(session)
+    db_session.commit()
+    
+    # Used, but was NOT effective
+    usage = SessionEvidenceUsageModel(session_id=session.id, suspect_id=marina.id, evidence_id=relatorio.id, was_effective=False)
+    db_session.add(usage)
+    db_session.commit()
+
+    from app.core.exceptions import RuleViolationError
+    with pytest.raises(RuleViolationError):
+        evaluate_verdict(
+            session_id=session.id,
+            chosen_suspect_id=marina.id,
+            evidence_ids=[relatorio.id],
+            motive_key="financial_gain",
+            db=db_session
+        )
+
+def test_evaluate_verdict_wrong_suspect_missing_evidence(db_session):
+    scenario = db_session.query(ScenarioModel).first()
+    # Wrong suspect
+    wrong_suspect = db_session.query(SuspectModel).filter(SuspectModel.name != "Marina Souza", SuspectModel.scenario_id == scenario.id).first()
+    
+    session = SessionModel(scenario_id=scenario.id, status="in_progress")
+    db_session.add(session)
+    db_session.commit()
+
+    verdict = evaluate_verdict(
+        session_id=session.id,
+        chosen_suspect_id=wrong_suspect.id,
+        evidence_ids=[],
+        motive_key="financial_gain",
+        db=db_session
+    )
+
+    assert verdict["result_type"] == "wrong"
+    assert "wrong_suspect" in verdict["reason_codes"]

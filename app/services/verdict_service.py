@@ -104,26 +104,33 @@ def evaluate_verdict(
             # ----------------------------------------
             # 2.6. Validate Evidence Usage (B3)
             # ----------------------------------------
+            # T9: Changed to session-level (removed suspect_id == chosen_suspect_id).
+            # T10: Added requirement for was_effective == True.
             used_evidences = db.query(SessionEvidenceUsageModel.evidence_id).filter(
                 SessionEvidenceUsageModel.session_id == session_id,
-                SessionEvidenceUsageModel.suspect_id == chosen_suspect_id,
+                SessionEvidenceUsageModel.was_effective == True,
                 SessionEvidenceUsageModel.evidence_id.in_(provided)
             ).all()
             used_evidence_ids = {row[0] for row in used_evidences}
 
             for ev_id in provided:
                 if ev_id not in used_evidence_ids:
-                    raise RuleViolationError(f"Evidence {ev_id} was not used against the accused suspect {chosen_suspect_id} during the session.")
+                    raise RuleViolationError(f"Evidence {ev_id} was not used effectively during the session.")
 
         # ----------------------------------------
-        # 3. Assess Motive Result
+        # 3. Assess Motive Result & Reason Codes
         # ----------------------------------------
         motive_result = "correct" if motive_key == true_motive_key else "wrong"
+        
+        # T11: Reason Codes
+        reason_codes = []
 
         # ----------------------------------------
-        # 3. Wrong culprit → immediate fail
+        # 4. Wrong culprit → immediate fail
         # ----------------------------------------
         if chosen_suspect_id != real_culprit_id:
+            reason_codes.append("wrong_suspect")
+            
             result_dict = {
                 "result_type": "wrong",
                 "missing_evidence_ids": required_evidence_ids,
@@ -131,7 +138,8 @@ def evaluate_verdict(
                 "chosen_suspect_id": chosen_suspect_id,
                 "real_culprit_id": real_culprit_id,
                 "chosen_motive_key": motive_key,
-                "motive_result": motive_result
+                "motive_result": motive_result,
+                "reason_codes": reason_codes
             }
             telemetry_logger.info(json.dumps({
                 "event": "session_verdict",
@@ -142,13 +150,18 @@ def evaluate_verdict(
             return result_dict
 
         # ----------------------------------------
-        # 4. Culprit correct → check evidences
+        # 5. Culprit correct → check evidences & motive
         # ----------------------------------------
+        if motive_result == "wrong":
+            reason_codes.append("wrong_motive")
+            
         required = set(required_evidence_ids)
-
         missing = list(required - set(provided))
+        
+        if missing:
+            reason_codes.append("missing_evidence")
 
-        if not missing and motive_result == "correct":
+        if not reason_codes:
             result_type = "correct"
         else:
             result_type = "partial"
@@ -160,7 +173,8 @@ def evaluate_verdict(
             "chosen_suspect_id": chosen_suspect_id,
             "real_culprit_id": real_culprit_id,
             "chosen_motive_key": motive_key,
-            "motive_result": motive_result
+            "motive_result": motive_result,
+            "reason_codes": reason_codes
         }
         
         telemetry_logger.info(json.dumps({

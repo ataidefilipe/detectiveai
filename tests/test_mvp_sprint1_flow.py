@@ -4,9 +4,9 @@ from tests.conftest import TestingSessionLocal
 from unittest.mock import patch
 
 from app.main import app
-from app.infra.db_models import ScenarioModel, SuspectModel, EvidenceModel
+from app.infra.db_models import ScenarioModel, SuspectModel, EvidenceModel, SecretModel
 from app.services.scenario_loader import load_scenario_from_json
-from app.api.schemas.chat import StateTransitionResult, NpcShift, ConversationEffect
+from app.api.schemas.chat import StateTransitionResult, NpcShift, ConversationEffect, MessageAnalysisResult, MessageIntent, SensitivityLevel
 
 
 def test_mvp_sprint1_flow_end_to_end():
@@ -57,6 +57,11 @@ def test_mvp_sprint1_flow_end_to_end():
         evidence_cafe_id = evidence_cafe.id
         evidence_testemunho_id = evidence_testemunho.id
         
+        # Inject secrets so they can be effective
+        secret_cartao = SecretModel(suspect_id=marina_id, evidence_id=evidence_cartao_id, content="Secret Cartao")
+        secret_testemunha = SecretModel(suspect_id=marina_id, evidence_id=evidence_testemunho_id, content="Secret Testemunha")
+        db.add_all([secret_cartao, secret_testemunha])
+        
         db.commit()
     finally:
         db.close()
@@ -77,6 +82,7 @@ def test_mvp_sprint1_flow_end_to_end():
     db = SessionLocal()
     from app.infra.db_models import SessionSuspectTopicStateModel
     db.add(SessionSuspectTopicStateModel(session_id=session_id, suspect_id=marina_id, topic_id="faca"))
+    db.add(SessionSuspectTopicStateModel(session_id=session_id, suspect_id=marina_id, topic_id="fraude"))
     db.commit()
     db.close()
 
@@ -175,10 +181,20 @@ def test_mvp_sprint1_flow_end_to_end():
     # -------------------------
     # 6.1 Revelar restantes para fechar o suspeito
     # -------------------------
-    turn5_resp = client.post(
-        f"/sessions/{session_id}/suspects/{marina_id}/messages",
-        json={"text": "Aqui está o cartão, assuma!", "evidence_id": evidence_cartao_id}
-    )
+    # Enforce topic detection for the context-dependent evidence (cartao needs "fraude")
+    with patch("app.services.interrogation_turn_service.analyze_message") as mock_analysis:
+        mock_analysis.return_value = MessageAnalysisResult(
+            intent=MessageIntent.confront,
+            detected_topic_ids=["fraude"],
+            sensitive_topic_ids=[],
+            sensitivity_hit=SensitivityLevel.none
+        )
+        turn5_resp = client.post(
+            f"/sessions/{session_id}/suspects/{marina_id}/messages",
+            json={"text": "É uma fraude com cartão, assuma!", "evidence_id": evidence_cartao_id}
+        )
+        if turn5_resp.status_code != 200:
+            print("TURN 5 FAILED:", turn5_resp.text)
     assert turn5_resp.status_code == 200
 
     turn6_resp = client.post(
@@ -216,7 +232,7 @@ def test_mvp_sprint1_flow_end_to_end():
     db = SessionLocal()
     from app.infra.db_models import SessionEvidenceUsageModel
     for evid_id in mandatory_ids:
-        db.add(SessionEvidenceUsageModel(session_id=session_id_2, suspect_id=marina_id, evidence_id=evid_id))
+        db.add(SessionEvidenceUsageModel(session_id=session_id_2, suspect_id=marina_id, evidence_id=evid_id, was_effective=True))
     db.commit()
     db.close()
     

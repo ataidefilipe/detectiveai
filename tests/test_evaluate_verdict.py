@@ -85,12 +85,14 @@ def seed_verdict_scenario(db):
     usage1 = SessionEvidenceUsageModel(
         session_id=session.id,
         suspect_id=suspect_guilty.id,
-        evidence_id=evidence_1.id
+        evidence_id=evidence_1.id,
+        was_effective=True
     )
     usage2 = SessionEvidenceUsageModel(
         session_id=session.id,
         suspect_id=suspect_guilty.id,
-        evidence_id=evidence_2.id
+        evidence_id=evidence_2.id,
+        was_effective=True
     )
     db.add_all([usage1, usage2])
     db.commit()
@@ -117,8 +119,8 @@ def test_verdict_wrong_culprit():
     data = seed_verdict_scenario(db)
     
     # We must use the evidences against the wrong suspect to bypass B3 validation and hit the Wrong Culprit return
-    usage1 = SessionEvidenceUsageModel(session_id=data["session_id"], suspect_id=data["wrong_suspect_id"], evidence_id=data["evidence_1_id"])
-    usage2 = SessionEvidenceUsageModel(session_id=data["session_id"], suspect_id=data["wrong_suspect_id"], evidence_id=data["evidence_2_id"])
+    usage1 = SessionEvidenceUsageModel(session_id=data["session_id"], suspect_id=data["wrong_suspect_id"], evidence_id=data["evidence_1_id"], was_effective=True)
+    usage2 = SessionEvidenceUsageModel(session_id=data["session_id"], suspect_id=data["wrong_suspect_id"], evidence_id=data["evidence_2_id"], was_effective=True)
     db.add_all([usage1, usage2])
     db.commit()
 

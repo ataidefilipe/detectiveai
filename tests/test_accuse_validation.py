@@ -123,7 +123,7 @@ def test_cannot_accuse_with_unused_evidence():
     )
 
     assert resp.status_code == 409
-    assert "was not used against the accused suspect" in resp.json()["detail"]
+    assert "was not used effectively during the session" in resp.json()["detail"]
 
 
 def test_can_accuse_with_used_evidence():
@@ -146,12 +146,13 @@ def test_can_accuse_with_used_evidence():
     resp = client.post("/sessions", json={"scenario_id": scenario_id})
     test_session_id = resp.json()["session_id"]
 
-    # Use a evidência no chat
+    # Use a evidência no chat de forma eficaz (com contexto e a evidence correta)
     resp_chat = client.post(
         f"/sessions/{test_session_id}/suspects/{marina_id}/messages",
-        json={"text": "Explique isso.", "evidence_id": relatorio_id}
+        json={"text": "Este rascunho de relatório não parece bater com o outro", "evidence_id": relatorio_id}
     )
     assert resp_chat.status_code == 200
+    assert resp_chat.json()["evidence_effect"] == "revealed_secret"
 
     resp = client.post(
         f"/sessions/{test_session_id}/accuse",

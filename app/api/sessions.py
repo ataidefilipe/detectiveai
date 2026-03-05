@@ -128,6 +128,7 @@ def accuse_session(session_id: int, payload: AccuseRequest):
             missing_evidence_ids=verdict["missing_evidence_ids"],
             chosen_motive_key=verdict["chosen_motive_key"],
             motive_result=verdict["motive_result"],
+            reason_codes=verdict.get("reason_codes", []),
             description=description
         )
 

@@ -35,9 +35,10 @@ def test_cannot_accuse_with_evidence_used_on_wrong_suspect():
     test_session_id = resp.json()["session_id"]
 
     # Use a evidência no chat com a Marina
+    # Enviar chat eficaz
     resp_chat = client.post(
         f"/sessions/{test_session_id}/suspects/{marina_id}/messages",
-        json={"text": "Explique isso.", "evidence_id": relatorio_id}
+        json={"text": "Explique o relatório.", "evidence_id": relatorio_id}
     )
     assert resp_chat.status_code == 200
 
@@ -51,6 +52,8 @@ def test_cannot_accuse_with_evidence_used_on_wrong_suspect():
         }
     )
 
-    # Como a evidência não foi usada CONTRA o suspeito acusado, deve falhar
-    assert resp.status_code == 409
-    assert "was not used against the accused suspect" in resp.json()["detail"]
+    # Como a evidência é a nível de sessão (T9), o uso via Marina valida a prova!
+    # Mas o suspeito acusado está errado, então dá wrong_suspect
+    assert resp.status_code == 200
+    assert resp.json()["result_type"] == "wrong"
+    assert "wrong_suspect" in resp.json()["reason_codes"]
