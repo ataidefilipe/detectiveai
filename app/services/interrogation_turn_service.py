@@ -86,6 +86,14 @@ def run_interrogation_turn(
         topic_state=primary_topic_state
     )
 
+    # T6: Persist primary_topic_id as last_topic_id for short-term context.
+    # Preserve the existing last_topic_id if this turn didn't detect a new primary topic.
+    new_last_topic_id = msg_analysis.primary_topic_id if msg_analysis.primary_topic_id else initial_suspect_state.get("last_topic_id")
+    if new_last_topic_id:
+        if not state_transition.state_deltas:
+            state_transition.state_deltas = {}
+        state_transition.state_deltas["last_topic_id"] = new_last_topic_id
+
     # 1.4 Apply state deltas to DB
     if state_transition.state_deltas:
         update_suspect_state_from_deltas(
@@ -120,6 +128,7 @@ def run_interrogation_turn(
             suspect_id=suspect_id,
             evidence_id=evidence_id,
             detected_topics=msg_analysis.detected_topic_ids,
+            last_topic_id=initial_suspect_state.get("last_topic_id"),
             db=db
         )
         

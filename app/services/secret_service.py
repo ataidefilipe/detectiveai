@@ -16,6 +16,7 @@ def apply_evidence_to_suspect(
     suspect_id: int,
     evidence_id: int,
     detected_topics: Optional[List[str]] = None,
+    last_topic_id: Optional[str] = None,
     db: Optional[Session] = None
 ) -> Tuple[List[Dict[str, Any]], str]:
     """
@@ -52,11 +53,10 @@ def apply_evidence_to_suspect(
         
         if evidence and evidence.related_topic_id:
             msg_topics = detected_topics or []
-            if evidence.related_topic_id not in msg_topics:
-                # Se a evidência exige um tópico e esse tópico não está na conversa atual,
-                # e a pressão do suspeito não for absurdamente alta (fallback), é fora de contexto.
-                if state.pressure < 80.0:
-                    is_context_valid = False
+            # T7: Valid if topic is in current message OR matches the last active topic.
+            if evidence.related_topic_id not in msg_topics and evidence.related_topic_id != last_topic_id:
+                # T8: Removed the check for state.pressure >= 80.0 bypass.
+                is_context_valid = False
 
         if not is_context_valid:
             return [], "out_of_context"

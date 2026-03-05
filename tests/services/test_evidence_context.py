@@ -107,7 +107,7 @@ def test_evidence_free_accepted(evidence_scenario_db):
     assert effect == "revealed_secret"
     assert len(revealed) == 1
 
-def test_evidence_out_of_context_high_pressure_override(evidence_scenario_db):
+def test_evidence_out_of_context_high_pressure_still_blocked(evidence_scenario_db):
     db = evidence_scenario_db["db"]
     
     # Set high pressure
@@ -125,6 +125,23 @@ def test_evidence_out_of_context_high_pressure_override(evidence_scenario_db):
         db=db
     )
     
-    # High pressure bypasses the context wall
+    # T8: High pressure no longer bypasses the context wall
+    assert effect == "out_of_context"
+    assert len(revealed) == 0
+
+def test_evidence_short_term_context_accepted(evidence_scenario_db):
+    db = evidence_scenario_db["db"]
+    
+    # Simulating that "weapon" was the primary topic in a previous turn
+    revealed, effect = apply_evidence_to_suspect(
+        session_id=evidence_scenario_db["session_id"],
+        suspect_id=evidence_scenario_db["suspect_id"],
+        evidence_id=evidence_scenario_db["ev_contextual_id"],
+        detected_topics=[], # No explicit topic detected this turn
+        last_topic_id="weapon", # But we remember the last active topic
+        db=db
+    )
+    
+    # T6/T7: The evidence is accepted based on the short-term context history
     assert effect == "revealed_secret"
     assert len(revealed) == 2
