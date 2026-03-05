@@ -153,7 +153,7 @@ def api_get_session_overview(session_id: int):
     # get_session_overview já retorna progress e is_closed por suspeito
     return overview
 
-@router.get("/sessions/{session_id}/suspects/{suspect_id}/status")
+@router.get("/debug/sessions/{session_id}/suspects/{suspect_id}/status")
 def get_suspect_status(session_id: int, suspect_id: int):
     db = SessionLocal()
     try:
@@ -301,9 +301,7 @@ def list_session_suspects(session_id: int):
                 suspect_id=s.id,
                 name=s.name,
                 backstory=s.backstory,
-                initial_statement=s.initial_statement,
-                progress=state_map[s.id].progress if s.id in state_map else 0.0,
-                is_closed=state_map[s.id].is_closed if s.id in state_map else False
+                initial_statement=s.initial_statement
             )
             for s in suspects
         ]

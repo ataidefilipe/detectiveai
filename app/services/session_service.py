@@ -185,9 +185,7 @@ def get_session_overview(session_id: int, db: Optional[Session] = None) -> Dict[
 
             suspects_summary.append({
                 "suspect_id": s.id,
-                "name": s.name,
-                "progress": progress,
-                "is_closed": is_closed
+                "name": s.name
             })
 
         # -------------------------

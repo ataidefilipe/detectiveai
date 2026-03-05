@@ -116,11 +116,7 @@ class PlayerTurnResponse(BaseModel):
     message_analysis: Optional[MessageAnalysisResult] = None
     state_transition: Optional[StateTransitionResult] = None
     
-    # Systemic Discrete Feedback
-    conversation_effect: str = "none"
-    npc_shift: str = "none"
-    topic_signal: TopicSignal = TopicSignal.none
-    feedback_hints: List[str] = Field(default_factory=list)
+    # Systemic Discrete Feedback removed for MVP-011 (T1)
     
     # Narrative Feedback (MVP-001)
     narrative_feedback: Optional[NarrativeFeedback] = None

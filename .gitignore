@@ -4,3 +4,4 @@ saida.md
 .env
 /backlogs
 *.txt
+gpt.py

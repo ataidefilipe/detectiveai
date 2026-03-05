@@ -100,7 +100,6 @@ def test_mvp_sprint1_flow_end_to_end():
         turn1_data = turn1_resp.json()
         
         assert turn1_data["narrative_feedback"]["guidance"] == "A pergunta foi muito aberta e não obteve um foco claro."
-        assert turn1_data["topic_signal"] == "weak"
 
     # -------------------------
     # 4. Turno 2 - Contexto Promissor (MVP-004)
@@ -126,7 +125,6 @@ def test_mvp_sprint1_flow_end_to_end():
         print("TURN 2 DATA: ", turn2_data)
         
         assert turn2_data["evidence_effect"] == "out_of_context"
-        assert turn2_data["topic_signal"] == "strong"
         assert turn2_data["narrative_feedback"]["guidance"] == "A direção é boa, mas essa ligação ainda não faz sentido para o suspeito."
 
     # -------------------------
