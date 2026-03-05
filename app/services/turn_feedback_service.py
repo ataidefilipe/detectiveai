@@ -3,7 +3,10 @@ from typing import Tuple, List, Optional, Dict, Any
 from app.api.schemas.chat import (
     MessageAnalysisResult,
     StateTransitionResult,
-    TopicSignal
+    TopicSignal,
+    NarrativeFeedback,
+    SuspectReaction,
+    TopicRead
 )
 
 def build_turn_feedback(
@@ -22,6 +25,8 @@ def build_turn_feedback(
     # 1. Evidence context takes precedence in hints
     if evidence_effect == "out_of_context":
         hints.append("evidência fora de contexto")
+        if analysis.sensitivity_hit.value in ["high", "medium"]:
+            hints.append("tema promissor, mas evidência não encaixou")
 
     # 2. Sensitivity handling
     if analysis.sensitivity_hit.value in ["high", "medium"]:
@@ -31,6 +36,9 @@ def build_turn_feedback(
         elif transition.npc_shift.value == "more_defensive":
             hints.append("suspeito recuou ao tocar em tema sensível")
             t_signal = TopicSignal.weak
+        elif evidence_effect == "out_of_context":
+            # If out of context but hit sensitive topic, we ensure strong signal
+            t_signal = TopicSignal.strong
     else:
         # 3. Normal topic detection
         if analysis.detected_topic_ids:
@@ -54,3 +62,51 @@ def build_turn_feedback(
         t_signal = TopicSignal.weak
 
     return t_signal, hints
+
+
+def build_narrative_feedback(
+    npc_shift: str,
+    topic_signal: TopicSignal,
+    evidence_effect: str,
+    hints: List[str]
+) -> NarrativeFeedback:
+    """
+    Translates internal system signals into narrative-focused feedback (diegetic)
+    for the frontend, so the player receives qualitative hints rather than technical ones.
+    """
+    reaction = SuspectReaction.neutro
+    if npc_shift == "more_defensive":
+        reaction = SuspectReaction.defensivo
+    elif npc_shift == "pressured":
+        reaction = SuspectReaction.pressionado
+    elif npc_shift == "more_cooperative":
+        reaction = SuspectReaction.cooperativo
+    elif npc_shift == "irritated":
+        reaction = SuspectReaction.irritado
+        
+    t_read = TopicRead.nenhum
+    if topic_signal == TopicSignal.strong:
+        t_read = TopicRead.sensivel
+    elif topic_signal == TopicSignal.good:
+        t_read = TopicRead.promissor
+    elif topic_signal == TopicSignal.weak:
+        t_read = TopicRead.fraco
+        
+    guidance = None
+    if evidence_effect == "out_of_context":
+        if "tema promissor, mas evidência não encaixou" in hints:
+            guidance = "A direção é boa, mas essa ligação ainda não faz sentido para o suspeito."
+        else:
+            guidance = "A conexão com o assunto ainda não ficou clara."
+    elif evidence_effect == "reaction_only":
+        guidance = "O suspeito sentiu o golpe, mas a evidência não provou nada por si só."
+    elif "pergunta muito vaga" in hints:
+        guidance = "A pergunta foi muito aberta e não obteve um foco claro."
+    elif "tópico já explorado" in hints:
+        guidance = "Parece que vocês estão andando em círculos sobre esse assunto."
+        
+    return NarrativeFeedback(
+        suspect_reaction=reaction,
+        topic_read=t_read,
+        guidance=guidance
+    )

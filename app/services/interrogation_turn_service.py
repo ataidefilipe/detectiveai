@@ -8,7 +8,7 @@ from app.services.topic_state_service import update_topic_hit, get_topic_state
 from app.services.reveal_policy_service import get_allowed_knowledge_facts
 from app.services.message_analysis_service import analyze_message
 from app.services.turn_resolution_service import resolve_turn_state
-from app.services.turn_feedback_service import build_turn_feedback
+from app.services.turn_feedback_service import build_turn_feedback, build_narrative_feedback
 from app.infra.db_models import SessionEvidenceUsageModel, SessionModel, ScenarioModel, NpcChatMessageModel
 from app.api.schemas.chat import (
     MessageAnalysisResult,
@@ -123,10 +123,15 @@ def run_interrogation_turn(
         
         # Penalize for out_of_context
         if evidence_effect == "out_of_context":
+            # MVP-004: Atenuate penalty if topic is sensitive
+            penalty = -10.0
+            if msg_analysis.sensitivity_hit.value in ["high", "medium"]:
+                penalty = -5.0
+                
             update_suspect_state_from_deltas(
                 session_id=session_id,
                 suspect_id=suspect_id,
-                deltas={"patience": -10.0},
+                deltas={"patience": penalty},
                 db=db
             )
 
@@ -193,6 +198,13 @@ def run_interrogation_turn(
             # mas ela já existia no histórico de uso (usage table) ANTES deste turno, então é duplicate.
             if was_previously_used:
                 evidence_effect = "duplicate"
+            else:
+                # MVP-002: Reação Sem Revelação (reaction_only)
+                is_sensitive = any(t in msg_analysis.sensitive_topic_ids for t in msg_analysis.detected_topic_ids)
+                has_reaction = state_transition.npc_shift.value in ["more_defensive", "pressured"]
+                
+                if is_sensitive or has_reaction:
+                    evidence_effect = "reaction_only"
                 
     # Feedback Sistêmico (Epic G) via service extraído
     t_signal, hints = build_turn_feedback(
@@ -200,6 +212,14 @@ def run_interrogation_turn(
         transition=state_transition,
         evidence_effect=evidence_effect,
         topic_state=primary_topic_state
+    )
+    
+    # Narrative Feedback (MVP-001)
+    narrative_fb = build_narrative_feedback(
+        npc_shift=state_transition.npc_shift.value,
+        topic_signal=t_signal,
+        evidence_effect=evidence_effect,
+        hints=hints
     )
 
     debug_trace = None
@@ -223,5 +243,6 @@ def run_interrogation_turn(
         "npc_shift": state_transition.npc_shift.value,
         "topic_signal": t_signal,
         "feedback_hints": hints,
+        "narrative_feedback": narrative_fb.model_dump() if narrative_fb else None,
         "debug_trace": debug_trace
     }

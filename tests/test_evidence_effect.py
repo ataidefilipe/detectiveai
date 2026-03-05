@@ -5,6 +5,8 @@ from tests.conftest import TestingSessionLocal
 from app.infra.db_models import (
     ScenarioModel, SuspectModel, EvidenceModel, SecretModel, SessionModel, SessionSuspectStateModel
 )
+from unittest.mock import patch
+from app.api.schemas.chat import StateTransitionResult, NpcShift, ConversationEffect
 
 client = TestClient(app)
 
@@ -61,6 +63,28 @@ def test_evidence_effect_api():
         assert res_dup.status_code == 200
         data_dup = res_dup.json()
         assert data_dup["evidence_effect"] == "duplicate"
+        
+        # 4. Turn with bad evidence but causing reaction (reaction_only)
+        # Mocking the `resolve_turn_state` to force a pressured shift
+        with patch("app.services.interrogation_turn_service.resolve_turn_state") as mock_resolve:
+            mock_resolve.return_value = StateTransitionResult(
+                conversation_effect=ConversationEffect.none,
+                npc_shift=NpcShift.pressured,
+                state_deltas={}
+            )
+            # using a new evidence as to not hit out_of_context or duplicate paths easily
+            evidence_reaction = EvidenceModel(name="Reaction Evidence", scenario_id=scenario.id)
+            db.add(evidence_reaction)
+            db.commit()
+            
+            res_reaction = client.post(
+                f"/sessions/{session_id}/suspects/{suspect.id}/messages",
+                json={"text": "Aham!", "evidence_id": evidence_reaction.id}
+            )
+            assert res_reaction.status_code == 200
+            data_reaction = res_reaction.json()
+            assert data_reaction["evidence_effect"] == "reaction_only"
+            assert data_reaction["narrative_feedback"]["suspect_reaction"] == "pressionado"
 
     finally:
         db.close()

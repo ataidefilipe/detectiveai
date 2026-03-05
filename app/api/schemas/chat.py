@@ -67,6 +67,25 @@ class TopicSignal(str, Enum):
     good = "good"
     strong = "strong"
 
+class SuspectReaction(str, Enum):
+    neutro = "neutro"
+    evasivo = "evasivo"
+    defensivo = "defensivo"
+    pressionado = "pressionado"
+    cooperativo = "cooperativo"
+    irritado = "irritado"
+
+class TopicRead(str, Enum):
+    nenhum = "nenhum"
+    fraco = "fraco"
+    promissor = "promissor"
+    sensivel = "sensível"
+
+class NarrativeFeedback(BaseModel):
+    suspect_reaction: SuspectReaction = SuspectReaction.neutro
+    topic_read: TopicRead = TopicRead.nenhum
+    guidance: Optional[str] = None
+
 class PlayerChatInput(BaseModel):
     text: str
     evidence_id: Optional[int] = None
@@ -92,7 +111,7 @@ class PlayerTurnResponse(BaseModel):
     player_message: ChatMessageInfo
     npc_message: ChatMessageInfo
     revealed_secrets: list[dict]
-    evidence_effect: str  # "none" | "revealed_secret" | "duplicate" | "out_of_context"
+    evidence_effect: str  # "none" | "revealed_secret" | "duplicate" | "out_of_context" | "reaction_only"
     suspect_state: dict
     message_analysis: Optional[MessageAnalysisResult] = None
     state_transition: Optional[StateTransitionResult] = None
@@ -102,5 +121,8 @@ class PlayerTurnResponse(BaseModel):
     npc_shift: str = "none"
     topic_signal: TopicSignal = TopicSignal.none
     feedback_hints: List[str] = Field(default_factory=list)
+    
+    # Narrative Feedback (MVP-001)
+    narrative_feedback: Optional[NarrativeFeedback] = None
     
     debug_trace: Optional[TurnDebugTrace] = None
