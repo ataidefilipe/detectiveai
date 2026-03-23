@@ -173,3 +173,14 @@ def test_build_narrative_feedback_vague_question():
     assert narrative_fb.suspect_reaction == SuspectReaction.neutro
     assert narrative_fb.topic_read == TopicRead.fraco
     assert narrative_fb.guidance == "A pergunta foi muito aberta e não obteve um foco claro."
+
+def test_build_narrative_feedback_generic_guidance():
+    narrative_fb = build_narrative_feedback(
+        npc_shift="none",
+        topic_signal=TopicSignal.none,
+        evidence_effect="none",
+        hints=[]
+    )
+    assert narrative_fb.suspect_reaction == SuspectReaction.neutro
+    assert narrative_fb.topic_read == TopicRead.nenhum
+    assert narrative_fb.guidance == "O suspeito não reagiu a nada de específico nessa troca."

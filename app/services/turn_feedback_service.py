@@ -105,6 +105,9 @@ def build_narrative_feedback(
     elif "tópico já explorado" in hints:
         guidance = "Parece que vocês estão andando em círculos sobre esse assunto."
         
+    if guidance is None and topic_signal == TopicSignal.none:
+        guidance = "O suspeito não reagiu a nada de específico nessa troca."
+        
     return NarrativeFeedback(
         suspect_reaction=reaction,
         topic_read=t_read,
