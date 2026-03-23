@@ -72,10 +72,12 @@ def create_session(scenario_id: int, db: Optional[Session] = None) -> SessionMod
 
             if core_secrets == 0:
                 if regular_secrets == 0:
-                    initial_progress = 1.0
+                    initial_progress = 0.0
                 else:
                     initial_progress = 0.0
 
+            # is_closed só é setado via ação de conteúdo futura (como reveal layers) 
+            # e nunca automaticamente por esgotamento de secrets.
             state = SessionSuspectStateModel(
                 session_id=session.id,
                 suspect_id=suspect.id,
@@ -183,7 +185,9 @@ def get_session_overview(session_id: int, db: Optional[Session] = None) -> Dict[
 
             suspects_summary.append({
                 "suspect_id": s.id,
-                "name": s.name
+                "name": s.name,
+                "progress": progress,
+                "is_closed": is_closed
             })
 
         # -------------------------

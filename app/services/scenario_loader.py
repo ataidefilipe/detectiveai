@@ -68,10 +68,14 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
                 raise DomainError(f"true_motive_key '{config.true_motive_key}' is not in motives list.")
                 
         # -------------------------
-        # 3.6 Validate Lies (T-0012)
+        # 3.6 Validações Estruturais de Fiações Cruzadas (SESS-003)
         # -------------------------
         valid_evidence_ids = {e.id for e in config.evidences}
         valid_topic_ids = {t.id for t in config.topics} if config.topics else set()
+        
+        for e in config.evidences:
+            if e.related_topic_id and e.related_topic_id not in valid_topic_ids:
+                raise DomainError(f"Evidence '{e.id}' references unknown related_topic_id '{e.related_topic_id}'")
         
         for s in config.suspects:
             if s.lies:
@@ -80,6 +84,10 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
                         raise DomainError(f"Lie '{lie.id}' for '{s.id}' references unknown topic_id '{lie.topic_id}'")
                     if lie.broken_by_evidence not in valid_evidence_ids:
                         raise DomainError(f"Lie '{lie.id}' for '{s.id}' references unknown broken_by_evidence '{lie.broken_by_evidence}'")
+            if s.knowledge:
+                for k in s.knowledge:
+                    if k.topic_id not in valid_topic_ids:
+                        raise DomainError(f"KnowledgeItem '{k.id}' for suspect '{s.id}' references unknown topic_id '{k.topic_id}'")
 
         # -------------------------
         # 4. Create Scenario

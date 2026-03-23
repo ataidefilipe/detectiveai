@@ -13,9 +13,9 @@ def test_scenario_loader_with_topics():
         data = {
             "scenario_code": "topic-case",
             "title": "Topic Case",
-            "culprit": "Suspect A",
-            "suspects": [{"name": "Suspect A"}],
-            "evidences": [{"name": "Evidence A"}],
+            "culprit": "suspect_a",
+            "suspects": [{"id": "suspect_a", "name": "Suspect A"}],
+            "evidences": [{"id": "evidence_a", "name": "Evidence A"}],
             "secrets": [],
             "topics": [
                 {
@@ -54,8 +54,9 @@ def test_scenario_loader_with_knowledge_items():
         data = {
             "scenario_code": "know-case",
             "title": "Knowledge Case",
-            "culprit": "Witness",
+            "culprit": "witness",
             "suspects": [{
+                "id": "witness",
                 "name": "Witness",
                 "knowledge": [
                     {
@@ -67,8 +68,14 @@ def test_scenario_loader_with_knowledge_items():
                     }
                 ]
             }],
-            "evidences": [{"name": "Knife"}],
-            "secrets": []
+            "evidences": [{"id": "knife", "name": "Knife"}],
+            "secrets": [],
+            "topics": [
+                {
+                    "id": "murder_weapon",
+                    "label": "The Murder Weapon"
+                }
+            ]
         }
 
         with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as tmp:

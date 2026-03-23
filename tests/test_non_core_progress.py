@@ -49,7 +49,7 @@ def test_non_core_progress_api():
         )
         assert res_empty.status_code == 200
         data_empty = res_empty.json()
-        assert data_empty["suspect_state"]["progress"] == 1.0
+        assert data_empty["suspect_state"]["progress"] == 0.0
         assert data_empty["suspect_state"]["is_closed"] is False
 
         # Test Suspect 1: Starts at 0, goes to 1 after revealing the single non-core secret
