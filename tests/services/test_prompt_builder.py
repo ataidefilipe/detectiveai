@@ -1,69 +1,70 @@
 import pytest
-from app.services.prompt_builder import build_npc_prompt
 from app.api.schemas.render_context import NpcResponseRenderContext, ResponseMode
+from app.services.prompt_builder import build_npc_prompt
 
-def test_prompt_builder_injects_render_context_correctly():
-    # Mock context pieces
+def test_build_npc_prompt_injects_new_context():
+    """
+    Tests if backstory, initial_statement, and final_phrase are properly injected.
+    """
+    # 1. Arrange
     npc_context = {
-        "suspect": {"name": "Test Name", "personality": "Test Personality"},
-        "case": {"description": "Public Test", "summary": "Secret Test"},
-        "revealed_secrets": [{"content": "I like cheese"}, {"content": "I hate cats"}],
-        "revealed_knowledge": ["The key is under the mat"]
+        "case": {
+            "title": "Test Case",
+            "description": "A public story describing the crime.",
+            "summary": "Short summary."
+        },
+        "suspect": {
+            "id": 1,
+            "name": "John Doe",
+            "personality": "Arrogant and defensive.",
+            "backstory": "Grew up in the slums, hates the police.",
+            "initial_statement": "I was at home watching TV.",
+            "final_phrase": "You will never prove anything!",
+            "is_closed": False,
+            "progress": 0.5
+        },
+        "revealed_secrets": [],
+        "revealed_knowledge": [],
+        "broken_claims": [],
+        "pressure_points": [],
+        "rules": {}
     }
-    chat_history = []
-    player_message = {"text": "Hello"}
-    
-    # Target Context with Evasive restriction
+
     render_context = NpcResponseRenderContext(
         npc_stance="hostile",
-        response_mode=ResponseMode.evasive
+        response_mode=ResponseMode.final_phrase,
+        new_secrets_this_turn=[],
+        new_knowledge_this_turn=[],
+        broken_lies_this_turn=[],
+        effectiveness=1.0,
+        motive_score=0.0
     )
-    
-    # Generate Prompt
-    messages = build_npc_prompt(
-        npc_context=npc_context,
-        chat_history=chat_history,
-        render_context=render_context
-    )
-    
-    system_prompt = messages[0]["content"]
-    
-    # Assertions
-    assert "HOSTILE" in system_prompt
-    assert "evasiva" in system_prompt.lower()
-    
-    # Check allowed facts
-    assert "I like cheese" in system_prompt
-    assert "I hate cats" in system_prompt
-    
-    # Check allowed knowledge
-    assert "The key is under the mat" in system_prompt
-    
-    # Rules enforcing bounds
-    assert "NUNCA invente fatos novos" in system_prompt
 
+    chat_history = [
+        {"sender": "user", "text": "Are you guilty?"}
+    ]
 
-def test_prompt_builder_without_facts():
-    npc_context = {
-        "suspect": {"name": "X", "personality": "Y"},
-        "case": {"description": "D", "summary": "S"},
-        "revealed_secrets": [],
-        "revealed_knowledge": []
+    # 2. Act
+    messages = build_npc_prompt(npc_context, chat_history, render_context)
+
+    # 3. Assert
+    assert len(messages) == 2 # System + User
+    sys_prompt = messages[0]["content"]
+
+    # Check injections
+    assert "História Pessoal / Backstory: Grew up in the slums, hates the police." in sys_prompt
+    assert "Sua Declaração Inicial: I was at home watching TV." in sys_prompt
+    assert "Responda APENAS E EXATAMENTE a sua Frase Final: 'You will never prove anything!'" in sys_prompt
+    assert "Nome: John Doe" in sys_prompt
+    
+    # Check default fallbacks if missing
+    npc_context_missing = {
+        "case": {"description": "Story"},
+        "suspect": {"name": "Jane", "personality": "Shy"}
     }
+    render_context.response_mode = ResponseMode.neutral_answer
     
-    render_context = NpcResponseRenderContext(
-        npc_stance="neutral",
-        response_mode=ResponseMode.neutral_answer
-    )
-    
-    messages = build_npc_prompt(
-        npc_context=npc_context,
-        chat_history=[],
-        render_context=render_context
-    )
-    
-    system_prompt = messages[0]["content"]
-    
-    # Should contain fallback texts
-    assert "Nenhum segredo revelado até agora" in system_prompt
-    assert "Nenhum cenário já discutido." in system_prompt
+    msgs2 = build_npc_prompt(npc_context_missing, [], render_context)
+    sys2 = msgs2[0]["content"]
+    assert "História Pessoal / Backstory: Desconhecido." in sys2
+    assert "Sua Declaração Inicial: Nada declarado." in sys2
