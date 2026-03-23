@@ -112,3 +112,17 @@ def test_build_render_context_cooperative(base_analysis):
         analysis=base_analysis
     )
     assert ctx.response_mode == ResponseMode.clarify
+
+def test_build_render_context_new_knowledge(base_analysis):
+    transition = StateTransitionResult(
+        conversation_effect=ConversationEffect.none,
+        npc_shift=NpcShift.none,
+        state_deltas={},
+        debug_reason_codes=[]
+    )
+    ctx = build_render_context(
+        transition=transition,
+        analysis=base_analysis,
+        new_knowledge_this_turn=["New fact"]
+    )
+    assert ctx.response_mode == ResponseMode.partial_admission

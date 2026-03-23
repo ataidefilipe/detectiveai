@@ -39,9 +39,12 @@ def build_render_context(
         else:
             response_mode = ResponseMode.evasive
             
+    elif new_knowledge_this_turn:
+        response_mode = ResponseMode.partial_admission
+
     # 3. Se pressured E houver allowed_knowledge -> partial_admission
     elif transition.npc_shift == NpcShift.pressured:
-        if allowed_knowledge or new_knowledge_this_turn:
+        if allowed_knowledge:
             response_mode = ResponseMode.partial_admission
         else:
             response_mode = ResponseMode.evasive
