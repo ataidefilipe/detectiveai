@@ -204,6 +204,13 @@ def _build_suspect_state_for_ai(
                 for i in range(depth):
                     revealed_knowledge.append(layers[i])
 
+    broken_claims = []
+    if state.broken_lie_ids and suspect and suspect.lies:
+        lie_dict_map = {lie["id"]: lie for lie in suspect.lies}
+        for lie_id in state.broken_lie_ids:
+            if lie_id in lie_dict_map:
+                broken_claims.append(lie_dict_map[lie_id]["statement"])
+
     suspect_state = {
         "suspect_id": suspect_id,
         "name": suspect.name if suspect else "O suspeito",
@@ -216,7 +223,8 @@ def _build_suspect_state_for_ai(
             suspect.final_phrase
             if suspect and suspect.final_phrase
             else "Já falei tudo que sabia."
-        )
+        ),
+        "broken_claims": broken_claims
     }
     
     return suspect_state, revealed_secrets
