@@ -9,6 +9,7 @@ from app.services.reveal_policy_service import get_allowed_knowledge_facts
 from app.services.message_analysis_service import analyze_message
 from app.services.turn_resolution_service import resolve_turn_state
 from app.services.turn_feedback_service import build_turn_feedback, build_narrative_feedback
+from app.services.lie_break_service import evaluate_broken_lies
 from app.infra.db_models import SessionEvidenceUsageModel, SessionModel, ScenarioModel, NpcChatMessageModel
 from app.api.schemas.chat import (
     MessageAnalysisResult,
@@ -105,20 +106,16 @@ def run_interrogation_turn(
 
     # 1.5 Update topic hits
     for topic_id in msg_analysis.detected_topic_ids:
-        # Verifica se o tópico ESPECÍFICO detectado é sensível 
-        is_sens_hit = topic_id in msg_analysis.sensitive_topic_ids
-        heat_delta = settings.SENSITIVE_HIT_HEAT_DELTA if is_sens_hit else 0.0
-
         update_topic_hit(
             session_id=session_id,
             suspect_id=suspect_id,
             topic_id=topic_id,
-            heat_delta=heat_delta,
             db=db
         )
 
-    # 2. Evidence logic (may reveal secrets)
+    # 2. Evidence logic (may reveal secrets or break lies)
     revealed_secrets = []
+    newly_broken_lies = []
     evidence_effect = "none"
     was_previously_used = False
     
@@ -146,6 +143,16 @@ def run_interrogation_turn(
                 db=db
             )
 
+        # 2.1 Check for newly broken lies
+        newly_broken_lies = evaluate_broken_lies(
+            session_id=session_id,
+            suspect_id=suspect_id,
+            evidence_id=evidence_id,
+            current_topics=msg_analysis.detected_topic_ids,
+            last_topic_id=initial_suspect_state.get("last_topic_id"),
+            db=db
+        )
+
         # Log evidence usage and update was_effective if applicable
         usage = db.query(SessionEvidenceUsageModel).filter(
             SessionEvidenceUsageModel.session_id == session_id,
@@ -153,7 +160,7 @@ def run_interrogation_turn(
             SessionEvidenceUsageModel.evidence_id == evidence_id
         ).first()
 
-        is_effective = len(revealed_secrets) > 0
+        is_effective = len(revealed_secrets) > 0 or len(newly_broken_lies) > 0
 
         if not usage:
             was_previously_used = False
@@ -268,14 +275,11 @@ def run_interrogation_turn(
         "player_message": player_msg,
         "npc_message": npc_msg,
         "revealed_secrets": revealed_secrets,
+        "newly_broken_lies": newly_broken_lies if newly_broken_lies else None,
         "evidence_effect": evidence_effect,
         "suspect_state": suspect_state,
         "message_analysis": msg_analysis if settings.DEBUG_TURN_TRACE else None,
         "state_transition": state_transition if settings.DEBUG_TURN_TRACE else None,
-        "conversation_effect": state_transition.conversation_effect.value,
-        "npc_shift": state_transition.npc_shift.value,
-        "topic_signal": t_signal,
-        "feedback_hints": hints,
         "narrative_feedback": narrative_fb.model_dump() if narrative_fb else None,
         "debug_trace": debug_trace
     }

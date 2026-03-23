@@ -10,6 +10,8 @@ from app.api.schemas.suspect import SuspectSessionResponse
 from app.services.interrogation_turn_service import run_interrogation_turn
 from app.services.session_finalize_service import finalize_session
 from app.services.session_service import create_session, get_session_overview, get_suspect_state
+from app.services.case_file_service import get_session_case_file
+from app.api.schemas.case_file import CaseFileResponse
 
 from app.infra.db import SessionLocal
 from app.infra.db_models import NpcChatMessageModel, SessionModel, SessionSuspectStateModel, SuspectModel, ScenarioModel, EvidenceModel
@@ -106,10 +108,27 @@ def accuse_session(session_id: int, payload: AccuseRequest):
                 "as evidências essenciais."
             )
         elif verdict["result_type"] == "partial":
-            description = (
-                "Você identificou corretamente o culpado, mas deixou passar "
-                "evidências essenciais."
-            )
+            reasons = verdict.get("reason_codes", [])
+            has_wrong_motive = "wrong_motive" in reasons
+            has_missing_evidence = "missing_required_evidence" in reasons
+            
+            if has_wrong_motive and has_missing_evidence:
+                description = (
+                    "Você identificou corretamente o culpado, mas escolheu a motivação incorreta "
+                    "e deixou passar evidências essenciais."
+                )
+            elif has_wrong_motive:
+                description = (
+                    "Você identificou corretamente o culpado, mas escolheu a motivação incorreta."
+                )
+            elif has_missing_evidence:
+                description = (
+                    "Você identificou corretamente o culpado, mas deixou passar evidências essenciais."
+                )
+            else:
+                description = (
+                    "Você identificou corretamente o culpado, mas a acusação está incompleta."
+                )
         else:
             description = (
                 "O suspeito acusado não é o verdadeiro culpado."
@@ -128,7 +147,7 @@ def accuse_session(session_id: int, payload: AccuseRequest):
             missing_evidence_ids=verdict["missing_evidence_ids"],
             chosen_motive_key=verdict["chosen_motive_key"],
             motive_result=verdict["motive_result"],
-            reason_codes=verdict.get("reason_codes", []),
+            partial_reasons=verdict.get("reason_codes", []),
             description=description
         )
 
@@ -153,6 +172,21 @@ def api_get_session_overview(session_id: int):
 
     # get_session_overview já retorna progress e is_closed por suspeito
     return overview
+
+@router.get("/sessions/{session_id}/case-file", response_model=CaseFileResponse)
+def api_get_session_case_file(session_id: int):
+    """
+    Returns the consolidated read-model of the player's discoveries in the given session.
+    """
+    db = SessionLocal()
+    try:
+        from app.core.exceptions import NotFoundError
+        response = get_session_case_file(session_id, db)
+        return response
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    finally:
+        db.close()
 
 @router.get("/debug/sessions/{session_id}/suspects/{suspect_id}/status")
 def get_suspect_status(session_id: int, suspect_id: int):

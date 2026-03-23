@@ -86,10 +86,9 @@ def db_session():
 def test_integration_vague_question_weak_signal(db_session):
     res = run_interrogation_turn(session_id=1, suspect_id=1, text="Hmm, qual é mesmo a sua cor favorita?", evidence_id=None, db=db_session)
     
-    assert res["topic_signal"] == TopicSignal.weak
-    assert "pergunta muito vaga" in res["feedback_hints"]
+    assert res["narrative_feedback"]["topic_read"] == "fraco"
+    assert res["narrative_feedback"]["guidance"] == "A pergunta foi muito aberta e não obteve um foco claro."
     assert res["evidence_effect"] == "none"
-    assert res["conversation_effect"] == "none"
 
 def test_integration_sensitive_topic_touch(db_session):
     # Faca is marked is_sensitive=True
@@ -116,7 +115,7 @@ def test_integration_evidence_out_of_context(db_session):
     res = run_interrogation_turn(session_id=1, suspect_id=1, text="Esta faca tem a ver com isso?", evidence_id=2, db=db_session)
     
     assert res["evidence_effect"] == "out_of_context"
-    assert "evidência fora de contexto" in res["feedback_hints"]
+    assert res["narrative_feedback"]["guidance"] == "A direção é boa, mas essa ligação ainda não faz sentido para o suspeito."
 
 def test_integration_evidence_reveals_secret(db_session):
     # Presenting the Faca should reveal the secret linked to it.
