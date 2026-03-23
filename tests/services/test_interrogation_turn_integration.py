@@ -151,3 +151,38 @@ def test_integration_knowledge_progression(db_session):
         # Depending on evaluate_reveal_layer(), either a new layer unlocks or we get 0 new knowledge.
         # It's highly likely times_touched=1 vs times_touched=2 bumps depth, but either way it shouldn't repeat the first one in `new_knowledge_this_turn`.
         assert "A faca estava no chão." not in res2["debug_trace"].new_knowledge_this_turn
+
+def test_integration_last_topic_id_persistence(db_session):
+    # Turno 1: Toca no tópico "faca" sem apresentar evidência
+    res1 = run_interrogation_turn(
+        session_id=1, 
+        suspect_id=1, 
+        text="Me fale sobre a arma do crime.", 
+        evidence_id=None, 
+        db=db_session
+    )
+    
+    from app.infra.db_models import SessionSuspectStateModel
+    
+    # Verifica que last_topic_id foi persistido corretamente no banco
+    state = db_session.query(SessionSuspectStateModel).filter(
+        SessionSuspectStateModel.session_id == 1,
+        SessionSuspectStateModel.suspect_id == 1
+    ).first()
+    
+    assert state.last_topic_id == "faca"
+    
+    # Turno 2: Apresenta evidência 1 (related_topic_id="faca") mas texto NÂO menciona faca
+    res2 = run_interrogation_turn(
+        session_id=1,
+        suspect_id=1,
+        text="Explique isso aqui.",
+        evidence_id=1,
+        db=db_session
+    )
+    
+    # O contexto (last_topic_id) deve ter conectado a evidência "Faca Suja" que é do tópico "faca"
+    # Assim, a secret deve ser revelada e não dar out_of_context
+    assert res2["evidence_effect"] == "revealed_secret"
+    assert len(res2["revealed_secrets"]) == 1
+    assert res2["revealed_secrets"][0]["content"] == "Eu usei a faca"
