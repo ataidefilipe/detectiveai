@@ -80,13 +80,13 @@ def create_session(scenario_id: int, db: Optional[Session] = None) -> SessionMod
                 session_id=session.id,
                 suspect_id=suspect.id,
                 revealed_secret_ids=[],
+                broken_lie_ids=[],
                 is_closed=False,
                 progress=initial_progress,
                 stance="neutral",
                 patience=50.0,
                 pressure=0.0,
                 rapport=0.0,
-                repetition_score=0.0,
                 last_topic_id=None
             )
             db.add(state)
@@ -99,8 +99,7 @@ def create_session(scenario_id: int, db: Optional[Session] = None) -> SessionMod
                         suspect_id=suspect.id,
                         topic_id=topic["id"],
                         status="untouched",
-                        times_touched=0,
-                        sensitive_heat=0.0
+                        times_touched=0
                     )
                     db.add(topic_state)
 
@@ -290,7 +289,9 @@ def get_suspect_state(session_id: int, suspect_id: int, db: Optional[Session] = 
             "stance": state.stance,
             "patience": state.patience,
             "pressure": state.pressure,
-            "rapport": state.rapport
+            "rapport": state.rapport,
+            "broken_lie_ids": state.broken_lie_ids,
+            "last_topic_id": state.last_topic_id
         }
     finally:
         if close_session:
@@ -328,6 +329,9 @@ def update_suspect_state_from_deltas(
     if "stance" in deltas:
         state.stance = deltas["stance"]
 
+    if "last_topic_id" in deltas:
+        state.last_topic_id = deltas["last_topic_id"]
+
     db.flush()
 
     return {
@@ -336,6 +340,8 @@ def update_suspect_state_from_deltas(
         "stance": state.stance,
         "patience": state.patience,
         "pressure": state.pressure,
-        "rapport": state.rapport
+        "rapport": state.rapport,
+        "broken_lie_ids": state.broken_lie_ids,
+        "last_topic_id": state.last_topic_id
     }
 
