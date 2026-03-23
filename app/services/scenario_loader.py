@@ -17,7 +17,8 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
     """
     Loads a scenario from a JSON file, validates it via Pydantic,
     and populates the SQLAlchemy database models.
-    Prevents duplication by checking scenario title.
+    Prevents duplication by checking scenario title explicitly avoiding any 
+    updates to already inserted scenarios (idempotent 'insert-if-not-exists').
     
     Args:
         path (str): Path to the scenario JSON file.
@@ -55,7 +56,7 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
         )
 
         if existing:
-            print(f"[loader] Scenario '{config.scenario_code}' already exists. Skipping insert.")
+            print(f"[loader] Cenário '{config.scenario_code}' já existe. Ignorando atualização (para forçar o update, delete o arquivo game.db).")
             return existing
 
         # -------------------------
@@ -65,6 +66,20 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
             valid_motive_keys = [m.key for m in config.motives]
             if config.true_motive_key not in valid_motive_keys:
                 raise DomainError(f"true_motive_key '{config.true_motive_key}' is not in motives list.")
+                
+        # -------------------------
+        # 3.6 Validate Lies (T-0012)
+        # -------------------------
+        valid_evidence_ids = {e.id for e in config.evidences}
+        valid_topic_ids = {t.id for t in config.topics} if config.topics else set()
+        
+        for s in config.suspects:
+            if s.lies:
+                for lie in s.lies:
+                    if lie.topic_id not in valid_topic_ids:
+                        raise DomainError(f"Lie '{lie.id}' for '{s.id}' references unknown topic_id '{lie.topic_id}'")
+                    if lie.broken_by_evidence not in valid_evidence_ids:
+                        raise DomainError(f"Lie '{lie.id}' for '{s.id}' references unknown broken_by_evidence '{lie.broken_by_evidence}'")
 
         # -------------------------
         # 4. Create Scenario
@@ -89,7 +104,16 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
         # -------------------------
         # 5. Insert Suspects
         # -------------------------
+        evidence_name_map = {e.id: e.name for e in config.evidences}
+
         for s in config.suspects:
+            lies_dicts = []
+            if s.lies:
+                for lie in s.lies:
+                    lie_dict = lie.dict()
+                    lie_dict['broken_by_evidence'] = evidence_name_map.get(lie.broken_by_evidence, lie.broken_by_evidence)
+                    lies_dicts.append(lie_dict)
+
             suspect = SuspectModel(
                 scenario_id=scenario.id,
                 name=s.name,
@@ -99,14 +123,14 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
                 initial_statement=s.initial_statement,
                 final_phrase=s.final_phrase,
                 true_timeline=s.true_timeline,
-                lies=[lie.dict() for lie in s.lies] if s.lies else None,
+                lies=lies_dicts if lies_dicts else None,
                 knowledge_items=[k.model_dump() for k in s.knowledge] if s.knowledge else []
             )
             db.add(suspect)
             db.flush()
             db.refresh(suspect)
 
-            suspect_map[s.name] = suspect.id
+            suspect_map[s.id] = suspect.id
 
         # -------------------------
         # 6. Insert Evidence
@@ -125,7 +149,7 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
             db.flush()
             db.refresh(evidence)
 
-            evidence_map[e.name] = evidence.id
+            evidence_map[e.id] = evidence.id
 
             if e.is_mandatory:
                 mandatory_evidence_ids.append(evidence.id)
