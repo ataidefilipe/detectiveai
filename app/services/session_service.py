@@ -176,18 +176,9 @@ def get_session_overview(session_id: int, db: Optional[Session] = None) -> Dict[
         # -------------------------
         suspects_summary = []
         for s in suspects:
-            s_state = state_map.get(s.id)
-
-            progress = s_state.progress if s_state else 0.0
-
-            # Pegar o status de 'fechado' (is_closed)
-            is_closed = s_state.is_closed if s_state else False
-
             suspects_summary.append({
                 "suspect_id": s.id,
-                "name": s.name,
-                "progress": progress,
-                "is_closed": is_closed
+                "name": s.name
             })
 
         # -------------------------
