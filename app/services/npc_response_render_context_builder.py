@@ -14,7 +14,11 @@ def build_render_context(
 ) -> NpcResponseRenderContext:
     """
     Constrói o NpcResponseRenderContext, decidindo a diretriz de atuação da LLM
-    com as decisões já tomadas pelo motor mecânico do jogo (MVP).
+    com as decisões já tomadas pelo motor mecânico do jogo.
+
+    IMPORTANTE: 'allowed_knowledge' serve apenas como insumo de decisão para o 'response_mode' 
+    dentro deste builder. O prompt final (prompt_builder.py) utiliza 'npc_context["revealed_knowledge"]' 
+    (persistido no banco) como fonte de memória. Não trate os dois como sinônimos.
     """
 
     # Default

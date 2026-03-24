@@ -12,6 +12,7 @@ def build_npc_prompt(
         if all_secrets else "Nenhum segredo revelado até agora."
         
     all_knowledge = npc_context.get("revealed_knowledge", [])
+    # Usa o histórico persistido do banco, não render_context.allowed_knowledge
     allowed_knowledge_str = "\n".join(f"- {k}" for k in all_knowledge) \
         if all_knowledge else "Nenhum cenário já discutido."
         
