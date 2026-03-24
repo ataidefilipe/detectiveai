@@ -68,6 +68,21 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
                 raise DomainError(f"true_motive_key '{config.true_motive_key}' is not in motives list.")
                 
         # -------------------------
+        # 3.55 Validate Uniqueness (SESS-003-B)
+        # -------------------------
+        suspect_ids = [s.id for s in config.suspects]
+        if len(suspect_ids) != len(set(suspect_ids)):
+            seen = set()
+            duplicates = [x for x in suspect_ids if x in seen or seen.add(x)]
+            raise DomainError(f"Duplicate suspect id found in scenario: '{duplicates[0]}'")
+            
+        evidence_ids_check = [e.id for e in config.evidences]
+        if len(evidence_ids_check) != len(set(evidence_ids_check)):
+            seen = set()
+            duplicates = [x for x in evidence_ids_check if x in seen or seen.add(x)]
+            raise DomainError(f"Duplicate evidence id found in scenario: '{duplicates[0]}'")
+                
+        # -------------------------
         # 3.6 Validações Estruturais de Fiações Cruzadas (SESS-003)
         # -------------------------
         valid_evidence_ids = {e.id for e in config.evidences}
