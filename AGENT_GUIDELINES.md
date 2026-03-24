@@ -49,3 +49,23 @@ Por favor, atualize este arquivo sempre que um novo padrão for estabelecido ou 
 ## 4. Evolução do Checklist
 
 * Este é um documento vivo. Ao resolver problemas de compatibilidade difíceis ou notar que a IA bateu muita cabeça resolvendo o mesmo tipo de falha arquitetural, documente o aprendizado neste arquivo para a próxima iteração.
+
+---
+
+## 5. Mocks de Testes e Validação Pydantic
+
+### 5.1. Cuidados ao Criar Mocks de JSON
+* **`pydantic_core.ValidationError`**: Ao criar mocks manuais de dicionários JSON dentro dos testes (ex: para testar loaders de cenário), verifique sempre a estrutura exata do Schema alvo (em `schema_scenario.py` ou similares). É comum que as variáveis tenham nomes diferentes entre a representação de banco de dados e os contratos Pydantic (ex: `label` vs `name`). Um campo ausente ou com nome incorreto derrubará o teste na etapa de parse com erro obscuro. Sempre cruze a declaração de dict do mock com a definição Pydantic.
+
+---
+
+## 6. Mecânicas de Jogo e Narrativa (Gameplay)
+
+### 6.1. Normalização de Nomes de Evidências em Mentiras
+* **Mapeamento de Slug para Nome Amigável:** No banco de dados (`SuspectModel.lies`), o campo `broken_by_evidence` deve conter o *nome exibível* da evidência (ex: "Faca Suja") e não o identificador curto (slug) do JSON (ex: "faca_01"). O `scenario_loader.py` realiza essa tradução automaticamente.
+* **Erro Comum em Testes Unitários:** Ao criar mentiras (`lies`) em mocks manuais para testes, garanta que o valor de `broken_by_evidence` corresponda EXATAMENTE ao atributo `.name` do objeto `EvidenceModel` persistido, sob o risco da mentira nunca ser detectada como quebrada pelo `lie_break_service.py`.
+
+### 6.2. Quebra de Mentiras e Contexto de Tópicos
+* **Dependência de Tópico:** Para que uma mentira seja quebrada, não basta apresentar a evidência correta; o jogador deve estar "falando" sobre o tópico associado àquela mentira (presente no `detected_topic_ids` da mensagem atual ou no `last_topic_id` da sessão). 
+* **Teste de Integração:** Em testes que buscam validar a quebra de mentiras, certifique-se de que o texto da mensagem do jogador contenha palavras-chave que disparem a detecção do tópico correto, ou que o turno anterior tenha estabelecido esse tópico como o contexto ativo.
+

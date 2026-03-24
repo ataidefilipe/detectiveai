@@ -50,6 +50,14 @@ def db_session():
                  "topic_id": "faca",
                  "content_layers": ["A faca estava no chão.", "A faca tinha minhas digitais."]
              }
+        ],
+        lies=[
+            {
+                "id": "lie1",
+                "statement": "Eu não encostei na faca.",
+                "topic_id": "faca",
+                "broken_by_evidence": "Faca Suja"
+            }
         ]
     )
     db.add(suspect)
@@ -185,3 +193,41 @@ def test_integration_last_topic_id_persistence(db_session):
     assert res2["evidence_effect"] == "revealed_secret"
     assert len(res2["revealed_secrets"]) == 1
     assert res2["revealed_secrets"][0]["content"] == "Eu usei a faca"
+
+def test_integration_evidence_breaks_lie(db_session):
+    # Setup the patch just so we don't need real AI reply
+    with patch("app.services.interrogation_turn_service.add_npc_reply") as mock_reply:
+        mock_reply.return_value = {"id": 2, "text": "Fui pego."}
+        
+        # Turno 1: Apresenta evidência que quebra mentira configurada
+        res = run_interrogation_turn(
+            session_id=1,
+            suspect_id=1,
+            text="Explique sua mentira sobre a faca.",
+            evidence_id=1, # Faca Suja
+            db=db_session
+        )
+        
+        db_session.commit()
+        
+        # Validar que a mentira foi fisgada no array newly_broken_lies de retorno
+        assert res["newly_broken_lies"] is not None
+        assert len(res["newly_broken_lies"]) == 1
+        assert res["newly_broken_lies"][0]["id"] == "lie1"
+        
+        # Validar que o chat_service empilha em broken_claims do estado da IA
+        from app.services.chat_service import _build_suspect_state_for_ai
+        from app.infra.db_models import SessionSuspectStateModel, SuspectModel
+        
+        state = db_session.query(SessionSuspectStateModel).filter(
+            SessionSuspectStateModel.session_id == 1,
+            SessionSuspectStateModel.suspect_id == 1
+        ).first()
+        
+        suspect = db_session.query(SuspectModel).filter(
+            SuspectModel.id == 1
+        ).first()
+        
+        ai_state, _ = _build_suspect_state_for_ai(state, suspect, 1, db_session)
+        assert "broken_claims" in ai_state
+        assert "Eu não encostei na faca." in ai_state["broken_claims"]
