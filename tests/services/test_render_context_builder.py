@@ -72,3 +72,33 @@ def test_build_render_context_cooperative():
         analysis=analysis
     )
     assert rc.response_mode == ResponseMode.clarify
+
+def test_build_render_context_new_knowledge_no_shift():
+    # BUG-005: Ensure new knowledge forces partial admission even without shift
+    transition = StateTransitionResult(npc_shift=NpcShift.none)
+    analysis = MessageAnalysisResult(intent=MessageIntent.ask)
+    rc = build_render_context(
+        transition=transition,
+        analysis=analysis,
+        new_knowledge_this_turn=["Fato novo do cenário"]
+    )
+    assert rc.response_mode == ResponseMode.partial_admission
+
+def test_build_render_context_out_of_context_no_shift():
+    transition = StateTransitionResult(npc_shift=NpcShift.none)
+    analysis = MessageAnalysisResult(intent=MessageIntent.ask)
+    rc = build_render_context(
+        transition=transition,
+        analysis=analysis,
+        evidence_effect="out_of_context"
+    )
+    assert rc.response_mode == ResponseMode.evasive
+
+def test_build_render_context_neutral_answer():
+    transition = StateTransitionResult(npc_shift=NpcShift.none)
+    analysis = MessageAnalysisResult(intent=MessageIntent.ask)
+    rc = build_render_context(
+        transition=transition,
+        analysis=analysis
+    )
+    assert rc.response_mode == ResponseMode.neutral_answer

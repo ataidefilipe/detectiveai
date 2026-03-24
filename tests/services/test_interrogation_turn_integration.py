@@ -231,3 +231,27 @@ def test_integration_evidence_breaks_lie(db_session):
         ai_state, _ = _build_suspect_state_for_ai(state, suspect, 1, db_session)
         assert "broken_claims" in ai_state
         assert "Eu não encostei na faca." in ai_state["broken_claims"]
+
+def test_integration_evidence_wrong_context_does_not_break_lie(db_session):
+    # Evidence 1 breaks lie1 BUT topic "local" is active, not "faca"
+    res = run_interrogation_turn(
+        session_id=1,
+        suspect_id=1,
+        text="Aonde você estava na cidade?", # Topic: local
+        evidence_id=1, # Faca Suja (belongs to topic: faca)
+        db=db_session
+    )
+    
+    assert res["newly_broken_lies"] is None or len(res["newly_broken_lies"]) == 0
+
+def test_integration_wrong_evidence_does_not_break_lie(db_session):
+    # Topic "faca" is active, but Evidence 2 (Chave do Carro) is presented
+    res = run_interrogation_turn(
+        session_id=1,
+        suspect_id=1,
+        text="Me fale sobre a faca.", # Topic: faca
+        evidence_id=2, # Chave do Carro
+        db=db_session
+    )
+    
+    assert res["newly_broken_lies"] is None or len(res["newly_broken_lies"]) == 0
