@@ -200,10 +200,30 @@ def get_suspect_status(session_id: int, suspect_id: int):
         if not state:
             raise HTTPException(status_code=404, detail="Suspect not found in this session.")
 
+        topic_states = db.query(SessionSuspectTopicStateModel).filter(
+            SessionSuspectTopicStateModel.session_id == session_id,
+            SessionSuspectTopicStateModel.suspect_id == suspect_id
+        ).all()
+
         return {
             "suspect_id": state.suspect_id,
             "progress": state.progress,
-            "is_closed": state.is_closed
+            "is_closed": state.is_closed,
+            "stance": state.stance,
+            "patience": state.patience,
+            "pressure": state.pressure,
+            "rapport": state.rapport,
+            "last_topic_id": state.last_topic_id,
+            "broken_lie_ids": state.broken_lie_ids,
+            "revealed_secret_ids": state.revealed_secret_ids,
+            "topic_states": [
+                {
+                    "topic_id": t.topic_id,
+                    "status": t.status,
+                    "times_touched": t.times_touched
+                }
+                for t in topic_states
+            ]
         }
 
     finally:
