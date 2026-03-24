@@ -268,7 +268,9 @@ def run_interrogation_turn(
         "evidence_inserted": evidence_id is not None,
         "evidence_effect": evidence_effect,
         "topics_touched": len(msg_analysis.detected_topic_ids),
-        "revealed_secrets_count": len(revealed_secrets)
+        "revealed_secrets_count": len(revealed_secrets),
+        "broken_lies_count": len(newly_broken_lies),
+        "broken_lie_ids": [l["id"] for l in newly_broken_lies] if newly_broken_lies else []
     }))
 
     return {
