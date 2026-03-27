@@ -15,8 +15,8 @@ def bootstrap_game():
 
     Responsibilities:
     - Initialize database tables
-    - Load scenario JSON files if no scenario exists
-    - Ensure idempotency (safe to run multiple times)
+    - Load scenario JSON files if no scenario exists (skip-if-exists)
+    - Ensure idempotency (safe to run multiple times, ignoring JSON updates for existing scenarios unless DB is dropped/reset)
     """
 
     # 1. Ensure DB schema exists

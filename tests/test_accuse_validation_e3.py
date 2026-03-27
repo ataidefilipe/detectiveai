@@ -56,4 +56,4 @@ def test_cannot_accuse_with_evidence_used_on_wrong_suspect():
     # Mas o suspeito acusado está errado, então dá wrong_suspect
     assert resp.status_code == 200
     assert resp.json()["result_type"] == "wrong"
-    assert "wrong_suspect" in resp.json()["reason_codes"]
+    assert "wrong_suspect" in resp.json()["partial_reasons"]

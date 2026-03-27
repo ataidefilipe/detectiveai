@@ -2,7 +2,49 @@
   "scenario_code": "piloto-01",
   "title": "O Caso do Escritório Trancado",
   "description": "Um funcionário importante da empresa Solarium Corp foi encontrado morto dentro de uma sala trancada por dentro. Apenas quatro pessoas tinham acesso ao andar no horário do crime.",
-  "culprit": "Marina Souza",
+  "culprit": "marina_souza",
+  "topics": [
+    {
+      "id": "alibi",
+      "label": "Álibi",
+      "aliases": [
+        "onde estava", "quarto", "sozinha", "estava lá", "sua localização",
+        "noite do crime", "onde você estava", "o que fazia"
+      ]
+    },
+    {
+      "id": "relatorio_contabil",
+      "label": "Relatório Contábil",
+      "aliases": [
+        "relatório", "contábil", "documento", "números", "adulterado",
+        "irregularidades", "desvio", "contabilidade", "planilha", "arquivo"
+      ]
+    },
+    {
+      "id": "presenca_local",
+      "label": "Presença no Local",
+      "aliases": [
+        "cartão de acesso", "cartão", "acesso", "porta", "entrou", "estava lá",
+        "presença", "registro", "câmeras", "gravação", "andar"
+      ]
+    },
+    {
+      "id": "conflito_vitima",
+      "label": "Conflito com a Vítima",
+      "aliases": [
+        "discussão", "briga", "conflito", "desentendimento", "problema",
+        "vítima", "chefe", "relação", "trabalho com", "como era", "tensão"
+      ]
+    },
+    {
+      "id": "outros_suspeitos",
+      "label": "Outros Suspeitos",
+      "aliases": [
+        "rogério", "clara", "eduardo", "estagiária", "segurança", "gerente",
+        "outro", "mais alguém", "quem mais"
+      ]
+    }
+  ],
   "motives": [
     {
       "key": "financial_gain",
@@ -23,120 +65,165 @@
   "true_motive_key": "financial_gain",
   "suspects": [
     {
+      "id": "marina_souza",
       "name": "Marina Souza",
-      "backstory": "Assistente financeira. Trabalhou por cinco anos com a vítima, mas recentemente teve conflitos sobre relatórios contábeis. É meticulosa, ansiosa e tenta sempre parecer calma.",
-      "internal_note": "Atenção: A Marina tem um amante no escritório e estava roubando dinheiro para ele. Isso não deve ser revelado de imediato, e o jogador tem de pressioná-la.",
-      "initial_statement": "Eu já disse tudo o que sei. Só quero ir embora logo.",
+      "backstory": "Assistente financeira. Trabalhou por cinco anos com a vítima, mas recentemente teve conflitos sobre relatórios contábeis. É meticulosa, ansiosa e tenta sempre parecer calma. Tem um histórico de decisões financeiras questionáveis na empresa e foi vista saindo tarde na semana do crime.",
+      "personality": "nervoso",
+      "internal_note": "Atenção: A Marina tem um amante no escritório e estava desviando dinheiro. Isso não deve ser revelado de imediato, e o jogador tem de pressioná-la.",
+      "initial_statement": "Eu já disse tudo o que sei. Só quero ir embora logo. Fui cooperativa desde o início, não é?",
       "true_timeline": [
         "Chegou ao hotel às 20h",
-        "Encontrou a vítima no corredor",
-        "Mentiu sobre estar sozinha"
+        "Encontrou a vítima no corredor às 22h10",
+        "Usou o cartão de acesso às 22h14",
+        "Discutiu com a vítima sobre o relatório",
+        "Saiu antes das câmeras voltarem"
       ],
       "lies": [
         {
+          "id": "lie_marina_alibi_01",
           "statement": "Eu estava sozinha no meu quarto a noite toda.",
-          "broken_by": "Registro de acesso do cartão magnético"
+          "topic_id": "alibi",
+          "broken_by_evidence": "cartao_acesso"
         }
       ],
-      "final_phrase": "Eu… já disse tudo que tinha pra dizer."
+      "knowledge": [
+        {
+          "id": "know_relatorio_01",
+          "topic_id": "relatorio_contabil",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "O relatório contábil estava sendo revisado naquela semana.",
+            "Eu mesma detectei algumas inconsistências nos números antes do crime.",
+            "A vítima sabia das irregularidades e me pressionava a encobri-las."
+          ]
+        },
+        {
+          "id": "know_conflito_01",
+          "topic_id": "conflito_vitima",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "Minha relação com a vítima tinha ficado tensa nos últimos meses.",
+            "Tivemos uma discussão séria sobre os relatórios na semana do crime.",
+            "Ele ameaçou me demitir se eu não cooperasse com o esquema dele."
+          ]
+        }
+      ],
+      "final_phrase": "Eu… já disse tudo que tinha pra dizer. Preciso falar com meu advogado."
     },
     {
+      "id": "rogerio_lima",
       "name": "Rogério Lima",
-      "backstory": "Segurança do prédio. Trabalha no turno da noite há 12 anos. Conhecido por seguir regras, mas também por dormir em serviço. Não gosta do chefe da segurança.",
+      "backstory": "Segurança do prédio há 12 anos. Segue regras à risca, mas é conhecido por dormir em serviço às vezes. Não gosta do chefe da segurança e evita conflito. Conhecia a vítima de vista, sem relação próxima.",
+      "personality": "neutro",
+      "initial_statement": "Fiz minha ronda como de costume. Não vi nada de estranho naquela noite, palavra.",
       "final_phrase": "Já falei tudo que eu sei, chefe."
     },
     {
+      "id": "clara_martins",
       "name": "Clara Martins",
-      "backstory": "Estagiária de TI. Inteligente, distraída, frequentemente fica até tarde mexendo em servidores. É vista como a 'nerd da equipe'.",
+      "backstory": "Estagiária de TI. Inteligente, distraída, costuma ficar até tarde mexendo nos servidores. É vista como a 'nerd da equipe'. Tem medo de perder o estágio e por isso evita se envolver em conflitos.",
+      "personality": "nervoso",
+      "initial_statement": "Eu estava arrumando uns problemas no servidor. Não estava prestando atenção no corredor, juro.",
       "final_phrase": "Sério, não tenho mais nada pra dizer!"
     },
     {
+      "id": "eduardo_farias",
       "name": "Eduardo Farias",
-      "backstory": "Gerente do setor. Tem histórico de discussões com a vítima sobre metas e pressão excessiva. Tentou pedir transferência recentemente.",
+      "backstory": "Gerente do setor. Tem histórico de discussões com a vítima sobre metas e pressão excessiva. Pediu transferência recentemente. É calculista e escolhe bem as palavras.",
+      "personality": "arrogante",
+      "initial_statement": "Trabalhei até tarde no meu escritório. Vários colegas podem confirmar. Não vejo por que estou aqui.",
       "final_phrase": "Não adianta insistir, já respondi tudo."
     }
   ],
   "evidences": [
     {
+      "id": "relatorio_contabil",
       "name": "Relatório Contábil Alterado",
-      "description": "Documento encontrado na mesa da vítima com números adulterados.",
-      "internal_note": "Este documento foi impresso 1 hora antes do crime. Ele liga os desvios diretamente à conta bancária de Marina.",
+      "description": "Documento encontrado na mesa da vítima com números adulterados. Impresso 1 hora antes do crime.",
+      "related_topic_id": "relatorio_contabil",
       "is_mandatory": true
     },
     {
+      "id": "cartao_acesso",
       "name": "Cartão de Acesso de Marina",
-      "description": "Registro mostra que o cartão de Marina abriu a porta às 22h14.",
+      "description": "Registro mostra que o cartão de Marina abriu a porta às 22h14 — horário que ela nega ter estado no local.",
+      "related_topic_id": "presenca_local",
       "is_mandatory": true
     },
     {
+      "id": "cafe_derramado",
       "name": "Café Derramado",
-      "description": "Uma caneca quebrada no chão ainda quente quando o corpo foi achado.",
+      "description": "Uma caneca quebrada no chão ainda quente quando o corpo foi encontrado. Indica luta ou pressa.",
+      "related_topic_id": "conflito_vitima",
       "is_mandatory": false
     },
     {
+      "id": "falha_cameras",
       "name": "Falha no Sistema de Câmeras",
-      "description": "Servidores reiniciaram sozinhos entre 22h00 e 22h20.",
+      "description": "Servidores reiniciaram sozinhos entre 22h00 e 22h20 — exatamente no período crítico.",
+      "related_topic_id": "presenca_local",
       "is_mandatory": false
     },
     {
+      "id": "testemunho_estagiaria",
       "name": "Testemunho da Estagiária",
-      "description": "Clara afirma que viu Marina entrando no andar, mas não falou nada por medo.",
+      "description": "Clara afirma que viu Marina entrando no andar às 22h, mas não falou nada por medo.",
+      "related_topic_id": "alibi",
       "is_mandatory": true
     },
     {
+      "id": "luvas_borracha",
       "name": "Luvas de Borracha",
-      "description": "Encontradas na lixeira do banheiro do andar.",
+      "description": "Encontradas na lixeira do banheiro do andar. Sem DNA, mas com resíduo de café.",
+      "related_topic_id": "conflito_vitima",
       "is_mandatory": false
     }
   ],
   "secrets": [
     {
-      "suspect": "Marina Souza",
-      "evidence": "Relatório Contábil Alterado",
-      "content": "Marina adulterou números porque descobriu irregularidades que a vítima encobria, mas teve medo de denunciar.",
+      "suspect": "marina_souza",
+      "evidence": "relatorio_contabil",
+      "content": "Marina adulterou os relatórios junto com a vítima — mas quando ele ameaçou jogá-la debaixo do ônibus, ela perdeu o controle.",
       "is_core": true
     },
     {
-      "suspect": "Marina Souza",
-      "evidence": "Cartão de Acesso de Marina",
-      "content": "Ela realmente esteve na sala pouco antes do crime e discutiu com a vítima.",
+      "suspect": "marina_souza",
+      "evidence": "cartao_acesso",
+      "content": "Ela realmente esteve na sala às 22h14 e teve uma discussão violenta com a vítima sobre os relatórios.",
       "is_core": true
     },
     {
-      "suspect": "Rogério Lima",
-      "evidence": "Falha no Sistema de Câmeras",
-      "content": "Ele desligou câmeras sem querer enquanto dormia e tentou encobrir o erro.",
+      "suspect": "marina_souza",
+      "evidence": "testemunho_estagiaria",
+      "content": "Clara a viu entrar, o que derruba definitivamente o álibi de Marina.",
+      "is_core": true
+    },
+    {
+      "suspect": "rogerio_lima",
+      "evidence": "falha_cameras",
+      "content": "Rogério desligou os servidores sem querer enquanto dormia no posto e tentou encobrir o erro reiniciando o sistema.",
       "is_core": false
     },
     {
-      "suspect": "Clara Martins",
-      "evidence": "Testemunho da Estagiária",
+      "suspect": "clara_martins",
+      "evidence": "testemunho_estagiaria",
       "content": "Clara viu Marina entrar, mas mentiu inicialmente por medo de perder o estágio.",
       "is_core": false
     },
     {
-      "suspect": "Eduardo Farias",
-      "evidence": "Luvas de Borracha",
-      "content": "Eduardo usou as luvas para limpar marcas de café porque achou que seria culpado; ele estava escondendo apenas sua tentativa de proteger a própria reputação.",
+      "suspect": "eduardo_farias",
+      "evidence": "luvas_borracha",
+      "content": "Eduardo usou as luvas para limpar marcas de café que acidentalmente deixou — estava no corredor por curiosidade, não por crime.",
       "is_core": false
     }
   ],
   "chronology": [
-    {
-      "time": "21h40",
-      "description": "A vítima chega ao escritório para revisar documentos."
-    },
-    {
-      "time": "22h10",
-      "description": "Câmeras falham por 10 minutos."
-    },
-    {
-      "time": "22h14",
-      "description": "Cartão de Marina registra abertura da porta."
-    },
-    {
-      "time": "22h30",
-      "description": "Café derramado ainda quente é encontrado."
-    }
+    { "time": "21h40", "description": "A vítima chega ao escritório para revisar documentos." },
+    { "time": "22h00", "description": "Câmeras falham — reinicialização forçada." },
+    { "time": "22h14", "description": "Cartão de Marina registra abertura da porta do andar." },
+    { "time": "22h20", "description": "Câmeras voltam. Corredor vazio." },
+    { "time": "22h30", "description": "Corpo encontrado. Café ainda quente." }
   ]
 }

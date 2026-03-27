@@ -2,12 +2,11 @@
 Dummy implementation of NpcAIAdapter.
 
 This adapter does NOT use any real AI model.
-It produces deterministic responses based on:
+It produces deterministic first-person responses based on:
 - revealed secrets
-- hidden secrets
+- render_context.response_mode
+- player message text
 - personality
-- evidence usage
-- whether the suspect is 'closed'
 
 Useful for testing the entire interrogation flow before integrating a real LLM.
 """
@@ -18,7 +17,7 @@ from app.api.schemas.render_context import NpcResponseRenderContext, ResponseMod
 
 
 class DummyNpcAIAdapter(NpcAIAdapter):
-    """Deterministic, rule-based NPC reply generator."""
+    """Deterministic, rule-based NPC reply generator. Speaks in first person."""
 
     def generate_reply(
         self,
@@ -27,101 +26,92 @@ class DummyNpcAIAdapter(NpcAIAdapter):
         player_message: Dict[str, Any],
         render_context: NpcResponseRenderContext,
         npc_context: Dict[str, Any] | None = None,
-        revealed_now: Optional[List[Dict[str, Any]]] = None
+        revealed_now: Optional[List[Dict[str, Any]]] = None,
+        effective_message_ids: Optional[List[int]] = None  # AI-002
     ) -> str:
 
-        name = suspect_state.get("name", "O suspeito")
         personality = suspect_state.get("personality", "neutro")
         is_closed = suspect_state.get("is_closed", False)
         final_phrase = suspect_state.get("final_phrase", "Já falei tudo que sabia.")
-        hidden_secrets = suspect_state.get("hidden_secrets", [])
         evidence_id = player_message.get("evidence_id")
+        player_text = (player_message.get("text") or "").strip()
 
-        # ----------------------------------------------------------------------
-        # 1. Se o suspeito está "fechado", só devolve a frase final.
-        #    Ou se o response_mode ditou final_phrase.
-        # ----------------------------------------------------------------------
+        # ── 1. Fechado / frase final ─────────────────────────────
         if is_closed or render_context.response_mode == ResponseMode.final_phrase:
             return final_phrase
 
-        # ----------------------------------------------------------------------
-        # 2. Se o jogador usou uma evidência, reagimos a isso.
-        # ----------------------------------------------------------------------
+        # ── 2. Evidência apresentada ─────────────────────────────
         if evidence_id is not None:
-            # Se essa evidência revelou algum segredo recém descoberto...
-            if revealed_now:
-                revealed_texts = [s["content"] for s in revealed_now]
-                combined = " ".join(revealed_texts)
+            # Sem contexto textual — não entrega o segredo diretamente
+            if len(player_text) < 4:
                 return (
-                    f"...Tá bom, tá bom! Essa evidência me incrimina. "
-                    f"{combined}"
+                    "Isso aí? O que você quer dizer com isso? "
+                    "Se tem algo a dizer, fale direto."
+                )
+
+            # Com contexto e motor revelou segredo → reage com pressão, não repete o conteúdo
+            if revealed_now and len(revealed_now) > 0:
+                return (
+                    "Eu... espera. De onde você tirou isso? "
+                    "[pausa] Tudo bem. Você me pegou. Mas não é tão simples quanto parece."
                 )
             else:
                 return (
-                    f"Isso? {name} olha para a evidência e dá de ombros. "
-                    "“Isso não prova nada. Você está exagerando.”"
+                    "Isso não prova nada. Você está tirando conclusões precipitadas. "
+                    "Precisa de mais do que isso pra me acusar."
                 )
 
-        # ----------------------------------------------------------------------
-        # 3. Response mode handling (Mock deterministic responses)
-        # ----------------------------------------------------------------------
+        # ── 3. Por modo de resposta ──────────────────────────────
         mode = render_context.response_mode
-        
-        # Helper to extract a single piece of allowed content
+
         def get_allowed_content():
             if render_context.new_knowledge_this_turn:
-                return f"[Novo Conhecimento: {render_context.new_knowledge_this_turn[0]}]"
+                return render_context.new_knowledge_this_turn[0]
             if render_context.allowed_knowledge:
-                return f"[Conhecimento Base: {render_context.allowed_knowledge[0]}]"
+                return render_context.allowed_knowledge[0]
             if render_context.allowed_facts:
-                return f"[Fato: {render_context.allowed_facts[0]}]"
+                return render_context.allowed_facts[0]
             return ""
 
-        allowed_txt = get_allowed_content()
+        content = get_allowed_content()
 
         if mode == ResponseMode.deny:
-            return f"{name} balança a cabeça negativamente. “Eu não sei nada sobre isso. É mentira.”"
-            
-        elif mode == ResponseMode.evasive:
-            return f"{name} desvia o olhar. “Não tenho certeza... Eu não lembro direito.”"
-            
-        elif mode == ResponseMode.clarify:
-            if allowed_txt:
-                return f"{name} suspira. “Vou ser claro com você. {allowed_txt}”"
-            return f"{name} tenta explicar. “Veja bem, a verdade é que as coisas são complicadas.”"
-            
-        elif mode == ResponseMode.partial_admission:
-            if revealed_now:
-                return f"{name} cede um pouco. “Ok, você me pegou nisso. {[s['content'] for s in revealed_now][0]}”"
-            if allowed_txt:
-                return f"{name} concorda parcialmente. “Sim, isso é parte da verdade. {allowed_txt}”"
-            return f"{name} abaixa a cabeça. “Ok, você tem um ponto, mas não é toda a história...”"
-            
-        elif mode == ResponseMode.neutral_answer:
-            if allowed_txt:
-                return f"{name} responde de forma contida: “Posso confirmar que {allowed_txt}”"
+            return "Eu não sei nada sobre isso. Estão me acusando de coisas que não fiz."
 
-        # ----------------------------------------------------------------------
-        # 4. Personality Fallback (if no explicit mode match)
-        # ----------------------------------------------------------------------
+        elif mode == ResponseMode.evasive:
+            return "Não tenho certeza... Não lembro direito. Faz muito tempo."
+
+        elif mode == ResponseMode.clarify:
+            if content:
+                return f"Vou ser direto com você. {content}"
+            return "Olha, as coisas são mais complicadas do que parecem. Não é fácil explicar."
+
+        elif mode == ResponseMode.partial_admission:
+            if content:
+                return f"Ok, você tem razão em parte. {content} Mas não é a história toda."
+            return "Tudo bem, talvez eu não tenha sido completamente honesto. Mas tinha motivos."
+
+        elif mode == ResponseMode.neutral_answer:
+            if content:
+                return f"Posso confirmar que {content}"
+            return "Estou cooperando com a investigação. Pergunte o que quiser."
+
+        # ── 4. Fallback por personalidade ────────────────────────
         if personality == "agressivo":
             return (
-                f"{name} cruza os braços. “Por que eu perderia meu tempo respondendo isso? "
-                "Fale algo que faça sentido.”"
+                "Chega de perguntas. Se tem prova de alguma coisa, mostre. "
+                "Caso contrário, estou indo embora."
             )
         elif personality == "nervoso":
             return (
-                f"{name} engole seco. “E-eu já disse tudo o que sei. "
-                "Vocês estão me assustando.”"
+                "E-eu já disse tudo o que sei. Por que ficam me pressionando assim? "
+                "Não fiz nada de errado!"
             )
         elif personality == "arrogante":
             return (
-                f"{name} sorri com desprezo. “Vocês detetives são todos iguais. "
-                "Perguntam demais e entendem de menos.”"
+                "Vocês detetives são todos iguais. Perguntam muito e entendem de menos. "
+                "Tente algo mais inteligente."
             )
 
         # Personalidade neutra / fallback genérico
-        return (
-            f"{name} responde calmamente: "
-            "“Olha, estou cooperando. Mas você precisa ser mais específico.”"
-        )
+        return "Olha, estou cooperando. Mas você precisa ser mais específico."

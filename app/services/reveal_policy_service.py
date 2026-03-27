@@ -4,6 +4,7 @@ from app.services.session_service import get_suspect_state
 from app.services.topic_state_service import get_topic_state
 from app.infra.db_models import SessionModel, SuspectModel, SessionSuspectKnowledgeStateModel
 from app.infra.db import SessionLocal
+from app.core.config import settings
 
 
 def evaluate_reveal_layer(
@@ -18,7 +19,7 @@ def evaluate_reveal_layer(
     """
     patience = suspect_state.get("patience", 50.0)
     pressure = suspect_state.get("pressure", 0.0)
-    rapport = suspect_state.get("rapport", 0.0)
+    # rapport removido (AI-003): campo dormant, nunca usado nas condicionais de reveal layer
     
     times_touched = topic_state.get("times_touched", 0)
     status = topic_state.get("status", "untouched")
@@ -35,15 +36,15 @@ def evaluate_reveal_layer(
     
     # Needs to be touched at least once to even talk about it specifically
     if status != "untouched" and times_touched > 0:
-        if patience > 30.0:
+        if patience > settings.REVEAL_LAYER_1_PATIENCE_MIN:
             allowed_layer = 1
         
-        # Further pressure or rapport unlocks deeper layers
-        if (pressure > 50.0 or rapport > 50.0) and times_touched > 1:
+        # Further pressure unlocks deeper layers
+        if pressure > settings.REVEAL_LAYER_2_PRESSURE_MIN and times_touched > 1:
             allowed_layer = 2
         
         # Push to max if really pushing
-        if pressure > 80.0 and times_touched > 2:
+        if pressure > settings.REVEAL_LAYER_3_PRESSURE_MIN and times_touched > 2:
             allowed_layer = 3
 
     # Adjust based on kind and reliability
@@ -52,12 +53,12 @@ def evaluate_reveal_layer(
         if pressure < 60.0:
             allowed_layer = 0
     elif kind == "rumor" or reliability == "low":
-        # Limit layers for rumors unless extreme pressure/rapport is achieved
-        if pressure < 80.0 and rapport < 80.0:
+        # Limit layers for rumors unless extreme pressure is achieved
+        if pressure < settings.REVEAL_LAYER_3_PRESSURE_MIN:
             allowed_layer = min(allowed_layer, 2)
     elif kind == "observed" and reliability == "high":
         # Solid direct observations are easier to bring up
-        if allowed_layer >= 1 and (pressure > 40.0 or rapport > 40.0):
+        if allowed_layer >= 1 and pressure > 40.0:
             allowed_layer = min(allowed_layer + 1, max_layers)
 
     # Clamping
@@ -99,8 +100,7 @@ def get_allowed_knowledge_facts(
                 try:
                     topic_state = get_topic_state(session_id, suspect_id, k_item["topic_id"], db)
                 except Exception:
-                    # If topic state isn't found for some edge case, assume untouched defaults
-                    topic_state = {"status": "untouched", "times_touched": 0, "sensitive_heat": 0.0}
+                    topic_state = {"status": "untouched", "times_touched": 0}
 
                 allowed_depth = evaluate_reveal_layer(k_item, suspect_state, topic_state)
                 

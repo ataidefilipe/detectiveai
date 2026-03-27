@@ -32,7 +32,8 @@ class OpenAINpcAIAdapter(NpcAIAdapter):
         player_message: dict,
         render_context: NpcResponseRenderContext,
         npc_context: dict | None = None,
-        revealed_now: list | None = None
+        revealed_now: list | None = None,
+        effective_message_ids: list | None = None
     ) -> str:
         if not npc_context:
             raise DomainError("npc_context is required for OpenAI adapter")
@@ -40,7 +41,8 @@ class OpenAINpcAIAdapter(NpcAIAdapter):
         prompt = build_npc_prompt(
             npc_context=npc_context,
             chat_history=chat_history,
-            render_context=render_context
+            render_context=render_context,
+            effective_message_ids=effective_message_ids
         )
 
         response = self.client.responses.create(

@@ -69,3 +69,15 @@ Por favor, atualize este arquivo sempre que um novo padrão for estabelecido ou 
 * **Dependência de Tópico:** Para que uma mentira seja quebrada, não basta apresentar a evidência correta; o jogador deve estar "falando" sobre o tópico associado àquela mentira (presente no `detected_topic_ids` da mensagem atual ou no `last_topic_id` da sessão). 
 * **Teste de Integração:** Em testes que buscam validar a quebra de mentiras, certifique-se de que o texto da mensagem do jogador contenha palavras-chave que disparem a detecção do tópico correto, ou que o turno anterior tenha estabelecido esse tópico como o contexto ativo.
 
+### 6.3. Fontes de Memória do Prompt (AI-001-B)
+* **Single Source of Truth:** O prompt da IA deve usar exclusivamente `npc_context["revealed_knowledge"]` (persistido no banco) como fonte de memória para conhecimentos do cenário. 
+* **`allowed_knowledge`:** O campo `render_context.allowed_knowledge` serve APENAS como insumo para o `builder` decidir o `response_mode` (ex: se o NPC admite algo ou é evasivo). NUNCA o use como fonte de memória direta no prompt para evitar duplicações.
+
+---
+
+## 7. Observabilidade e Telemetria
+
+### 7.1. Logs Estruturados (OBS-001)
+* **Eventos Críticos:** Sempre utilize o `telemetry_logger.info(json.dumps({...}))` para eventos como `interrogation_turn` e `lie_broken`. 
+* **Campos Obrigatórios:** Garanta que o log inclua `session_id`, `suspect_id` e contadores relevantes (`broken_lies_count`, `revealed_secrets_count`) para facilitar a análise de sessões.
+

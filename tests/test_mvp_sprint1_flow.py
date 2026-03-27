@@ -46,7 +46,7 @@ def test_mvp_sprint1_flow_end_to_end():
             EvidenceModel.name == "Testemunho da Estagiária"
         ).first()
 
-        evidence_cartao.related_topic_id = "fraude"
+        evidence_cartao.related_topic_id = "presenca_local"
 
         mandatory_ids = scenario.required_evidence_ids
         
@@ -76,17 +76,6 @@ def test_mvp_sprint1_flow_end_to_end():
     session_id = resp.json()["session_id"]
     
     # -------------------------
-    # 2.1 Criar Topic State para "faca"
-    # -------------------------
-    # Como piloto.json não carrega tópicos por padrão e precisamos testar detecção, criamos o state localmente
-    db = SessionLocal()
-    from app.infra.db_models import SessionSuspectTopicStateModel
-    db.add(SessionSuspectTopicStateModel(session_id=session_id, suspect_id=marina_id, topic_id="faca"))
-    db.add(SessionSuspectTopicStateModel(session_id=session_id, suspect_id=marina_id, topic_id="fraude"))
-    db.commit()
-    db.close()
-
-    # -------------------------
     # 3. Turno 1 - Vago (MVP-001)
     # -------------------------
     # Pergunta sem tópico detectável e sem evidência
@@ -114,8 +103,8 @@ def test_mvp_sprint1_flow_end_to_end():
     with patch("app.services.interrogation_turn_service.analyze_message") as mock_analysis:
         mock_analysis.return_value = MessageAnalysisResult(
             intent=MessageIntent.confront,
-            detected_topic_ids=["faca"],
-            sensitive_topic_ids=["faca"],
+            detected_topic_ids=["relatorio_contabil"],
+            sensitive_topic_ids=["relatorio_contabil"],
             sensitivity_hit=SensitivityLevel.high
         )
         
@@ -141,8 +130,8 @@ def test_mvp_sprint1_flow_end_to_end():
              
         mock_analysis.return_value = MessageAnalysisResult(
             intent=MessageIntent.confront,
-            detected_topic_ids=["faca"],
-            sensitive_topic_ids=["faca"],
+            detected_topic_ids=["conflito_vitima"],
+            sensitive_topic_ids=["conflito_vitima"],
             sensitivity_hit=SensitivityLevel.high
         )
         mock_resolve.return_value = StateTransitionResult(
@@ -185,7 +174,7 @@ def test_mvp_sprint1_flow_end_to_end():
     with patch("app.services.interrogation_turn_service.analyze_message") as mock_analysis:
         mock_analysis.return_value = MessageAnalysisResult(
             intent=MessageIntent.confront,
-            detected_topic_ids=["fraude"],
+            detected_topic_ids=["presenca_local"],
             sensitive_topic_ids=[],
             sensitivity_hit=SensitivityLevel.none
         )
@@ -195,13 +184,20 @@ def test_mvp_sprint1_flow_end_to_end():
         )
         if turn5_resp.status_code != 200:
             print("TURN 5 FAILED:", turn5_resp.text)
-    assert turn5_resp.status_code == 200
+        assert turn5_resp.status_code == 200
 
-    turn6_resp = client.post(
-        f"/sessions/{session_id}/suspects/{marina_id}/messages",
-        json={"text": "Temos uma testemunha.", "evidence_id": evidence_testemunho_id}
-    )
-    assert turn6_resp.status_code == 200
+        # Turno 6: Testemunha
+        mock_analysis.return_value = MessageAnalysisResult(
+            intent=MessageIntent.confront,
+            detected_topic_ids=["alibi"],
+            sensitive_topic_ids=[],
+            sensitivity_hit=SensitivityLevel.none
+        )
+        turn6_resp = client.post(
+            f"/sessions/{session_id}/suspects/{marina_id}/messages",
+            json={"text": "Temos uma testemunha.", "evidence_id": evidence_testemunho_id}
+        )
+        assert turn6_resp.status_code == 200
 
     # -------------------------
     # 7. Acusação Final

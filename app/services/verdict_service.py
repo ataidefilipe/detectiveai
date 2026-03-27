@@ -7,7 +7,8 @@ from app.infra.db_models import (
     ScenarioModel,
     SuspectModel,
     EvidenceModel,
-    SessionEvidenceUsageModel
+    SessionEvidenceUsageModel,
+    SessionSuspectStateModel
 )
 from app.core.exceptions import NotFoundError, RuleViolationError
 from app.core.telemetry import telemetry_logger
@@ -71,6 +72,7 @@ def evaluate_verdict(
 
         real_culprit_id = scenario.culprit_id
         required_evidence_ids = scenario.required_evidence_ids or []
+        required_broken_lie_ids = scenario.required_broken_lie_ids or []
         true_motive_key = scenario.true_motive_key
         
         # Validate motive exists in scenario options
@@ -150,7 +152,7 @@ def evaluate_verdict(
             return result_dict
 
         # ----------------------------------------
-        # 5. Culprit correct → check evidences & motive
+        # 5. Culprit correct → check evidences, motive & required lies
         # ----------------------------------------
         if motive_result == "wrong":
             reason_codes.append("wrong_motive")
@@ -159,7 +161,18 @@ def evaluate_verdict(
         missing = list(required - set(provided))
         
         if missing:
-            reason_codes.append("missing_evidence")
+            reason_codes.append("missing_required_evidence")
+
+        # VERD-002: Check required broken lies
+        if required_broken_lie_ids:
+            suspect_state = db.query(SessionSuspectStateModel).filter(
+                SessionSuspectStateModel.session_id == session_id,
+                SessionSuspectStateModel.suspect_id == chosen_suspect_id
+            ).first()
+            broken_lie_ids = suspect_state.broken_lie_ids if suspect_state else []
+            missing_lie_ids = [lie_id for lie_id in required_broken_lie_ids if lie_id not in broken_lie_ids]
+            if missing_lie_ids:
+                reason_codes.append("missing_required_lie")
 
         if not reason_codes:
             result_type = "correct"

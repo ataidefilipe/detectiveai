@@ -15,6 +15,8 @@ def build_npc_context(
             "id": suspect.id,
             "name": suspect.name,
             "personality": suspect.personality,
+            "backstory": suspect.backstory,
+            "initial_statement": suspect.initial_statement,
             "final_phrase": suspect.final_phrase,
             "is_closed": suspect_state.get("is_closed", False),
             "progress": suspect_state.get("progress", 0.0),

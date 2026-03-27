@@ -46,12 +46,12 @@ def test_evaluate_reveal_layer_low_patience_blocking():
     # Patience is low (<=30), pressure and rapport are low, so allowed_layer remains 0
     assert evaluate_reveal_layer(knowledge_item, suspect_state, topic_state) == 0
 
-def test_evaluate_reveal_layer_rapport_unlock():
+def test_evaluate_reveal_layer_pressure_only_unlock():
     knowledge_item = {"content_layers": ["fact 1", "fact 2", "fact 3"]}
-    suspect_state = {"patience": 50.0, "pressure": 0.0, "rapport": 60.0}
+    suspect_state = {"patience": 50.0, "pressure": 60.0, "rapport": 90.0} # Rapport does not matter anymore
     topic_state = {"status": "active", "times_touched": 2}
     
-    # Rapport > 50 and times_touched > 1 unlocks layer 2
+    # Pressure > 50 (from REVEAL_LAYER_2_PRESSURE_MIN) and times_touched > 1 unlocks layer 2
     assert evaluate_reveal_layer(knowledge_item, suspect_state, topic_state) == 2
 
 def test_evaluate_reveal_layer_lie_blocked():

@@ -188,6 +188,22 @@ def run_interrogation_turn(
     allowed_knowledge = knowledge_facts.get("known_knowledge", [])
     new_knowledge = knowledge_facts.get("new_knowledge_this_turn", [])
 
+    # AI-002: Build list of message IDs where evidence was effective so prompt_builder can pin them
+    effective_usages = db.query(SessionEvidenceUsageModel).filter(
+        SessionEvidenceUsageModel.session_id == session_id,
+        SessionEvidenceUsageModel.suspect_id == suspect_id,
+        SessionEvidenceUsageModel.was_effective == True
+    ).all()
+    effective_evidence_ids = {u.evidence_id for u in effective_usages}
+    effective_message_ids = [
+        row[0] for row in db.query(NpcChatMessageModel.id).filter(
+            NpcChatMessageModel.session_id == session_id,
+            NpcChatMessageModel.suspect_id == suspect_id,
+            NpcChatMessageModel.sender_type == "player",
+            NpcChatMessageModel.evidence_id.in_(effective_evidence_ids)
+        ).all()
+    ] if effective_evidence_ids else []
+
     # 3. NPC reply
     npc_msg = add_npc_reply(
         session_id=session_id,
@@ -199,6 +215,7 @@ def run_interrogation_turn(
         allowed_knowledge=allowed_knowledge,
         new_knowledge_this_turn=new_knowledge,
         evidence_effect=evidence_effect,
+        effective_message_ids=effective_message_ids,
         db=db
     )
 

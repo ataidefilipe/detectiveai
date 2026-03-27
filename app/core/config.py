@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     STANCE_COOPERATIVE_PATIENCE_THRESHOLD: float = 40.0
     STANCE_COOPERATIVE_PRESSURE_THRESHOLD: float = 30.0
     
+    # --- Reveal Policy Thresholds ---
+    REVEAL_LAYER_1_PATIENCE_MIN: float = 30.0
+    REVEAL_LAYER_2_PRESSURE_MIN: float = 50.0
+    REVEAL_LAYER_3_PRESSURE_MIN: float = 80.0
+    
     OUT_OF_CONTEXT_PENALTY_DEFAULT: float = -10.0
     OUT_OF_CONTEXT_PENALTY_SENSITIVE: float = -5.0
 

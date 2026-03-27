@@ -128,6 +128,7 @@ def _load_turn_context_for_npc_reply(
 
     chat_history = [
         {
+            "id": row.id,
             "sender": row.sender_type,
             "text": row.text,
             "evidence_id": row.evidence_id,
@@ -237,7 +238,8 @@ def _generate_npc_text_with_fallback(
     chat_history: list,
     player_message_dict: dict,
     render_context: dict,
-    revealed_now: list
+    revealed_now: list,
+    effective_message_ids: Optional[List[int]] = None
 ) -> str:
     try:
         reply_text = ai.generate_reply(
@@ -246,7 +248,8 @@ def _generate_npc_text_with_fallback(
             chat_history=chat_history,
             player_message=player_message_dict,
             render_context=render_context,
-            revealed_now=revealed_now
+            revealed_now=revealed_now,
+            effective_message_ids=effective_message_ids
         )
     except Exception as e:
         logger.error(f"LLM Adapter failed for suspect {suspect_id}. Falling back to Dummy adapter. Error: {e}", exc_info=True)
@@ -258,7 +261,8 @@ def _generate_npc_text_with_fallback(
             chat_history=chat_history,
             player_message=player_message_dict,
             render_context=render_context,
-            revealed_now=revealed_now
+            revealed_now=revealed_now,
+            effective_message_ids=effective_message_ids
         )
     return reply_text
 
@@ -273,6 +277,7 @@ def add_npc_reply(
     allowed_knowledge: List[str] = None,
     new_knowledge_this_turn: List[str] = None,
     evidence_effect: str = "none",
+    effective_message_ids: Optional[List[int]] = None,
     db: Session = None
 ) -> dict:
     """
@@ -338,7 +343,8 @@ def add_npc_reply(
             chat_history,
             player_message_dict,
             render_context,
-            revealed_now
+            revealed_now,
+            effective_message_ids
         )
 
         # Save NPC message

@@ -1,9 +1,41 @@
+from typing import Optional, List
 from app.api.schemas.render_context import NpcResponseRenderContext
+
+
+def _select_history(
+    chat_history: list,
+    effective_message_ids: Optional[List[int]],
+    limit: int = 10
+) -> list:
+    """
+    AI-002: Selects the chat history to send to the AI.
+    Always includes turns where an effective evidence was presented,
+    then fills up with the most recent messages up to `limit`.
+    Deduplication preserves chronological order.
+    """
+    if not effective_message_ids:
+        return chat_history[-limit:]
+
+    effective_set = set(effective_message_ids)
+
+    # Pinned: messages whose id is in effective_message_ids
+    pinned = [m for m in chat_history if m.get("id") in effective_set]
+
+    # Recents: the last N messages that are NOT already pinned
+    pinned_ids = {m.get("id") for m in pinned}
+    recent = [m for m in chat_history if m.get("id") not in pinned_ids]
+    recent = recent[-(limit - len(pinned)):] if len(pinned) < limit else []
+
+    # Merge in chronological order, deduplicated
+    selected_ids = {m.get("id") for m in pinned + recent}
+    result = [m for m in chat_history if m.get("id") in selected_ids]
+    return result[-limit:]  # safety clamp
 
 def build_npc_prompt(
     npc_context,
     chat_history,
-    render_context: NpcResponseRenderContext
+    render_context: NpcResponseRenderContext,
+    effective_message_ids: Optional[List[int]] = None
 ):
     
     # 1. Format Allowed Facts and Knowledge
@@ -75,15 +107,18 @@ Contradições/Mentiras suas que o detetive já quebrou com evidências:
 {broken_claims_str}
 
 === REGRAS ABSOLUTAS ===
+- FALE SEMPRE EM PRIMEIRA PESSOA. Você é o personagem, não um narrador. Nunca escreva "{npc_context['suspect']['name']} [verbo]:" ou qualquer narração em terceira pessoa.
+- Responda diretamente ao detetive como se fosse uma conversa real face a face.
 - NUNCA invente fatos novos.
 - NUNCA revele fatos que não estão listados como mandatórios ou já revelados.
 - Se o detetive perguntar de algo não listado, seja evasivo ou negue.
 - Se a Instrução de Tom exigir a sua Frase Final, retorne apenas ela e encerre.
 """.strip()
 
+    selected_history = _select_history(chat_history, effective_message_ids)
     messages = [{"role": "system", "content": system_prompt}]
 
-    for msg in chat_history[-10:]:
+    for msg in selected_history:
         role = "assistant" if msg["sender"] == "npc" else "user"
         messages.append({"role": role, "content": msg["text"]})
 

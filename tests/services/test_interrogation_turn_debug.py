@@ -30,7 +30,6 @@ def base_mocks():
         mock_generic.patience = 50.0
         mock_generic.pressure = 0.0
         mock_generic.stance = "neutral"
-        mock_generic.sensitive_heat = 0.0
         mock_generic.frequency_count = 0
         db_mock.query.return_value.filter.return_value.first.return_value = mock_generic
         

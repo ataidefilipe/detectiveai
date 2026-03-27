@@ -34,8 +34,7 @@ def get_topic_state(
         return {
             "topic_id": topic_state.topic_id,
             "status": topic_state.status,
-            "times_touched": topic_state.times_touched,
-            "sensitive_heat": topic_state.sensitive_heat
+            "times_touched": topic_state.times_touched
         }
     finally:
         if close_session:
@@ -46,7 +45,6 @@ def update_topic_hit(
     session_id: int,
     suspect_id: int,
     topic_id: str,
-    heat_delta: float = 0.0,
     new_status: Optional[str] = None,
     db: Optional[Session] = None
 ) -> Dict[str, Any]:
@@ -72,9 +70,6 @@ def update_topic_hit(
 
         topic_state.times_touched += 1
         
-        if heat_delta != 0.0:
-            topic_state.sensitive_heat = max(0.0, min(100.0, topic_state.sensitive_heat + heat_delta))
-            
         if new_status:
             topic_state.status = new_status
         elif topic_state.status == "untouched":
@@ -89,8 +84,7 @@ def update_topic_hit(
         return {
             "topic_id": topic_state.topic_id,
             "status": topic_state.status,
-            "times_touched": topic_state.times_touched,
-            "sensitive_heat": topic_state.sensitive_heat
+            "times_touched": topic_state.times_touched
         }
     except Exception:
         if close_session:

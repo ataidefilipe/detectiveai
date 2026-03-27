@@ -18,5 +18,5 @@ class AccuseResponse(BaseModel):
     missing_evidence_ids: List[int]
     chosen_motive_key: str
     motive_result: str
-    reason_codes: List[str] = []
+    partial_reasons: List[str] = []
     description: str

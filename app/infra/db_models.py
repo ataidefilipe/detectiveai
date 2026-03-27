@@ -20,7 +20,7 @@ class ScenarioModel(Base):
     )
 
     partial_evidence_ids = Column(
-        MutableList.as_mutable(JSON), default=list
+        MutableList.as_mutable(JSON), default=list, comment="[DORMANT IN MVP] Replaced by semantic matching."
     )
 
     topics = Column(
@@ -32,6 +32,10 @@ class ScenarioModel(Base):
     )
     
     true_motive_key = Column(String, nullable=True)
+
+    required_broken_lie_ids = Column(
+        MutableList.as_mutable(JSON), default=list, comment="Lie IDs required to be broken for a correct verdict"
+    )
 
     suspects = relationship("SuspectModel", back_populates="scenario")
     evidences = relationship("EvidenceModel", back_populates="scenario")
@@ -104,6 +108,7 @@ class SessionSuspectStateModel(Base):
     session_id = Column(Integer, ForeignKey("sessions.id"), primary_key=True)
     suspect_id = Column(Integer, ForeignKey("suspects.id"), primary_key=True)
     revealed_secret_ids = Column(MutableList.as_mutable(JSON), default=list)
+    broken_lie_ids = Column(MutableList.as_mutable(JSON), default=list)
     is_closed = Column(Boolean, default=False)
     progress = Column(Float, default=0.0)
 
@@ -111,8 +116,7 @@ class SessionSuspectStateModel(Base):
     stance = Column(String, default="neutral")
     patience = Column(Float, default=50.0)
     pressure = Column(Float, default=0.0)
-    rapport = Column(Float, default=0.0)
-    repetition_score = Column(Float, default=0.0)
+    rapport = Column(Float, default=0.0, comment="[DORMANT IN MVP CORE MECHANICS] Only used for narrative tone.")
     last_topic_id = Column(String, nullable=True)
 
     session = relationship("SessionModel", back_populates="session_states")
@@ -126,7 +130,6 @@ class SessionSuspectTopicStateModel(Base):
     
     status = Column(String, default="untouched") # untouched, touched, active, cooled, resolved
     times_touched = Column(Integer, default=0)
-    sensitive_heat = Column(Float, default=0.0)
 
     session = relationship("SessionModel")
     suspect = relationship("SuspectModel")

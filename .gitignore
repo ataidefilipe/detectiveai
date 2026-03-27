@@ -5,3 +5,13 @@ saida.md
 /backlogs
 *.txt
 gpt.py
+/agents
+/backlog
+/decisions
+/docs
+/logs
+/state
+/src
+/tests
+/work
+/memory-bank

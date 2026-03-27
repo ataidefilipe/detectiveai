@@ -22,16 +22,19 @@ class KnowledgeItemConfig(BaseModel):
     content_layers: List[str] = Field(..., description="List of facts/phrases revealed gradually")
 
 class SecretConfig(BaseModel):
-    suspect: str = Field(..., description="Name of the suspect this secret belongs to")
-    evidence: str = Field(..., description="Name of the evidence that reveals this secret")
+    suspect: str = Field(..., description="Stable id of the suspect this secret belongs to")
+    evidence: str = Field(..., description="Stable id of the evidence that reveals this secret")
     content: str = Field(..., description="The secret information")
     is_core: bool = Field(default=False, description="Whether this is a core secret for progress")
 
 class LieConfig(BaseModel):
-    statement: str
-    broken_by: str
+    id: str = Field(..., description="Unique string identifier for the lie")
+    statement: str = Field(..., description="The textual statement of the lie")
+    topic_id: str = Field(..., description="The slug of the Topic it relates to")
+    broken_by_evidence: str = Field(..., description="Stable id of the evidence that breaks it")
 
 class SuspectConfig(BaseModel):
+    id: str = Field(..., description="Stable string identifier for the suspect")
     name: str
     backstory: Optional[str] = None
     personality: Optional[str] = None
@@ -57,6 +60,7 @@ class SuspectConfig(BaseModel):
     )
 
 class EvidenceConfig(BaseModel):
+    id: str = Field(..., description="Stable string identifier for the evidence")
     name: str = Field(..., description="Name of the evidence")
     description: Optional[str] = Field(default=None, description="Public description")
     internal_note: Optional[str] = Field(default=None, description="Internal usage desc not exposed to players")
@@ -77,7 +81,7 @@ class ScenarioConfig(BaseModel):
         description="Resumo interno do caso, conhecido pelo NPC mas não exposto ao jogador"
     )
     
-    culprit: str = Field(..., description="Name of the guilty suspect")
+    culprit: str = Field(..., description="Stable id of the guilty suspect")
     suspects: List[SuspectConfig] = Field(..., description="List of suspects")
     evidences: List[EvidenceConfig] = Field(..., description="List of evidences")
     secrets: List[SecretConfig] = Field(..., description="List of secrets")
@@ -85,5 +89,6 @@ class ScenarioConfig(BaseModel):
     topics: Optional[List[TopicConfig]] = Field(default=None, description="Optional list of tracked topics in the scenario")
     motives: Optional[List[MotivationConfig]] = Field(default=None, description="List of possible motives for the crime")
     true_motive_key: Optional[str] = Field(default=None, description="The key of the true motivation (must exist in motives)")
+    required_broken_lie_ids: Optional[List[str]] = Field(default_factory=list, description="Lie IDs that must be broken for a correct verdict")
 
 

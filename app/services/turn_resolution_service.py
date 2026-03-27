@@ -54,7 +54,6 @@ def resolve_turn_state(
     if topic_state:
         times_touched = topic_state.get("times_touched", 0)
         status = topic_state.get("status", "untouched")
-        sensitive_heat = topic_state.get("sensitive_heat", 0.0)
         
         if status == "untouched" and conversation_effect == ConversationEffect.none:
             conversation_effect = ConversationEffect.new_topic
@@ -64,10 +63,6 @@ def resolve_turn_state(
             deltas["patience"] = deltas.get("patience", 0.0) + settings.TOPIC_SATURATION_PENALTY
             reason_codes.append("penalized_topic_saturation")
             
-        if sensitive_heat > settings.TOPIC_HOT_HEAT_THRESHOLD:
-            # Tópico muito quente aumenta a chance de defesa
-            deltas["pressure"] = deltas.get("pressure", 0.0) + settings.TOPIC_HOT_PRESSURE_GAIN
-
     # 4. Simulate future state to decide NpcShift & Stance change
     future_patience = current_patience + deltas.get("patience", 0.0)
     future_pressure = current_pressure + deltas.get("pressure", 0.0)

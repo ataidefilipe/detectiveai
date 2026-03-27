@@ -23,7 +23,7 @@ def test_scenario_loader_rollback_on_invalid_culprit():
             "description": "Will crash half-way",
             "culprit": "Ghost",
             "suspects": [
-                {"name": "Real Person"}
+                {"id": "real_person", "name": "Real Person"}
             ],
             "evidences": [],
             "secrets": []

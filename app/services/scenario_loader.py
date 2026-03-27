@@ -114,7 +114,8 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
             case_summary=config.case_summary,
             topics=[t.model_dump() for t in config.topics] if config.topics else [],
             motive_options=[m.model_dump() for m in config.motives] if config.motives else [],
-            true_motive_key=config.true_motive_key
+            true_motive_key=config.true_motive_key,
+            required_broken_lie_ids=config.required_broken_lie_ids or []
         )
         db.add(scenario)
         db.flush()

@@ -64,6 +64,8 @@ def test_happy_path_piloto_end_to_end():
     # 2. Criar sessão
     # -------------------------
     resp = client.post("/sessions", json={"scenario_id": scenario_id})
+    if resp.status_code != 200:
+        print(f"DEBUG: Session creation failed with {resp.status_code}: {resp.text}")
     assert resp.status_code == 200
     session_id = resp.json()["session_id"]
 
@@ -71,20 +73,14 @@ def test_happy_path_piloto_end_to_end():
     # 3. Confrontos
     # -------------------------
     
-    # Criar states localmente para passar no Topic Guard
-    db = SessionLocal()
-    from app.infra.db_models import SessionSuspectTopicStateModel
-    db.add(SessionSuspectTopicStateModel(session_id=session_id, suspect_id=marina_id, topic_id="fraude"))
-    db.commit()
-    db.close()
-    
     from unittest.mock import patch
     from app.api.schemas.chat import MessageAnalysisResult, MessageIntent, SensitivityLevel
 
     with patch("app.services.interrogation_turn_service.analyze_message") as mock_analysis:
+        # Turno 1: Relatório
         mock_analysis.return_value = MessageAnalysisResult(
             intent=MessageIntent.confront,
-            detected_topic_ids=["fraude"],
+            detected_topic_ids=["relatorio_contabil"],
             sensitive_topic_ids=[],
             sensitivity_hit=SensitivityLevel.none
         )
@@ -93,11 +89,25 @@ def test_happy_path_piloto_end_to_end():
             json={"text": "Explique isso.", "evidence_id": evidence_relatorio_id}
         )
 
+        # Turno 2: Cartão
+        mock_analysis.return_value = MessageAnalysisResult(
+            intent=MessageIntent.confront,
+            detected_topic_ids=["presenca_local"],
+            sensitive_topic_ids=[],
+            sensitivity_hit=SensitivityLevel.none
+        )
         client.post(
             f"/sessions/{session_id}/suspects/{marina_id}/messages",
             json={"text": "E o cartão da fraude?", "evidence_id": evidence_cartao_id}
         )
         
+        # Turno 3: Testemunha
+        mock_analysis.return_value = MessageAnalysisResult(
+            intent=MessageIntent.confront,
+            detected_topic_ids=["alibi"],
+            sensitive_topic_ids=[],
+            sensitivity_hit=SensitivityLevel.none
+        )
         client.post(
             f"/sessions/{session_id}/suspects/{marina_id}/messages",
             json={"text": "E a testemunha?", "evidence_id": evidence_testemunho_id}
