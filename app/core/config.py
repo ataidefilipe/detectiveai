@@ -3,6 +3,9 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     DEBUG_TURN_TRACE: bool = False
 
+    # --- Conversation Context ---
+    CONTEXT_WINDOW_MESSAGES: int = 6  # Número de mensagens recentes lidas para montar ConversationMemory
+
     # --- Game Balance Thresholds ---
     PENALTY_FOR_REPETITION: float = -15.0
     

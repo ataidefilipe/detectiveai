@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 from enum import Enum
 
+
 class MessageIntent(str, Enum):
     ask = "ask"
     pressure = "pressure"
@@ -107,6 +108,20 @@ class TurnDebugTrace(BaseModel):
     allowed_knowledge: list[str] = Field(default_factory=list)
     new_knowledge_this_turn: list[str] = Field(default_factory=list)
 
+class ConversationMemory(BaseModel):
+    """
+    Memória curta determinística do interrogatório.
+    Janela estruturada dos últimos N turnos — não é memória semântica livre.
+    """
+    active_topic_id: Optional[str] = None
+    last_topic_id: Optional[str] = None
+    recent_topic_ids: List[str] = Field(default_factory=list)
+    recent_intents: List[str] = Field(default_factory=list)
+    recent_evidence_ids: List[int] = Field(default_factory=list)
+    recent_claim_ids: List[str] = Field(default_factory=list)
+    context_inherited: bool = False
+
+
 class PlayerTurnResponse(BaseModel):
     player_message: ChatMessageInfo
     npc_message: ChatMessageInfo
@@ -116,10 +131,14 @@ class PlayerTurnResponse(BaseModel):
     suspect_state: dict
     message_analysis: Optional[MessageAnalysisResult] = None
     state_transition: Optional[StateTransitionResult] = None
-    
+
     # Systemic Discrete Feedback removed for MVP-011 (T1)
-    
+
     # Narrative Feedback (MVP-001)
     narrative_feedback: Optional[NarrativeFeedback] = None
-    
+
     debug_trace: Optional[TurnDebugTrace] = None
+
+    # T1.1: Contexto conversacional (backlog12)
+    active_topic_id: Optional[str] = None
+    context_inherited: bool = False
