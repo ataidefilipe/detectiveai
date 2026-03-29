@@ -78,12 +78,16 @@
         "Discutiu com a vítima sobre o relatório",
         "Saiu antes das câmeras voltarem"
       ],
-      "lies": [
+      "claims": [
         {
-          "id": "lie_marina_alibi_01",
-          "statement": "Eu estava sozinha no meu quarto a noite toda.",
+          "claim_id": "claim_marina_alibi_01",
           "topic_id": "alibi",
-          "broken_by_evidence": "cartao_acesso"
+          "text": "Eu estava sozinha no meu quarto a noite toda.",
+          "claim_type": "alibi",
+          "importance": "high",
+          "breakable_by_evidence_ids": ["cartao_acesso"],
+          "breakable_by_claim_ids": [],
+          "reveal_on_break": []
         }
       ],
       "knowledge": [

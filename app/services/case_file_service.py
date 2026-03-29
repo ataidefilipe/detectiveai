@@ -5,13 +5,14 @@ from app.api.schemas.case_file import (
     CaseFileSuspectEntry, 
     SecretEntry, 
     KnowledgeEntry, 
-    BrokenLieEntry, 
+    BrokenClaimEntry, 
     EffectiveEvidenceEntry
 )
 from app.infra.db_models import (
     SessionSuspectStateModel,
     SessionSuspectKnowledgeStateModel,
     SessionEvidenceUsageModel,
+    SessionClaimStateModel,
     SuspectModel,
     SecretModel,
     EvidenceModel
@@ -74,16 +75,21 @@ def get_session_case_file(session_id: int, db: Session) -> CaseFileResponse:
                             revealed_text=revealed_text
                         ))
 
-        # C) Resolve Broken Lies
-        broken_lies_list = []
-        if state.broken_lie_ids and suspect.lies:
-            l_dict = {str(l.get("id")): l for l in suspect.lies}
-            for lie_id in state.broken_lie_ids:
-                lie_item = l_dict.get(str(lie_id))
-                if lie_item:
-                    broken_lies_list.append(BrokenLieEntry(
-                        id=str(lie_id),
-                        statement=lie_item.get("statement", "")
+        # C) Resolve Broken Claims
+        broken_claims_list = []
+        broken_claim_states = db.query(SessionClaimStateModel).filter(
+            SessionClaimStateModel.session_id == session_id,
+            SessionClaimStateModel.suspect_id == suspect.id,
+            SessionClaimStateModel.status == "broken"
+        ).all()
+        if broken_claim_states and suspect.claims:
+            c_dict = {str(c.get("claim_id")): c for c in suspect.claims}
+            for cs in broken_claim_states:
+                claim_item = c_dict.get(str(cs.claim_id))
+                if claim_item:
+                    broken_claims_list.append(BrokenClaimEntry(
+                        id=str(cs.claim_id),
+                        statement=claim_item.get("text", "")
                     ))
 
         # D) Resolve Effective Evidences
@@ -108,7 +114,7 @@ def get_session_case_file(session_id: int, db: Session) -> CaseFileResponse:
             name=suspect.name,
             revealed_secrets=revealed_secrets_list,
             discovered_knowledge=knowledge_list,
-            broken_lies=broken_lies_list,
+            broken_claims=broken_claims_list,
             effective_evidences=evidence_list
         ))
 

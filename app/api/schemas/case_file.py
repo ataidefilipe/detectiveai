@@ -10,7 +10,7 @@ class KnowledgeEntry(BaseModel):
     id: str
     revealed_text: str
 
-class BrokenLieEntry(BaseModel):
+class BrokenClaimEntry(BaseModel):
     id: str
     statement: str
 
@@ -23,7 +23,7 @@ class CaseFileSuspectEntry(BaseModel):
     name: str
     revealed_secrets: List[SecretEntry]
     discovered_knowledge: List[KnowledgeEntry]
-    broken_lies: List[BrokenLieEntry]
+    broken_claims: List[BrokenClaimEntry]
     effective_evidences: List[EffectiveEvidenceEntry]
 
 class CaseFileResponse(BaseModel):

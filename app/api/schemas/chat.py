@@ -154,7 +154,6 @@ class PlayerTurnResponse(BaseModel):
     player_message: ChatMessageInfo
     npc_message: ChatMessageInfo
     revealed_secrets: list[dict]
-    newly_broken_lies: Optional[list[dict]] = None
     newly_broken_claims: Optional[List[ClaimEvent]] = None
     evidence_effect: str  # "none" | "revealed_secret" | "duplicate" | "out_of_context" | "reaction_only"
     suspect_state: dict

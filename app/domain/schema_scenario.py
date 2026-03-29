@@ -37,11 +37,7 @@ class ClaimConfig(BaseModel):
     breakable_by_claim_ids: List[str] = Field(default_factory=list, description="IDs of other claims that contradict this one")
     reveal_on_break: List[str] = Field(default_factory=list, description="IDs of knowledge or secrets to reveal when broken")
 
-class LieConfig(BaseModel):
-    id: str = Field(..., description="Unique string identifier for the lie")
-    statement: str = Field(..., description="The textual statement of the lie")
-    topic_id: str = Field(..., description="The slug of the Topic it relates to")
-    broken_by_evidence: str = Field(..., description="Stable id of the evidence that breaks it")
+
 
 class SuspectConfig(BaseModel):
     id: str = Field(..., description="Stable string identifier for the suspect")
@@ -63,7 +59,6 @@ class SuspectConfig(BaseModel):
     final_phrase: Optional[str] = Field(
         default="I've told you everything I know."
     )
-    lies: Optional[List[LieConfig]] = None
     claims: Optional[List[ClaimConfig]] = Field(
         default=None,
         description="List of claims made by the suspect"
@@ -103,6 +98,6 @@ class ScenarioConfig(BaseModel):
     topics: Optional[List[TopicConfig]] = Field(default=None, description="Optional list of tracked topics in the scenario")
     motives: Optional[List[MotivationConfig]] = Field(default=None, description="List of possible motives for the crime")
     true_motive_key: Optional[str] = Field(default=None, description="The key of the true motivation (must exist in motives)")
-    required_broken_lie_ids: Optional[List[str]] = Field(default_factory=list, description="Lie IDs that must be broken for a correct verdict")
+    required_broken_claim_ids: Optional[List[str]] = Field(default_factory=list, description="Claim IDs that must be broken for a correct verdict")
 
 

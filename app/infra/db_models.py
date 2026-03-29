@@ -33,8 +33,8 @@ class ScenarioModel(Base):
     
     true_motive_key = Column(String, nullable=True)
 
-    required_broken_lie_ids = Column(
-        MutableList.as_mutable(JSON), default=list, comment="Lie IDs required to be broken for a correct verdict"
+    required_broken_claim_ids = Column(
+        MutableList.as_mutable(JSON), default=list, comment="Claim IDs required to be broken for a correct verdict"
     )
 
     suspects = relationship("SuspectModel", back_populates="scenario")
@@ -52,7 +52,6 @@ class SuspectModel(Base):
     initial_statement = Column(String)
     final_phrase = Column(String, nullable=True)
     true_timeline = Column(JSON) 
-    lies = Column(JSON)          
     claims = Column(JSON, default=list)
     knowledge_items = Column(JSON, default=list)
 
@@ -111,7 +110,6 @@ class SessionSuspectStateModel(Base):
     session_id = Column(Integer, ForeignKey("sessions.id"), primary_key=True)
     suspect_id = Column(Integer, ForeignKey("suspects.id"), primary_key=True)
     revealed_secret_ids = Column(MutableList.as_mutable(JSON), default=list)
-    broken_lie_ids = Column(MutableList.as_mutable(JSON), default=list)
     is_closed = Column(Boolean, default=False)
     progress = Column(Float, default=0.0)
 

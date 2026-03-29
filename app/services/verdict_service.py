@@ -8,7 +8,8 @@ from app.infra.db_models import (
     SuspectModel,
     EvidenceModel,
     SessionEvidenceUsageModel,
-    SessionSuspectStateModel
+    SessionSuspectStateModel,
+    SessionClaimStateModel
 )
 from app.core.exceptions import NotFoundError, RuleViolationError
 from app.core.telemetry import telemetry_logger
@@ -72,7 +73,7 @@ def evaluate_verdict(
 
         real_culprit_id = scenario.culprit_id
         required_evidence_ids = scenario.required_evidence_ids or []
-        required_broken_lie_ids = scenario.required_broken_lie_ids or []
+        required_broken_claim_ids = scenario.required_broken_claim_ids or []
         true_motive_key = scenario.true_motive_key
         
         # Validate motive exists in scenario options
@@ -152,7 +153,7 @@ def evaluate_verdict(
             return result_dict
 
         # ----------------------------------------
-        # 5. Culprit correct → check evidences, motive & required lies
+        # 5. Culprit correct → check evidences, motive & required claims
         # ----------------------------------------
         if motive_result == "wrong":
             reason_codes.append("wrong_motive")
@@ -163,16 +164,17 @@ def evaluate_verdict(
         if missing:
             reason_codes.append("missing_required_evidence")
 
-        # VERD-002: Check required broken lies
-        if required_broken_lie_ids:
-            suspect_state = db.query(SessionSuspectStateModel).filter(
-                SessionSuspectStateModel.session_id == session_id,
-                SessionSuspectStateModel.suspect_id == chosen_suspect_id
-            ).first()
-            broken_lie_ids = suspect_state.broken_lie_ids if suspect_state else []
-            missing_lie_ids = [lie_id for lie_id in required_broken_lie_ids if lie_id not in broken_lie_ids]
-            if missing_lie_ids:
-                reason_codes.append("missing_required_lie")
+        # VERD-002: Check required broken claims
+        if required_broken_claim_ids:
+            broken_claims = db.query(SessionClaimStateModel).filter(
+                SessionClaimStateModel.session_id == session_id,
+                SessionClaimStateModel.suspect_id == chosen_suspect_id,
+                SessionClaimStateModel.status == "broken"
+            ).all()
+            broken_claim_ids = [c.claim_id for c in broken_claims] if broken_claims else []
+            missing_claim_ids = [c_id for c_id in required_broken_claim_ids if c_id not in broken_claim_ids]
+            if missing_claim_ids:
+                reason_codes.append("missing_required_claim")
 
         if not reason_codes:
             result_type = "correct"

@@ -99,12 +99,6 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
                 raise DomainError(f"Evidence '{e.id}' references unknown related_topic_id '{e.related_topic_id}'")
         
         for s in config.suspects:
-            if s.lies:
-                for lie in s.lies:
-                    if lie.topic_id not in valid_topic_ids:
-                        raise DomainError(f"Lie '{lie.id}' for '{s.id}' references unknown topic_id '{lie.topic_id}'")
-                    if lie.broken_by_evidence not in valid_evidence_ids:
-                        raise DomainError(f"Lie '{lie.id}' for '{s.id}' references unknown broken_by_evidence '{lie.broken_by_evidence}'")
             if s.claims:
                 for c in s.claims:
                     if c.topic_id not in valid_topic_ids:
@@ -131,7 +125,7 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
             topics=[t.model_dump() for t in config.topics] if config.topics else [],
             motive_options=[m.model_dump() for m in config.motives] if config.motives else [],
             true_motive_key=config.true_motive_key,
-            required_broken_lie_ids=config.required_broken_lie_ids or []
+            required_broken_claim_ids=config.required_broken_claim_ids or []
         )
         db.add(scenario)
         db.flush()
@@ -147,13 +141,6 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
         evidence_name_map = {e.id: e.name for e in config.evidences}
 
         for s in config.suspects:
-            lies_dicts = []
-            if s.lies:
-                for lie in s.lies:
-                    lie_dict = lie.dict()
-                    lie_dict['broken_by_evidence'] = evidence_name_map.get(lie.broken_by_evidence, lie.broken_by_evidence)
-                    lies_dicts.append(lie_dict)
-
             suspect = SuspectModel(
                 scenario_id=scenario.id,
                 name=s.name,
@@ -163,7 +150,6 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
                 initial_statement=s.initial_statement,
                 final_phrase=s.final_phrase,
                 true_timeline=s.true_timeline,
-                lies=lies_dicts if lies_dicts else None,
                 claims=[c.model_dump() for c in s.claims] if s.claims else [],
                 knowledge_items=[k.model_dump() for k in s.knowledge] if s.knowledge else []
             )

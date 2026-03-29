@@ -12,7 +12,10 @@ from app.services.turn_feedback_service import build_turn_feedback, build_narrat
 from app.services.claim_resolution_service import resolve_broken_claims
 from app.services.conversation_context_service import build_conversation_context
 from app.services.move_classification_service import classify_move
-from app.infra.db_models import SessionEvidenceUsageModel, SessionModel, ScenarioModel, NpcChatMessageModel
+from app.infra.db_models import (
+    SessionEvidenceUsageModel, SessionModel, ScenarioModel, 
+    NpcChatMessageModel, SuspectModel, SessionSuspectKnowledgeStateModel
+)
 from app.api.schemas.chat import (
     MessageAnalysisResult,
     StateTransitionResult,
@@ -204,6 +207,41 @@ def run_interrogation_turn(
     )
     allowed_knowledge = knowledge_facts.get("known_knowledge", [])
     new_knowledge = knowledge_facts.get("new_knowledge_this_turn", [])
+
+    # MVP-004: Force reveal knowledge from claim_rewards
+    if claim_rewards:
+        suspect = db.query(SuspectModel).filter(SuspectModel.id == suspect_id).first()
+        if suspect and suspect.knowledge_items:
+            for k_item in suspect.knowledge_items:
+                kid = k_item.get("id")
+                if kid in claim_rewards:
+                    k_state = db.query(SessionSuspectKnowledgeStateModel).filter(
+                        SessionSuspectKnowledgeStateModel.session_id == session_id,
+                        SessionSuspectKnowledgeStateModel.suspect_id == suspect_id,
+                        SessionSuspectKnowledgeStateModel.knowledge_id == str(kid)
+                    ).first()
+                    
+                    layers = k_item.get("content_layers", [])
+                    max_available = len(layers)
+                    current_depth = k_state.max_revealed_depth if k_state else 0
+                    
+                    if current_depth < max_available:
+                        for i in range(current_depth, max_available):
+                            # Append to new_knowledge if not already there
+                            if layers[i] not in new_knowledge and layers[i] not in allowed_knowledge:
+                                new_knowledge.append(layers[i])
+                        
+                        if not k_state:
+                            k_state = SessionSuspectKnowledgeStateModel(
+                                session_id=session_id,
+                                suspect_id=suspect_id,
+                                knowledge_id=str(kid),
+                                max_revealed_depth=max_available
+                            )
+                            db.add(k_state)
+                        else:
+                            k_state.max_revealed_depth = max_available
+                        db.flush()
 
     # AI-002: Build list of message IDs where evidence was effective so prompt_builder can pin them
     effective_usages = db.query(SessionEvidenceUsageModel).filter(

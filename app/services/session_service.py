@@ -83,7 +83,6 @@ def create_session(scenario_id: int, db: Optional[Session] = None) -> SessionMod
                 session_id=session.id,
                 suspect_id=suspect.id,
                 revealed_secret_ids=[],
-                broken_lie_ids=[],
                 is_closed=False,
                 progress=initial_progress,
                 stance="neutral",
@@ -290,6 +289,13 @@ def get_suspect_state(session_id: int, suspect_id: int, db: Optional[Session] = 
         if not state:
             raise NotFoundError(f"Suspect {suspect_id} not part of session {session_id}.")
 
+        broken_claims = db.query(SessionClaimStateModel).filter(
+            SessionClaimStateModel.session_id == session_id,
+            SessionClaimStateModel.suspect_id == suspect_id,
+            SessionClaimStateModel.status == "broken"
+        ).all()
+        broken_claim_ids = [c.claim_id for c in broken_claims]
+
         return {
             "progress": state.progress,
             "is_closed": state.is_closed,
@@ -297,7 +303,7 @@ def get_suspect_state(session_id: int, suspect_id: int, db: Optional[Session] = 
             "patience": state.patience,
             "pressure": state.pressure,
             "rapport": state.rapport,
-            "broken_lie_ids": state.broken_lie_ids,
+            "broken_claim_ids": broken_claim_ids,
             "last_topic_id": state.last_topic_id
         }
     finally:
@@ -341,6 +347,13 @@ def update_suspect_state_from_deltas(
 
     db.flush()
 
+    broken_claims = db.query(SessionClaimStateModel).filter(
+        SessionClaimStateModel.session_id == session_id,
+        SessionClaimStateModel.suspect_id == suspect_id,
+        SessionClaimStateModel.status == "broken"
+    ).all()
+    broken_claim_ids = [c.claim_id for c in broken_claims]
+
     return {
         "progress": state.progress,
         "is_closed": state.is_closed,
@@ -348,7 +361,7 @@ def update_suspect_state_from_deltas(
         "patience": state.patience,
         "pressure": state.pressure,
         "rapport": state.rapport,
-        "broken_lie_ids": state.broken_lie_ids,
+        "broken_claim_ids": broken_claim_ids,
         "last_topic_id": state.last_topic_id
     }
 
