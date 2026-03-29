@@ -55,6 +55,10 @@ class MessageAnalysisResult(BaseModel):
     specificity: SpecificityLevel = SpecificityLevel.low
     confidence: float = 0.0
     notes: Optional[str] = None
+    # T1.3: Campos enriquecidos (backlog12)
+    is_reframe: bool = False           # Jogador reformulou a pergunta (não é repetição)
+    is_meta_behavior_read: bool = False # Jogador leu o comportamento do NPC ("você hesitou")
+    inferred_claim_targets: List[str] = Field(default_factory=list)  # Claims inferidos como alvo
 
 class ConversationEffect(str, Enum):
     none = "none"
