@@ -96,3 +96,42 @@ def test_resolve_turn_state_warm_topic_defensive():
     
     transition = resolve_turn_state(analysis, current_state, topic_state)
     assert transition.npc_shift == NpcShift.none
+
+
+# --- MoveType Tests (T1.5) ---
+
+from app.api.schemas.chat import MoveType
+
+def test_resolve_turn_state_with_move_explore():
+    analysis = MessageAnalysisResult(intent=MessageIntent.ask) # Fallback se MoveType nao estivesse
+    current_state = {"patience": 50.0, "pressure": 0.0, "stance": "neutral"}
+    transition = resolve_turn_state(analysis, current_state, move_type=MoveType.explore)
+    
+    assert transition.state_deltas["pressure"] == 2.0
+    assert "move_explore_detected" in transition.debug_reason_codes
+
+def test_resolve_turn_state_with_move_deepen():
+    analysis = MessageAnalysisResult(intent=MessageIntent.ask)
+    current_state = {"patience": 50.0, "pressure": 0.0, "stance": "neutral"}
+    transition = resolve_turn_state(analysis, current_state, move_type=MoveType.deepen)
+    
+    assert transition.state_deltas["pressure"] == 6.0
+    assert "move_deepen_detected" in transition.debug_reason_codes
+
+def test_resolve_turn_state_with_move_reframe():
+    analysis = MessageAnalysisResult(intent=MessageIntent.ask)
+    current_state = {"patience": 50.0, "pressure": 0.0, "stance": "neutral"}
+    transition = resolve_turn_state(analysis, current_state, move_type=MoveType.reframe)
+    
+    assert transition.state_deltas["pressure"] == 4.0
+    assert "move_reframe_detected" in transition.debug_reason_codes
+
+def test_resolve_turn_state_meta_behavior_bonus():
+    analysis = MessageAnalysisResult(intent=MessageIntent.ask, is_meta_behavior_read=True)
+    current_state = {"patience": 50.0, "pressure": 0.0, "stance": "neutral"}
+    transition = resolve_turn_state(analysis, current_state, move_type=MoveType.explore)
+    
+    # 2.0 from explore + 8.0 from meta behavior = 10.0
+    assert transition.state_deltas["pressure"] == 10.0
+    assert "meta_behavior_read_pressure_bonus" in transition.debug_reason_codes
+

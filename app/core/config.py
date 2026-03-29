@@ -8,6 +8,14 @@ class Settings(BaseSettings):
 
     # --- Game Balance Thresholds ---
     PENALTY_FOR_REPETITION: float = -15.0
+    REFRAME_GRACE_TURNS: int = 2           # Reformulação sem penalidade nos primeiros N toçues de tópico
+
+    # Deltas por MoveType
+    MOVE_EXPLORE_PRESSURE: float = 2.0
+    MOVE_DEEPEN_PRESSURE: float = 6.0
+    MOVE_REFRAME_PRESSURE: float = 4.0
+    META_BEHAVIOR_READ_PRESSURE_GAIN: float = 8.0
+
     
     INTENT_PRESSURE_GAIN: float = 15.0
     INTENT_CALM_RAPPORT_GAIN: float = 10.0
