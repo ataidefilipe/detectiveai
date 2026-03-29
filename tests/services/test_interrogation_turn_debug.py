@@ -13,17 +13,22 @@ def base_mocks():
          patch("app.services.interrogation_turn_service.add_npc_reply") as m_add_n, \
          patch("app.services.interrogation_turn_service.get_suspect_state") as m_state, \
          patch("app.services.interrogation_turn_service.apply_evidence_to_suspect") as m_evi, \
-         patch("app.services.interrogation_turn_service.get_allowed_knowledge_facts") as m_know:
-        
+         patch("app.services.interrogation_turn_service.get_allowed_knowledge_facts") as m_know, \
+         patch("app.services.interrogation_turn_service.build_conversation_context") as m_ctx, \
+         patch("app.services.interrogation_turn_service.classify_move") as m_move:
+
+        from app.api.schemas.chat import ConversationMemory, MoveType
         m_add_p.return_value = {"id": 1, "text": "Teste"}
         m_add_n.return_value = {"id": 2, "text": "Resposta"}
         m_state.return_value = {"stance": "neutral", "patience": 50.0, "pressure": 0.0}
         m_know.return_value = {"known_knowledge": [], "new_knowledge_this_turn": []}
         m_evi.return_value = ([], "none")
-        
+
         m_analyze.return_value = MessageAnalysisResult(detected_topic_ids=[])
         m_resolve.return_value = StateTransitionResult()
-        
+        m_ctx.return_value = ConversationMemory()
+        m_move.return_value = MoveType.explore
+
         db_mock = MagicMock()
         mock_generic = MagicMock()
         mock_generic.scenario.topic_config = None
@@ -32,7 +37,7 @@ def base_mocks():
         mock_generic.stance = "neutral"
         mock_generic.frequency_count = 0
         db_mock.query.return_value.filter.return_value.first.return_value = mock_generic
-        
+
         yield {"db": db_mock}
 
 @patch("app.services.interrogation_turn_service.settings")

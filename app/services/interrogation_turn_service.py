@@ -10,6 +10,8 @@ from app.services.message_analysis_service import analyze_message
 from app.services.turn_resolution_service import resolve_turn_state
 from app.services.turn_feedback_service import build_turn_feedback, build_narrative_feedback
 from app.services.lie_break_service import evaluate_broken_lies
+from app.services.conversation_context_service import build_conversation_context
+from app.services.move_classification_service import classify_move
 from app.infra.db_models import SessionEvidenceUsageModel, SessionModel, ScenarioModel, NpcChatMessageModel
 from app.api.schemas.chat import (
     MessageAnalysisResult,
@@ -43,6 +45,13 @@ def run_interrogation_turn(
         db=db
     )
 
+    # 1.0 Build conversation context (BEFORE analysis — provides topic inheritance)
+    conversation_context = build_conversation_context(
+        session_id=session_id,
+        suspect_id=suspect_id,
+        db=db
+    )
+
     # 1.1 Fetch current suspect conversational state
     initial_suspect_state = get_suspect_state(
         session_id=session_id,
@@ -67,6 +76,14 @@ def run_interrogation_turn(
 
     # 1.2 Analyze player message against known topics
     msg_analysis = analyze_message(text, available_topics=available_topics, player_history=recent_player_msgs)
+
+    # 1.2.5 Classify the move type (game design language)
+    move_type = classify_move(
+        analysis=msg_analysis,
+        context=conversation_context,
+        evidence_id=evidence_id
+    )
+
 
     # 1.3 Resolve turn mechanics (State Transition)
     primary_topic_state = None
@@ -300,5 +317,9 @@ def run_interrogation_turn(
         "message_analysis": msg_analysis if settings.DEBUG_TURN_TRACE else None,
         "state_transition": state_transition if settings.DEBUG_TURN_TRACE else None,
         "narrative_feedback": narrative_fb.model_dump() if narrative_fb else None,
-        "debug_trace": debug_trace
+        "debug_trace": debug_trace,
+        # T1.4: Contexto conversacional na resposta
+        "active_topic_id": conversation_context.active_topic_id,
+        "context_inherited": conversation_context.context_inherited,
+        "move_type": move_type.value,
     }
