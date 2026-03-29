@@ -61,6 +61,7 @@ class SuspectModel(Base):
     session_states = relationship("SessionSuspectStateModel", back_populates="suspect")
     chat_messages = relationship("NpcChatMessageModel", back_populates="suspect")
     evidence_usages = relationship("SessionEvidenceUsageModel", back_populates="suspect")
+    claim_states = relationship("SessionClaimStateModel", back_populates="suspect")
 
 class EvidenceModel(Base):
     __tablename__ = "evidences"
@@ -103,6 +104,7 @@ class SessionModel(Base):
     session_states = relationship("SessionSuspectStateModel", back_populates="session")
     chat_messages = relationship("NpcChatMessageModel", back_populates="session")
     evidence_usages = relationship("SessionEvidenceUsageModel", back_populates="session")
+    claim_states = relationship("SessionClaimStateModel", back_populates="session")
 
 class SessionSuspectStateModel(Base):
     __tablename__ = "session_suspect_states"
@@ -170,3 +172,16 @@ class SessionSuspectKnowledgeStateModel(Base):
 
     session = relationship("SessionModel")
     suspect = relationship("SuspectModel")
+
+class SessionClaimStateModel(Base):
+    __tablename__ = "session_claim_states"
+    session_id = Column(Integer, ForeignKey("sessions.id"), primary_key=True)
+    suspect_id = Column(Integer, ForeignKey("suspects.id"), primary_key=True)
+    claim_id = Column(String, primary_key=True)
+    status = Column(String, default="active") # active, broken
+    broken_by_evidence_id = Column(Integer, ForeignKey("evidences.id"), nullable=True)
+    broken_by_claim_id = Column(String, nullable=True)
+    broken_at = Column(DateTime, nullable=True)
+    
+    session = relationship("SessionModel", back_populates="claim_states")
+    suspect = relationship("SuspectModel", back_populates="claim_states")

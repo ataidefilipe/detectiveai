@@ -7,6 +7,7 @@ from app.infra.db_models import (
     SessionModel,
     SessionSuspectStateModel,
     SessionSuspectTopicStateModel,
+    SessionClaimStateModel,
     SuspectModel,
     SecretModel
 )
@@ -104,6 +105,17 @@ def create_session(scenario_id: int, db: Optional[Session] = None) -> SessionMod
                         times_touched=0
                     )
                     db.add(topic_state)
+
+            # --- Epic D: Initialize Claim States (T2.3) ---
+            if suspect.claims:
+                for claim in suspect.claims:
+                    claim_state = SessionClaimStateModel(
+                        session_id=session.id,
+                        suspect_id=suspect.id,
+                        claim_id=claim["claim_id"],
+                        status="active"
+                    )
+                    db.add(claim_state)
 
         db.commit()
 
