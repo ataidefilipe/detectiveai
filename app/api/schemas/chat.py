@@ -11,6 +11,23 @@ class MessageIntent(str, Enum):
     calm = "calm"
     unknown = "unknown"
 
+
+class MoveType(str, Enum):
+    """
+    Linguagem de game design para a jogada do turno.
+    Derivada de: intent, novelty, specificity, evidence e contexto.
+    O backend usa isso para calcular deltas e escolher response_mode.
+    """
+    explore = "explore"           # Pergunta aberta, tópico novo
+    deepen = "deepen"             # Aprofundamento no mesmo tópico
+    reframe = "reframe"           # Reformulação (não é repetição)
+    pressure = "pressure"         # Pressão direta/acusação
+    calm = "calm"                 # Acalmamento / empatia
+    confront_evidence = "confront_evidence"  # Apresentação de evidência com contexto
+    accuse_soft = "accuse_soft"   # Acusação leve / insinuação
+    continue_flow = "continue_flow"  # Fala vaga com tópico herdado
+
+
 class SensitivityLevel(str, Enum):
     none = "none"
     low = "low"
