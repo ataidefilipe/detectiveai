@@ -27,6 +27,16 @@ class SecretConfig(BaseModel):
     content: str = Field(..., description="The secret information")
     is_core: bool = Field(default=False, description="Whether this is a core secret for progress")
 
+class ClaimConfig(BaseModel):
+    claim_id: str = Field(..., description="Unique string identifier for the claim")
+    topic_id: str = Field(..., description="The slug of the Topic it relates to")
+    text: str = Field(..., description="The textual statement of the claim")
+    claim_type: str = Field(..., description="Enum: alibi, relationship, timeline, denial, motive, object, location")
+    importance: str = Field(default="medium", description="Enum: low, medium, high, critical")
+    breakable_by_evidence_ids: List[str] = Field(default_factory=list, description="IDs of evidences that can break this claim")
+    breakable_by_claim_ids: List[str] = Field(default_factory=list, description="IDs of other claims that contradict this one")
+    reveal_on_break: List[str] = Field(default_factory=list, description="IDs of knowledge or secrets to reveal when broken")
+
 class LieConfig(BaseModel):
     id: str = Field(..., description="Unique string identifier for the lie")
     statement: str = Field(..., description="The textual statement of the lie")
@@ -54,6 +64,10 @@ class SuspectConfig(BaseModel):
         default="I've told you everything I know."
     )
     lies: Optional[List[LieConfig]] = None
+    claims: Optional[List[ClaimConfig]] = Field(
+        default=None,
+        description="List of claims made by the suspect"
+    )
     knowledge: Optional[List[KnowledgeItemConfig]] = Field(
         default=None,
         description="Local knowledge instances the suspect holds"
