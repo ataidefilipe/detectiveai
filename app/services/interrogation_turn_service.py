@@ -141,8 +141,8 @@ def run_interrogation_turn(
             session_id=session_id,
             suspect_id=suspect_id,
             evidence_id=evidence_id,
+            conversation_memory=conversation_context,
             detected_topics=msg_analysis.detected_topic_ids,
-            last_topic_id=initial_suspect_state.get("last_topic_id"),
             db=db
         )
         

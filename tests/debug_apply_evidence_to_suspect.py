@@ -11,6 +11,7 @@ from app.infra.db_models import (
     SessionSuspectStateModel
 )
 from app.services.secret_service import apply_evidence_to_suspect
+from app.api.schemas.chat import ConversationMemory
 
 
 # ---------------------------------------------------------------------
@@ -115,6 +116,8 @@ def test_correct_evidence_reveals_secrets():
         session_id=data["session_id"],
         suspect_id=data["suspect_id"],
         evidence_id=data["correct_evidence_id"],
+        conversation_memory=ConversationMemory(recent_topic_ids=[], active_topic_id=None, last_topic_id=None, recent_intents=[], recent_evidence_ids=[], recent_claim_ids=[], context_inherited=False),
+        detected_topics=[],
         db=db
     )
 
@@ -137,6 +140,8 @@ def test_core_secret_updates_progress():
         session_id=data["session_id"],
         suspect_id=data["suspect_id"],
         evidence_id=data["correct_evidence_id"],
+        conversation_memory=ConversationMemory(recent_topic_ids=["topic_b"], active_topic_id="topic_b", last_topic_id=None, recent_intents=[], recent_evidence_ids=[], recent_claim_ids=[], context_inherited=False),
+        detected_topics=["topic_b"],
         db=db
     )
 

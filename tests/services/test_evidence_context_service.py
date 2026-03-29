@@ -3,6 +3,7 @@ from app.services.secret_service import apply_evidence_to_suspect
 from app.infra.db_models import (
     ScenarioModel, SuspectModel, EvidenceModel, SecretModel, SessionModel, SessionSuspectStateModel
 )
+from app.api.schemas.chat import ConversationMemory
 from tests.conftest import TestingSessionLocal
 
 @pytest.fixture
@@ -72,6 +73,7 @@ def test_evidence_out_of_context_blocked(evidence_scenario_db):
         session_id=evidence_scenario_db["session_id"],
         suspect_id=evidence_scenario_db["suspect_id"],
         evidence_id=evidence_scenario_db["ev_contextual_id"],
+        conversation_memory=ConversationMemory(recent_topic_ids=[], active_topic_id=None, last_topic_id=None, recent_intents=[], recent_evidence_ids=[], recent_claim_ids=[], context_inherited=False),
         detected_topics=["weather", "gossip"], # Wrong topics
         db=db
     )
@@ -86,6 +88,7 @@ def test_evidence_contextual_accepted(evidence_scenario_db):
         session_id=evidence_scenario_db["session_id"],
         suspect_id=evidence_scenario_db["suspect_id"],
         evidence_id=evidence_scenario_db["ev_contextual_id"],
+        conversation_memory=ConversationMemory(recent_topic_ids=[], active_topic_id=None, last_topic_id=None, recent_intents=[], recent_evidence_ids=[], recent_claim_ids=[], context_inherited=False),
         detected_topics=["alibi", "weapon"], # Correct topic "weapon" is present
         db=db
     )
@@ -100,6 +103,7 @@ def test_evidence_free_accepted(evidence_scenario_db):
         session_id=evidence_scenario_db["session_id"],
         suspect_id=evidence_scenario_db["suspect_id"],
         evidence_id=evidence_scenario_db["ev_free_id"],
+        conversation_memory=ConversationMemory(recent_topic_ids=[], active_topic_id=None, last_topic_id=None, recent_intents=[], recent_evidence_ids=[], recent_claim_ids=[], context_inherited=False),
         detected_topics=["irrelevant"], # Topic doesn't matter for this evidence
         db=db
     )
@@ -121,6 +125,7 @@ def test_evidence_out_of_context_high_pressure_still_blocked(evidence_scenario_d
         session_id=evidence_scenario_db["session_id"],
         suspect_id=evidence_scenario_db["suspect_id"],
         evidence_id=evidence_scenario_db["ev_contextual_id"],
+        conversation_memory=ConversationMemory(recent_topic_ids=[], active_topic_id=None, last_topic_id=None, recent_intents=[], recent_evidence_ids=[], recent_claim_ids=[], context_inherited=False),
         detected_topics=["wrong"], 
         db=db
     )
@@ -137,8 +142,8 @@ def test_evidence_short_term_context_accepted(evidence_scenario_db):
         session_id=evidence_scenario_db["session_id"],
         suspect_id=evidence_scenario_db["suspect_id"],
         evidence_id=evidence_scenario_db["ev_contextual_id"],
+        conversation_memory=ConversationMemory(recent_topic_ids=["weapon"], active_topic_id="weapon", last_topic_id="weapon", recent_intents=[], recent_evidence_ids=[], recent_claim_ids=[], context_inherited=True),
         detected_topics=[], # No explicit topic detected this turn
-        last_topic_id="weapon", # But we remember the last active topic
         db=db
     )
     

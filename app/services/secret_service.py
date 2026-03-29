@@ -10,18 +10,20 @@ from app.infra.db_models import (
 )
 from app.core.exceptions import NotFoundError
 
+from app.api.schemas.chat import ConversationMemory
+from app.services.evidence_context_service import evaluate_evidence_context
 
 def apply_evidence_to_suspect(
     session_id: int,
     suspect_id: int,
     evidence_id: int,
+    conversation_memory: ConversationMemory,
     detected_topics: Optional[List[str]] = None,
-    last_topic_id: Optional[str] = None,
     db: Optional[Session] = None
 ) -> Tuple[List[Dict[str, Any]], str]:
     """
     Applies evidence to a suspect:
-      - Validates if the evidence matches the current context (out_of_context check)
+      - Validates if the evidence matches the current context (out_of_context check) using evidence_context_service
       - Reveals secrets associated with that evidence
       - Updates progress
       - If all core secrets are revealed, marks suspect as 'closed'
@@ -46,17 +48,14 @@ def apply_evidence_to_suspect(
             raise NotFoundError(f"Suspect {suspect_id} not part of session {session_id}.")
 
         # ---------------------------------------
-        # Context validation for E1
+        # Context validation via evidence_context_service (T2.5)
         # ---------------------------------------
-        evidence = db.query(EvidenceModel).filter(EvidenceModel.id == evidence_id).first()
-        is_context_valid = True
-        
-        if evidence and evidence.related_topic_id:
-            msg_topics = detected_topics or []
-            # T7: Valid if topic is in current message OR matches the last active topic.
-            if evidence.related_topic_id not in msg_topics and evidence.related_topic_id != last_topic_id:
-                # T8: Removed the check for state.pressure >= 80.0 bypass.
-                is_context_valid = False
+        is_context_valid = evaluate_evidence_context(
+            evidence_id=evidence_id,
+            conversation_memory=conversation_memory,
+            detected_topics=detected_topics,
+            db=db
+        )
 
         if not is_context_valid:
             return [], "out_of_context"
