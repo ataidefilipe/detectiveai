@@ -53,6 +53,7 @@ class SuspectModel(Base):
     final_phrase = Column(String, nullable=True)
     true_timeline = Column(JSON) 
     lies = Column(JSON)          
+    claims = Column(JSON, default=list)
     knowledge_items = Column(JSON, default=list)
 
     scenario = relationship("ScenarioModel", back_populates="suspects")

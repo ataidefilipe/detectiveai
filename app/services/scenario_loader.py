@@ -88,6 +88,12 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
         valid_evidence_ids = {e.id for e in config.evidences}
         valid_topic_ids = {t.id for t in config.topics} if config.topics else set()
         
+        valid_claim_ids = set()
+        for s in config.suspects:
+            if s.claims:
+                valid_claim_ids.update(c.claim_id for c in s.claims)
+                
+        
         for e in config.evidences:
             if e.related_topic_id and e.related_topic_id not in valid_topic_ids:
                 raise DomainError(f"Evidence '{e.id}' references unknown related_topic_id '{e.related_topic_id}'")
@@ -99,6 +105,16 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
                         raise DomainError(f"Lie '{lie.id}' for '{s.id}' references unknown topic_id '{lie.topic_id}'")
                     if lie.broken_by_evidence not in valid_evidence_ids:
                         raise DomainError(f"Lie '{lie.id}' for '{s.id}' references unknown broken_by_evidence '{lie.broken_by_evidence}'")
+            if s.claims:
+                for c in s.claims:
+                    if c.topic_id not in valid_topic_ids:
+                        raise DomainError(f"Claim '{c.claim_id}' for '{s.id}' references unknown topic_id '{c.topic_id}'")
+                    for evid in c.breakable_by_evidence_ids:
+                        if evid not in valid_evidence_ids:
+                            raise DomainError(f"Claim '{c.claim_id}' references unknown breakable_by_evidence_ids '{evid}'")
+                    for other_claim in c.breakable_by_claim_ids:
+                        if other_claim not in valid_claim_ids:
+                            raise DomainError(f"Claim '{c.claim_id}' references unknown breakable_by_claim_ids '{other_claim}'")
             if s.knowledge:
                 for k in s.knowledge:
                     if k.topic_id not in valid_topic_ids:
@@ -148,6 +164,7 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
                 final_phrase=s.final_phrase,
                 true_timeline=s.true_timeline,
                 lies=lies_dicts if lies_dicts else None,
+                claims=[c.model_dump() for c in s.claims] if s.claims else [],
                 knowledge_items=[k.model_dump() for k in s.knowledge] if s.knowledge else []
             )
             db.add(suspect)

@@ -110,3 +110,74 @@ def test_load_scenario_evidence_slug_resolution(db_session, monkeypatch):
     from app.infra.db_models import SuspectModel
     suspect = db_session.query(SuspectModel).filter(SuspectModel.scenario_id == scenario.id).first()
     assert suspect.lies[0]["broken_by_evidence"] == "Faca Ensanguentada"
+
+
+def test_load_scenario_with_claims(db_session, monkeypatch):
+    valid_json = {
+        "scenario_code": "test-claims",
+        "title": "Claims Test",
+        "culprit": "fulano",
+        "motives": [],
+        "topics": [{"id": "topic_1", "label": "Topic 1", "aliases": []}],
+        "suspects": [
+            {
+                "id": "fulano", 
+                "name": "Fulano", 
+                "claims": [
+                    {
+                        "claim_id": "c1",
+                        "topic_id": "topic_1",
+                        "text": "Estava em casa",
+                        "claim_type": "alibi",
+                        "breakable_by_evidence_ids": ["pista_1"],
+                        "breakable_by_claim_ids": []
+                    }
+                ]
+            }
+        ],
+        "evidences": [{"id": "pista_1", "name": "Câmera de segurança"}],
+        "secrets": []
+    }
+    
+    monkeypatch.setattr("builtins.open", mock_open(read_data=json.dumps(valid_json)))
+    scenario = load_scenario_from_json("fake_path.json", db=db_session)
+    db_session.refresh(scenario)
+    
+    from app.infra.db_models import SuspectModel
+    suspect = db_session.query(SuspectModel).filter(SuspectModel.scenario_id == scenario.id).first()
+    assert len(suspect.claims) == 1
+    assert suspect.claims[0]["claim_id"] == "c1"
+    assert "pista_1" in suspect.claims[0]["breakable_by_evidence_ids"]
+
+
+def test_load_scenario_invalid_claims_references(db_session, monkeypatch):
+    invalid_json = {
+        "scenario_code": "test-invalid-claims",
+        "title": "Invalid Claims Test",
+        "culprit": "fulano",
+        "motives": [],
+        "topics": [{"id": "topic_1", "label": "Topic 1", "aliases": []}],
+        "suspects": [
+            {
+                "id": "fulano", 
+                "name": "Fulano", 
+                "claims": [
+                    {
+                        "claim_id": "c1",
+                        "topic_id": "topic_wrong",  # Erro aqui
+                        "text": "Estava em casa",
+                        "claim_type": "alibi",
+                        "breakable_by_evidence_ids": ["pista_wrong"],  # Erro aqui
+                        "breakable_by_claim_ids": ["c_wrong"] # Erro aqui
+                    }
+                ]
+            }
+        ],
+        "evidences": [{"id": "pista_1", "name": "Câmera de segurança"}],
+        "secrets": []
+    }
+    
+    monkeypatch.setattr("builtins.open", mock_open(read_data=json.dumps(invalid_json)))
+    
+    with pytest.raises(DomainError, match="references unknown"):
+        load_scenario_from_json("fake_path.json", db=db_session)
