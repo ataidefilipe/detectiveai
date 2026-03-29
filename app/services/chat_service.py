@@ -14,7 +14,8 @@ from app.infra.db_models import (
     SecretModel,
     EvidenceModel,
     ScenarioModel,
-    SessionSuspectKnowledgeStateModel
+    SessionSuspectKnowledgeStateModel,
+    SessionClaimStateModel
 )
 from app.core.exceptions import NotFoundError, RuleViolationError
 
@@ -206,11 +207,17 @@ def _build_suspect_state_for_ai(
                     revealed_knowledge.append(layers[i])
 
     broken_claims = []
-    if state.broken_lie_ids and suspect and suspect.lies:
-        lie_dict_map = {lie["id"]: lie for lie in suspect.lies}
-        for lie_id in state.broken_lie_ids:
-            if lie_id in lie_dict_map:
-                broken_claims.append(lie_dict_map[lie_id]["statement"])
+    broken_claim_states = db.query(SessionClaimStateModel).filter(
+        SessionClaimStateModel.session_id == state.session_id,
+        SessionClaimStateModel.suspect_id == suspect_id,
+        SessionClaimStateModel.status == "broken"
+    ).all()
+    
+    if broken_claim_states and suspect and suspect.claims:
+        claim_dict_map = {claim["claim_id"]: claim for claim in suspect.claims}
+        for cs in broken_claim_states:
+            if cs.claim_id in claim_dict_map:
+                broken_claims.append(claim_dict_map[cs.claim_id].get("statement", "Uma de minhas afirmações"))
 
     suspect_state = {
         "suspect_id": suspect_id,

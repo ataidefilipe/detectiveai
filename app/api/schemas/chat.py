@@ -129,6 +129,13 @@ class TurnDebugTrace(BaseModel):
     allowed_knowledge: list[str] = Field(default_factory=list)
     new_knowledge_this_turn: list[str] = Field(default_factory=list)
 
+class ClaimEvent(BaseModel):
+    claim_id: str
+    broken_by_evidence_id: Optional[int] = None
+    broken_by_claim_id: Optional[str] = None
+    rewards: List[str] = Field(default_factory=list)
+
+
 class ConversationMemory(BaseModel):
     """
     Memória curta determinística do interrogatório.
@@ -148,6 +155,7 @@ class PlayerTurnResponse(BaseModel):
     npc_message: ChatMessageInfo
     revealed_secrets: list[dict]
     newly_broken_lies: Optional[list[dict]] = None
+    newly_broken_claims: Optional[List[ClaimEvent]] = None
     evidence_effect: str  # "none" | "revealed_secret" | "duplicate" | "out_of_context" | "reaction_only"
     suspect_state: dict
     message_analysis: Optional[MessageAnalysisResult] = None

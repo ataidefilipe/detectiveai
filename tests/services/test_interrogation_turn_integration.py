@@ -51,12 +51,13 @@ def db_session():
                  "content_layers": ["A faca estava no chão.", "A faca tinha minhas digitais."]
              }
         ],
-        lies=[
+        claims=[
             {
-                "id": "lie1",
+                "claim_id": "lie1",
                 "statement": "Eu não encostei na faca.",
                 "topic_id": "faca",
-                "broken_by_evidence": "Faca Suja"
+                "breakable_by_evidence_ids": ["Faca Suja"],
+                "reveal_on_break": []
             }
         ]
     )
@@ -74,6 +75,11 @@ def db_session():
     topic_state1 = SessionSuspectTopicStateModel(session_id=1, suspect_id=1, topic_id="faca")
     topic_state2 = SessionSuspectTopicStateModel(session_id=1, suspect_id=1, topic_id="local")
     db.add_all([topic_state1, topic_state2])
+    
+    # Adicionar states das claims
+    from app.infra.db_models import SessionClaimStateModel
+    claim_state = SessionClaimStateModel(session_id=1, suspect_id=1, claim_id="lie1", status="active")
+    db.add(claim_state)
     
     # Evidence
     evi1 = EvidenceModel(id=1, scenario_id=1, name="Faca Suja", description="Uma faca de cozinha", related_topic_id="faca")
@@ -196,12 +202,12 @@ def test_integration_last_topic_id_persistence(db_session):
     assert len(res2["revealed_secrets"]) == 1
     assert res2["revealed_secrets"][0]["content"] == "Eu usei a faca"
 
-def test_integration_evidence_breaks_lie(db_session):
+def test_integration_evidence_breaks_claim(db_session):
     # Setup the patch just so we don't need real AI reply
     with patch("app.services.interrogation_turn_service.add_npc_reply") as mock_reply:
         mock_reply.return_value = {"id": 2, "text": "Fui pego."}
         
-        # Turno 1: Apresenta evidência que quebra mentira configurada
+        # Turno 1: Apresenta evidência que quebra claim configurada
         res = run_interrogation_turn(
             session_id=1,
             suspect_id=1,
@@ -212,10 +218,10 @@ def test_integration_evidence_breaks_lie(db_session):
         
         db_session.commit()
         
-        # Validar que a mentira foi fisgada no array newly_broken_lies de retorno
-        assert res["newly_broken_lies"] is not None
-        assert len(res["newly_broken_lies"]) == 1
-        assert res["newly_broken_lies"][0]["id"] == "lie1"
+        # Validar que a mentira foi fisgada no array newly_broken_claims de retorno
+        assert res["newly_broken_claims"] is not None
+        assert len(res["newly_broken_claims"]) == 1
+        assert res["newly_broken_claims"][0]["claim_id"] == "lie1"
         
         # Validar que o chat_service empilha em broken_claims do estado da IA
         from app.services.chat_service import _build_suspect_state_for_ai
@@ -234,7 +240,7 @@ def test_integration_evidence_breaks_lie(db_session):
         assert "broken_claims" in ai_state
         assert "Eu não encostei na faca." in ai_state["broken_claims"]
 
-def test_integration_evidence_wrong_context_does_not_break_lie(db_session):
+def test_integration_evidence_wrong_context_does_not_break_claim(db_session):
     # Evidence 1 breaks lie1 BUT topic "local" is active, not "faca"
     res = run_interrogation_turn(
         session_id=1,
@@ -244,9 +250,9 @@ def test_integration_evidence_wrong_context_does_not_break_lie(db_session):
         db=db_session
     )
     
-    assert res["newly_broken_lies"] is None or len(res["newly_broken_lies"]) == 0
+    assert res["newly_broken_claims"] is None or len(res["newly_broken_claims"]) == 0
 
-def test_integration_wrong_evidence_does_not_break_lie(db_session):
+def test_integration_wrong_evidence_does_not_break_claim(db_session):
     # Topic "faca" is active, but Evidence 2 (Chave do Carro) is presented
     res = run_interrogation_turn(
         session_id=1,
@@ -256,4 +262,4 @@ def test_integration_wrong_evidence_does_not_break_lie(db_session):
         db=db_session
     )
     
-    assert res["newly_broken_lies"] is None or len(res["newly_broken_lies"]) == 0
+    assert res["newly_broken_claims"] is None or len(res["newly_broken_claims"]) == 0
