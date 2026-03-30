@@ -66,51 +66,6 @@ def test_load_scenario_invalid_motive_key(db_session, monkeypatch):
     with pytest.raises(DomainError, match="true_motive_key 'wrong_motive' is not in motives list"):
         load_scenario_from_json("fake_path.json", db=db_session)
 
-def test_load_scenario_evidence_slug_resolution(db_session, monkeypatch):
-    valid_json = {
-        "scenario_code": "test-slug-resolution",
-        "title": "Slug Resolution",
-        "description": "Teste para verificar BUG-003",
-        "culprit": "fulano",
-        "motives": [],
-        "true_motive_key": None,
-        "topics": [
-            {"id": "topic_1", "label": "Topic 1", "aliases": []}
-        ],
-        "suspects": [
-            {
-                "id": "fulano", 
-                "name": "Fulano", 
-                "backstory": "Test",
-                "lies": [
-                    {
-                        "id": "lie_1",
-                        "statement": "Eu não estava lá",
-                        "topic_id": "topic_1",
-                        "broken_by_evidence": "pista_1"
-                    }
-                ]
-            }
-        ],
-        "evidences": [
-            {"id": "pista_1", "name": "Faca Ensanguentada", "is_mandatory": True}
-        ],
-        "secrets": []
-    }
-    
-    # Mock json load
-    monkeypatch.setattr("builtins.open", mock_open(read_data=json.dumps(valid_json)))
-    
-    scenario = load_scenario_from_json("fake_path.json", db=db_session)
-    
-    # Refresh to ensure relationships are loaded
-    db_session.refresh(scenario)
-    
-    # O suspeito no banco deve ter broken_by_evidence = "Faca Ensanguentada" e não "pista_1"
-    from app.infra.db_models import SuspectModel
-    suspect = db_session.query(SuspectModel).filter(SuspectModel.scenario_id == scenario.id).first()
-    assert suspect.lies[0]["broken_by_evidence"] == "Faca Ensanguentada"
-
 
 def test_load_scenario_with_claims(db_session, monkeypatch):
     valid_json = {

@@ -151,7 +151,8 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
                 final_phrase=s.final_phrase,
                 true_timeline=s.true_timeline,
                 claims=[c.model_dump() for c in s.claims] if s.claims else [],
-                knowledge_items=[k.model_dump() for k in s.knowledge] if s.knowledge else []
+                knowledge_items=[k.model_dump() for k in s.knowledge] if s.knowledge else [],
+                profile=s.profile.model_dump() if s.profile else None
             )
             db.add(suspect)
             db.flush()

@@ -96,7 +96,14 @@ class DummyNpcAIAdapter(NpcAIAdapter):
                 return f"Posso confirmar que {content}"
             return "Estou cooperando com a investigação. Pergunte o que quiser."
 
-        # ── 4. Fallback por personalidade ────────────────────────
+        elif mode == ResponseMode.guarded:
+            return "Não gosto do tom dessa pergunta. Vou pensar muito bem antes de responder."
+
+        elif mode == ResponseMode.pressured_deflection:
+            return "Isso é absurdo. Você está tentando me confundir. Não vou cair nessa."
+
+        elif mode == ResponseMode.contradiction_repair:
+            return "Espera, eu me confundi antes. O que eu quis dizer foi outra coisa, veja bem..."
         if personality == "agressivo":
             return (
                 "Chega de perguntas. Se tem prova de alguma coisa, mostre. "

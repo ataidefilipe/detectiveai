@@ -39,6 +39,12 @@ class ClaimConfig(BaseModel):
 
 
 
+class TopicAffinityProfile(BaseModel):
+    pressure_tolerance: float = Field(default=0.5, description="How well the suspect handles pressure (0.0 to 1.0)")
+    empathy_receptivity: float = Field(default=0.5, description="How well the suspect responds to calm approaches (0.0 to 1.0)")
+    repetition_irritability: float = Field(default=0.5, description="How easily the suspect gets annoyed by repeats (0.0 to 1.0)")
+    contradiction_fragility: float = Field(default=0.5, description="How quickly the suspect breaks when contradicted (0.0 to 1.0)")
+
 class SuspectConfig(BaseModel):
     id: str = Field(..., description="Stable string identifier for the suspect")
     name: str
@@ -66,6 +72,10 @@ class SuspectConfig(BaseModel):
     knowledge: Optional[List[KnowledgeItemConfig]] = Field(
         default=None,
         description="Local knowledge instances the suspect holds"
+    )
+    profile: Optional[TopicAffinityProfile] = Field(
+        default=None,
+        description="Behavioral profile modifiers for suspect reactions"
     )
 
 class EvidenceConfig(BaseModel):

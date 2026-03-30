@@ -54,6 +54,7 @@ class SuspectModel(Base):
     true_timeline = Column(JSON) 
     claims = Column(JSON, default=list)
     knowledge_items = Column(JSON, default=list)
+    profile = Column(JSON, nullable=True)
 
     scenario = relationship("ScenarioModel", back_populates="suspects")
     secrets = relationship("SecretModel", back_populates="suspect")

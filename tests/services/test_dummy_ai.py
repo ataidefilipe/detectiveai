@@ -89,3 +89,25 @@ def test_dummy_adapter_evidence_with_text_shows_pressure():
     # Should react with pressure, not expose the secret text directly
     assert "pegou" in res.lower() or "espera" in res.lower()
     assert "Segredo revelado" not in res
+
+
+def test_dummy_adapter_guarded():
+    adapter = DummyNpcAIAdapter()
+    rc = NpcResponseRenderContext(response_mode=ResponseMode.guarded)
+    res = adapter.generate_reply({}, [], {}, rc)
+    assert "tom dessa pergunta" in res.lower()
+
+
+def test_dummy_adapter_pressured_deflection():
+    adapter = DummyNpcAIAdapter()
+    rc = NpcResponseRenderContext(response_mode=ResponseMode.pressured_deflection)
+    res = adapter.generate_reply({}, [], {}, rc)
+    assert "absurdo" in res.lower() or "confundir" in res.lower()
+
+
+def test_dummy_adapter_contradiction_repair():
+    adapter = DummyNpcAIAdapter()
+    rc = NpcResponseRenderContext(response_mode=ResponseMode.contradiction_repair)
+    res = adapter.generate_reply({}, [], {}, rc)
+    # Expected: repair tone
+    assert "confundi" in res.lower() or "quis dizer" in res.lower()

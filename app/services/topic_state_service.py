@@ -70,8 +70,12 @@ def update_topic_hit(
 
         topic_state.times_touched += 1
         
+        from app.core.config import settings
+        
         if new_status:
             topic_state.status = new_status
+        elif topic_state.times_touched > settings.TOPIC_SATURATION_TOUCH_COUNT:
+            topic_state.status = "saturated"
         elif topic_state.status == "untouched":
             topic_state.status = "touched"
 

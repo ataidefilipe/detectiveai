@@ -66,6 +66,9 @@ def run_interrogation_turn(
     session = db.query(SessionModel).filter(SessionModel.id == session_id).first()
     scenario = db.query(ScenarioModel).filter(ScenarioModel.id == session.scenario_id).first()
     available_topics = scenario.topics if scenario and scenario.topics else []
+    
+    suspect_model = db.query(SuspectModel).filter(SuspectModel.id == suspect_id).first()
+    suspect_profile = suspect_model.profile if suspect_model else None
 
     # Fetch recent player messages for novelty check
     recent_player_msgs = [
@@ -104,7 +107,9 @@ def run_interrogation_turn(
     state_transition = resolve_turn_state(
         analysis=msg_analysis,
         current_state=initial_suspect_state,
-        topic_state=primary_topic_state
+        topic_state=primary_topic_state,
+        move_type=move_type,
+        suspect_profile=suspect_profile
     )
 
     # T6: Persist primary_topic_id as last_topic_id for short-term context.
@@ -270,6 +275,7 @@ def run_interrogation_turn(
         allowed_knowledge=allowed_knowledge,
         new_knowledge_this_turn=new_knowledge,
         evidence_effect=evidence_effect,
+        newly_broken_claims=newly_broken_claims,
         effective_message_ids=effective_message_ids,
         db=db
     )

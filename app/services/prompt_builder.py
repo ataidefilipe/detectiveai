@@ -73,6 +73,9 @@ ATENÇÃO: Os seguintes fatos novos DEVEM aparecer na sua resposta, integrados �
         "clarify": "Esclareça a dúvida mencionada, mas mantenha-se em seu personagem.",
         "partial_admission": "Faça uma admissão relutante e parcial do fato confrontado.",
         "deny": "Negue veementemente a acusação ou suposição feita pelo detetive.",
+        "guarded": "Seja cauteloso(a). Sinta-se pressionado(a), mas mantenha-se firme.",
+        "pressured_deflection": "Tente defletir a pressão. O detetive está muito perto de uma contradição sua.",
+        "contradiction_repair": "Você foi pego(a) em uma contradição. Tente 'consertar' sua história ou admita o erro se não houver saída.",
         "final_phrase": f"O interrogatório está ENCERRADO. Responda APENAS E EXATAMENTE a sua Frase Final: '{final_phrase_content}'"
     }
     
@@ -89,6 +92,7 @@ História Pessoal / Backstory: {npc_context["suspect"].get("backstory", "Desconh
 === CONTEXTO DO CASO (SUA VISÃO) ===
 Sua Declaração Inicial: {npc_context["suspect"].get("initial_statement", "Nada declarado.")}
 {mandatory_section}
+{f"=== PRESSÃO ATUAL ===\nO detetive está te pressionando especificamente sobre estas suas afirmações:\n" + "\n".join("- " + p for p in render_context.claim_pressure_summary) if render_context.claim_pressure_summary else ""}
 === POSTURA DRAMÁTICA ===
 Postura Atual com o Detetive: {render_context.npc_stance.upper()}
 Instrução de Tom e Estilo: {mode_rule}

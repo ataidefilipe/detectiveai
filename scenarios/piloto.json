@@ -71,6 +71,12 @@
       "personality": "nervoso",
       "internal_note": "Atenção: A Marina tem um amante no escritório e estava desviando dinheiro. Isso não deve ser revelado de imediato, e o jogador tem de pressioná-la.",
       "initial_statement": "Eu já disse tudo o que sei. Só quero ir embora logo. Fui cooperativa desde o início, não é?",
+      "profile": {
+        "pressure_tolerance": 0.4,
+        "empathy_receptivity": 0.7,
+        "repetition_irritability": 0.8,
+        "contradiction_fragility": 0.3
+      },
       "true_timeline": [
         "Chegou ao hotel às 20h",
         "Encontrou a vítima no corredor às 22h10",

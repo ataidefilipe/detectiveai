@@ -68,3 +68,20 @@ def test_build_npc_prompt_injects_new_context():
     sys2 = msgs2[0]["content"]
     assert "História Pessoal / Backstory: Desconhecido." in sys2
     assert "Sua Declaração Inicial: Nada declarado." in sys2
+    
+def test_build_npc_prompt_injects_claim_pressure():
+    npc_context = {
+        "suspect": {"name": "Test", "personality": "Normal"}
+    }
+    render_context = NpcResponseRenderContext(
+        npc_stance="hostile",
+        response_mode=ResponseMode.pressured_deflection,
+        claim_pressure_summary=["Eu não vi ninguém", "Eu estava no trabalho"]
+    )
+    
+    messages = build_npc_prompt(npc_context, [], render_context)
+    sys_prompt = messages[0]["content"]
+    
+    assert "=== PRESSÃO ATUAL ===" in sys_prompt
+    assert "Eu não vi ninguém" in sys_prompt
+    assert "Eu estava no trabalho" in sys_prompt

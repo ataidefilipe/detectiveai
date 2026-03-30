@@ -284,6 +284,7 @@ def add_npc_reply(
     allowed_knowledge: List[str] = None,
     new_knowledge_this_turn: List[str] = None,
     evidence_effect: str = "none",
+    newly_broken_claims: Optional[List[dict]] = None,
     effective_message_ids: Optional[List[int]] = None,
     db: Session = None
 ) -> dict:
@@ -340,7 +341,8 @@ def add_npc_reply(
             allowed_knowledge=allowed_knowledge,
             new_knowledge_this_turn=new_knowledge_this_turn,
             suspect=suspect,
-            evidence_effect=evidence_effect
+            evidence_effect=evidence_effect,
+            newly_broken_claims=newly_broken_claims
         )
 
         reply_text = _generate_npc_text_with_fallback(

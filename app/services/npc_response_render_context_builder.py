@@ -10,7 +10,8 @@ def build_render_context(
     allowed_knowledge: Optional[List[str]] = None,
     new_knowledge_this_turn: Optional[List[str]] = None,
     suspect: Optional[SuspectModel] = None,
-    evidence_effect: str = "none"
+    evidence_effect: str = "none",
+    newly_broken_claims: Optional[List[dict]] = None
 ) -> NpcResponseRenderContext:
     """
     Constrói o NpcResponseRenderContext, decidindo a diretriz de atuação da LLM
@@ -21,47 +22,29 @@ def build_render_context(
     (persistido no banco) como fonte de memória. Não trate os dois como sinônimos.
     """
 
-    # Default
-    response_mode = ResponseMode.neutral_answer
-    npc_stance = transition.npc_shift.value
-    
     # Map back dicts to strings if necessary. revealed_facts can be list of dicts from SecretModel
     if revealed_facts:
         allowed_facts = [f["content"] if isinstance(f, dict) else f for f in revealed_facts]
     else:
         allowed_facts = []
 
-    # Map state transitions to strict LLM directives
-    # 1. Se revealed_facts tiver itens novos -> partial_admission
-    if revealed_facts:
-        response_mode = ResponseMode.partial_admission
-        
-    # 2. Se evidence_effect == "out_of_context"
-    elif evidence_effect == "out_of_context":
-        if transition.npc_shift == NpcShift.more_defensive:
-            response_mode = ResponseMode.deny
-        else:
-            response_mode = ResponseMode.evasive
-            
-    elif new_knowledge_this_turn:
-        response_mode = ResponseMode.partial_admission
-
-    # 3. Se pressured E houver allowed_knowledge -> partial_admission
-    elif transition.npc_shift == NpcShift.pressured:
-        if allowed_knowledge:
-            response_mode = ResponseMode.partial_admission
-        else:
-            response_mode = ResponseMode.evasive
-            
-    # 4. Se more_defensive SEM novos conteúdos -> deny
-    elif transition.npc_shift == NpcShift.more_defensive:
-        response_mode = ResponseMode.deny
-        
-    # 5. Fallbacks pro humor/stance normal
-    elif transition.npc_shift == NpcShift.more_cooperative:
-        response_mode = ResponseMode.clarify
-
-    # No futuro (fase D), a Reveal Policy Service adicionará 'Knowledges' ao 'allowed_facts'
+    from app.services.npc_mode_policy_service import determine_response_mode
+    response_mode = determine_response_mode(
+        transition=transition,
+        analysis=analysis,
+        has_newly_broken_claims=bool(newly_broken_claims),
+        has_revealed_secrets=bool(revealed_facts),
+        has_new_knowledge=bool(new_knowledge_this_turn),
+        evidence_effect=evidence_effect
+    )
+    
+    npc_stance = transition.npc_shift.value
+    
+    # Map claim_id to statement if available
+    pressure_texts = []
+    if newly_broken_claims and suspect and suspect.claims:
+        claim_map = {c["claim_id"]: c.get("statement") or c.get("text") for c in suspect.claims}
+        pressure_texts = [claim_map[c["claim_id"]] for c in newly_broken_claims if c["claim_id"] in claim_map]
     
     return NpcResponseRenderContext(
         response_mode=response_mode,
@@ -71,5 +54,7 @@ def build_render_context(
         new_knowledge_this_turn=new_knowledge_this_turn or [],
         player_intent=analysis.intent.value,
         tone_hint=None, # Definido para testes no MVP
-        forbidden_topics=["alibi_contradiction"] if transition.npc_shift == NpcShift.more_defensive else []
+        forbidden_topics=["alibi_contradiction"] if transition.npc_shift == NpcShift.more_defensive else [],
+        active_topic_id=analysis.primary_topic_id,
+        claim_pressure_summary=pressure_texts
     )

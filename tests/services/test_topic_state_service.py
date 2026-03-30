@@ -40,3 +40,17 @@ def test_update_topic_hit_basic(db_session_with_topic):
     )
     assert state["times_touched"] == 1
     assert state["status"] == "touched" # Default transition
+
+def test_update_topic_hit_saturation(db_session_with_topic):
+    from app.core.config import settings
+    # Hit until saturation (threshold is 3, so hit 4 is saturation)
+    for _ in range(settings.TOPIC_SATURATION_TOUCH_COUNT + 1):
+        state = update_topic_hit(
+            session_id=999,
+            suspect_id=888,
+            topic_id="test_topic",
+            db=db_session_with_topic
+        )
+    
+    assert state["times_touched"] == settings.TOPIC_SATURATION_TOUCH_COUNT + 1
+    assert state["status"] == "saturated"

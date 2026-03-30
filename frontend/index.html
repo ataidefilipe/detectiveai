@@ -155,6 +155,7 @@
     .suspect-state-badge.pressured { border-color: var(--red); color: #f87171; }
     .suspect-state-badge.cooperative { border-color: var(--blue); color: #93c5fd; }
     .suspect-state-badge.tired     { border-color: var(--text-muted); color: var(--text-muted); }
+    .suspect-state-badge.guarded   { border-color: #fca5a5; color: #fecaca; } /* Reddish-pink */
 
     .chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
     .chat-messages::-webkit-scrollbar { width: 4px; }
@@ -612,12 +613,19 @@
     // B3: map suspect state numbers to category label
     function getSuspectStateLabel(suspectState) {
       if (!suspectState) return { label: '😐 Aguardando…', cls: '' };
+      
+      // Sprint 3: check response_mode for more granularity
+      const mode = (suspectState.response_mode || '').toLowerCase();
+      if (mode === 'guarded')               return { label: '🛡️ Cauteloso',    cls: 'guarded'     };
+      if (mode === 'pressured_deflection')  return { label: '😰 Defletindo',   cls: 'pressured'   };
+      if (mode === 'contradiction_repair')  return { label: '🩹 Reparando',    cls: 'defensive'   };
+
       const stance   = (suspectState.stance   || '').toLowerCase();
       const patience = suspectState.patience  ?? 100;
       const pressure = suspectState.pressure  ?? 0;
 
       if (stance === 'cooperative')           return { label: '🤝 Cooperativo',  cls: 'cooperative' };
-      if (pressure >= 60)                     return { label: '😰 Pressionado',  cls: 'pressured'   };
+      if (pressure >= 80)                     return { label: '😰 Pressionado',  cls: 'pressured'   };
       if (stance === 'defensive')             return { label: '🛡️ Defensivo',    cls: 'defensive'   };
       if (patience <= 30)                     return { label: '😤 Cansado',      cls: 'tired'       };
       return                                         { label: '😐 Tranquilo',    cls: 'calm'        };
@@ -768,10 +776,25 @@
 
     function processTurnFeedback(result) {
       const hasSecret = result.revealed_secrets?.length > 0;
-      const hasLie    = result.newly_broken_lies?.length > 0;
+      const hasClaim  = result.newly_broken_claims?.length > 0;
       const evId      = result.player_message?.evidence_id;
 
-      // B4: Inline notes in chat
+      // 1. Process narrative feedback (Sprint 2 structured feedback)
+      const fb = result.narrative_feedback;
+      if (fb) {
+        if (fb.signal && fb.shift_text) {
+          appendNoteBubble(fb.signal, `<em>${fb.shift_text}</em>`, 'note');
+        }
+        if (fb.evidence_feedback) {
+          appendNoteBubble('⚠️', fb.evidence_feedback, 'note note-hint');
+          toast('⚠️ Evidência', fb.evidence_feedback, 'ooc', 4000);
+        }
+        if (fb.guidance) {
+          appendNoteBubble('💡', fb.guidance, 'note note-hint');
+        }
+      }
+
+      // 2. Inline notes for breakthroughs
       if (hasSecret) {
         result.revealed_secrets.forEach(s => {
           appendNoteBubble('🔑', `<em>${s.content}</em>`, 'note');
@@ -779,25 +802,25 @@
         });
       }
 
-      if (hasLie) {
-        result.newly_broken_lies.forEach(l => {
-          appendNoteBubble('💥', `Mentira quebrada: <em>"${l.statement}"</em>`, 'note note-lie');
-          toast('💥 Mentira Quebrada', `"${l.statement}"`, 'lie', 7000);
+      if (hasClaim) {
+        result.newly_broken_claims.forEach(c => {
+          const statement = c.statement || c.text || `Contradição #${c.claim_id}`;
+          appendNoteBubble('💥', `Contradição quebrada: <em>"${statement}"</em>`, 'note note-lie');
+          toast('💥 Contradição Quebrada', `"${statement}"`, 'lie', 7000);
         });
       }
 
-      if (result.evidence_effect === 'out_of_context') {
+      if (result.evidence_effect === 'reaction_only') {
+        appendNoteBubble('🧐', 'O suspeito parece reagir a essa evidência, mas não cedeu.', 'note note-hint');
+      }
+      
+      if (result.evidence_effect === 'out_of_context' && !fb?.evidence_feedback) {
         appendNoteBubble('⚠️', 'Essa evidência não parece relevante neste momento.', 'note note-hint');
         toast('⚠️ Evidência', 'Fora de contexto. Tente com outro suspeito ou tópico.', 'ooc', 4000);
       }
 
-      const guidance = result.narrative_feedback?.guidance;
-      if (guidance) {
-        appendNoteBubble('💡', guidance, 'note note-hint');
-      }
-
-      // B5: mark evidence chip as effective
-      if (evId && (hasSecret || hasLie || result.evidence_effect === 'revealed_secret')) {
+      // 3. Mark evidence chip as effective
+      if (evId && (hasSecret || hasClaim || result.evidence_effect === 'revealed_secret')) {
         state.effectiveEvidenceIds.add(evId);
         const chip = document.getElementById(`ev-chip-${evId}`);
         if (chip) chip.classList.add('effective');
@@ -827,7 +850,7 @@
       }
 
       content.innerHTML = caseFile.suspects.map(s => {
-        const hasData = s.revealed_secrets.length || s.broken_lies.length
+        const hasData = s.revealed_secrets.length || s.broken_claims.length
           || s.discovered_knowledge.length || s.effective_evidences.length;
 
         const bodyHtml = hasData ? `
@@ -838,18 +861,18 @@
                 <div class="ds-item secret ${r.is_core ? 'core-badge' : ''}">${r.content}</div>
               `).join('')}
             </div>` : ''}
-          ${s.broken_lies.length ? `
+          ${s.broken_claims.length ? `
             <div class="ds-category">
-              <h4>💥 Mentiras Quebradas</h4>
-              ${s.broken_lies.map(l => `
-                <div class="ds-item lie">"${l.statement}"</div>
+              <h4>💥 Contradições Quebradas</h4>
+              ${s.broken_claims.map(c => `
+                <div class="ds-item lie">"${c.statement || c.text}"</div>
               `).join('')}
             </div>` : ''}
           ${s.discovered_knowledge.length ? `
             <div class="ds-category">
               <h4>📘 Conhecimentos Descobertos</h4>
               ${s.discovered_knowledge.map(k => `
-                <div class="ds-item knowledge">${k.revealed_text}</div>
+                <div class="ds-item knowledge">${k.revealed_text || k}</div>
               `).join('')}
             </div>` : ''}
           ${s.effective_evidences.length ? `

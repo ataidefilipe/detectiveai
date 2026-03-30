@@ -86,16 +86,18 @@ def validate_scenario(path: str) -> List[str]:
             )
 
     for s in config.suspects:
-        if s.lies:
-            for lie in s.lies:
-                if lie.topic_id not in valid_topic_ids:
+        if s.claims:
+            for claim in s.claims:
+                if claim.topic_id not in valid_topic_ids:
                     errors.append(
-                        f"[Reference] Suspect '{s.id}', Lie '{lie.id}': topic_id '{lie.topic_id}' not found in topics"
+                        f"[Reference] Suspect '{s.id}', Claim '{claim.claim_id}': topic_id '{claim.topic_id}' not found in topics"
                     )
-                if lie.broken_by_evidence not in valid_evidence_ids:
-                    errors.append(
-                        f"[Reference] Suspect '{s.id}', Lie '{lie.id}': broken_by_evidence '{lie.broken_by_evidence}' not found in evidences"
-                    )
+                for ev in claim.breakable_by_evidence_ids:
+                    if ev not in valid_evidence_ids:
+                        errors.append(
+                            f"[Reference] Suspect '{s.id}', Claim '{claim.claim_id}': breakable_by_evidence '{ev}' not found in evidences"
+                        )
+                # We could add check for breakable_by_claim_ids here too if we want
         if s.knowledge:
             for k in s.knowledge:
                 if k.topic_id not in valid_topic_ids:
@@ -113,18 +115,18 @@ def validate_scenario(path: str) -> List[str]:
     if config.culprit not in set(suspect_ids):
         errors.append(f"[Culprit] culprit '{config.culprit}' not found in suspects list")
 
-    # 7. required_broken_lie_ids (VERD-002)
-    if config.required_broken_lie_ids:
-        all_lie_ids = {
-            lie.id
+    # 7. required_broken_claim_ids (VERD-002)
+    if config.required_broken_claim_ids:
+        all_claim_ids = {
+            claim.claim_id
             for s in config.suspects
-            if s.lies
-            for lie in s.lies
+            if s.claims
+            for claim in s.claims
         }
-        for lie_id in config.required_broken_lie_ids:
-            if lie_id not in all_lie_ids:
+        for claim_id in config.required_broken_claim_ids:
+            if claim_id not in all_claim_ids:
                 errors.append(
-                    f"[Reference] required_broken_lie_ids: lie '{lie_id}' not found in any suspect's lies"
+                    f"[Reference] required_broken_claim_ids: claim '{claim_id}' not found in any suspect's claims"
                 )
 
     return errors

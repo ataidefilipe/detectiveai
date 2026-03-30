@@ -70,7 +70,7 @@ def test_build_render_context_pressured_with_knowledge(base_analysis):
         analysis=base_analysis,
         allowed_knowledge=["Fact 1"]
     )
-    assert ctx.response_mode == ResponseMode.partial_admission
+    assert ctx.response_mode == ResponseMode.guarded
 
 def test_build_render_context_pressured_no_knowledge(base_analysis):
     transition = StateTransitionResult(
@@ -84,7 +84,7 @@ def test_build_render_context_pressured_no_knowledge(base_analysis):
         analysis=base_analysis,
         allowed_knowledge=[]
     )
-    assert ctx.response_mode == ResponseMode.evasive
+    assert ctx.response_mode == ResponseMode.guarded
 
 def test_build_render_context_defensive(base_analysis):
     transition = StateTransitionResult(

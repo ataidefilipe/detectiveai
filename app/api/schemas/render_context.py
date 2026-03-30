@@ -8,6 +8,9 @@ class ResponseMode(str, Enum):
     clarify = "clarify"
     partial_admission = "partial_admission"
     deny = "deny"
+    guarded = "guarded"
+    pressured_deflection = "pressured_deflection"
+    contradiction_repair = "contradiction_repair"
     final_phrase = "final_phrase"
 
 class NpcResponseRenderContext(BaseModel):
@@ -33,3 +36,5 @@ class NpcResponseRenderContext(BaseModel):
     must_not_reveal: List[str] = Field(default_factory=list)
     tone_hint: Optional[str] = None
     player_intent: str = "unknown"
+    claim_pressure_summary: List[str] = Field(default_factory=list)
+    active_topic_id: Optional[str] = None
