@@ -1,5 +1,5 @@
 from app.api.schemas.chat import StateTransitionResult, NpcShift, MessageAnalysisResult
-from app.api.schemas.render_context import NpcResponseRenderContext, ResponseMode
+from app.api.schemas.render_context import NpcResponseRenderContext, ResponseMode, NarrativeMemoryView
 from typing import Optional, List
 from app.infra.db_models import SuspectModel
 
@@ -11,7 +11,9 @@ def build_render_context(
     new_knowledge_this_turn: Optional[List[str]] = None,
     suspect: Optional[SuspectModel] = None,
     evidence_effect: str = "none",
-    newly_broken_claims: Optional[List[dict]] = None
+    newly_broken_claims: Optional[List[dict]] = None,
+    current_stance: Optional[str] = None,
+    narrative_memory: Optional[NarrativeMemoryView] = None
 ) -> NpcResponseRenderContext:
     """
     Constrói o NpcResponseRenderContext, decidindo a diretriz de atuação da LLM
@@ -38,8 +40,26 @@ def build_render_context(
         evidence_effect=evidence_effect
     )
     
-    npc_stance = transition.npc_shift.value
+    npc_stance = current_stance or (transition.npc_shift.value if transition.npc_shift != NpcShift.none else "neutral")
     
+    # ── Sprint 3 T5.1: Categorizar conteúdo ──────────────────────────────────
+    must_say = []
+    may_say = []
+    
+    # Segredo recém-revelado → must_say
+    if allowed_facts:
+        must_say.extend(allowed_facts)
+
+    # Conhecimento novo neste turno → must_say
+    if new_knowledge_this_turn:
+        must_say.extend(new_knowledge_this_turn)
+
+    # Conhecimento antigo → may_say
+    if allowed_knowledge:
+        may_say.extend([k for k in allowed_knowledge if k not in must_say])
+
+    must_not_say = ["alibi_contradiction"] if transition.npc_shift == NpcShift.more_defensive else []
+
     # Map claim_id to statement if available
     pressure_texts = []
     if newly_broken_claims and suspect and suspect.claims:
@@ -54,7 +74,11 @@ def build_render_context(
         new_knowledge_this_turn=new_knowledge_this_turn or [],
         player_intent=analysis.intent.value,
         tone_hint=None, # Definido para testes no MVP
-        forbidden_topics=["alibi_contradiction"] if transition.npc_shift == NpcShift.more_defensive else [],
+        forbidden_topics=must_not_say,
         active_topic_id=analysis.primary_topic_id,
-        claim_pressure_summary=pressure_texts
+        claim_pressure_summary=pressure_texts,
+        must_say=must_say,
+        may_say=may_say,
+        must_not_say=must_not_say,
+        narrative_memory=narrative_memory or NarrativeMemoryView()
     )

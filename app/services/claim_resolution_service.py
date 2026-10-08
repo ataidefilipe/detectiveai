@@ -48,28 +48,41 @@ def resolve_broken_claims(
         broken_cl_id = None
         
         # 1. Quebra por evidência objetiva
-        if evidence_id and claim_config.get("breakable_by_evidence_ids"):
+        breakable_codes = claim_config.get("breakable_by_evidence_codes", 
+                                            claim_config.get("breakable_by_evidence_ids", []))
+        if evidence_id and breakable_codes:
             evidence = db.query(EvidenceModel).filter(EvidenceModel.id == evidence_id).first()
-            if evidence and evidence.name in claim_config["breakable_by_evidence_ids"]:
-                # Require context match for evidence breaks
-                topic_id = claim_config.get("topic_id")
+            if evidence:
+                matched = evidence.evidence_code in breakable_codes
+                # Warning para match por nome (legado)
+                if not matched and evidence.name in breakable_codes:
+                    import logging
+                    logging.getLogger(__name__).warning(
+                        f"[claim] Claim {state.claim_id} matched by evidence name '{evidence.name}' "
+                        f"instead of code. Please update scenario to use evidence_code."
+                    )
+                    matched = True
                 
-                is_context_match = True
-                if topic_id:
-                    active_topics = []
-                    last_topic_id = None
-                    if analysis:
-                        active_topics = analysis.detected_topic_ids
-                    if conversation_memory:
-                        last_topic_id = conversation_memory.active_topic_id
-                        if not last_topic_id:
-                            last_topic_id = conversation_memory.last_topic_id
-                            
-                    is_context_match = (topic_id in active_topics) or (topic_id == last_topic_id)
-                
-                if is_context_match:
-                    broken = True
-                    broken_ev_id = evidence_id
+                if matched:
+                    # Require context match for evidence breaks
+                    topic_id = claim_config.get("topic_id")
+                    
+                    is_context_match = True
+                    if topic_id:
+                        active_topics = []
+                        last_topic_id = None
+                        if analysis:
+                            active_topics = analysis.detected_topic_ids
+                        if conversation_memory:
+                            last_topic_id = conversation_memory.active_topic_id
+                            if not last_topic_id:
+                                last_topic_id = conversation_memory.last_topic_id
+                                
+                        is_context_match = (topic_id in active_topics) or (topic_id == last_topic_id)
+                    
+                    if is_context_match:
+                        broken = True
+                        broken_ev_id = evidence_id
 
         # 2. Quebra conversacional (claim contradiction)
         if not broken and analysis and analysis.inferred_claim_targets:

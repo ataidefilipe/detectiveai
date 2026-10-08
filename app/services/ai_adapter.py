@@ -58,7 +58,8 @@ class NpcAIAdapter:
         player_message: Dict[str, Any],
         render_context: NpcResponseRenderContext,
         npc_context: Dict[str, Any] | None = None,
-        revealed_now: Optional[List[Dict[str, Any]]] = None
+        revealed_now: Optional[List[Dict[str, Any]]] = None,
+        effective_message_ids: Optional[List[int]] = None
     ) -> str:
         """
         npc_context:

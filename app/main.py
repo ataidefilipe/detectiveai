@@ -28,6 +28,10 @@ register_exception_handlers(app)
 def startup_event():
     bootstrap_game()
 
+import os
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+
 # Register routes
 app.include_router(sessions_router)
 app.include_router(scenarios_router)
@@ -35,3 +39,14 @@ app.include_router(scenarios_router)
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+frontend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend"))
+if os.path.exists(frontend_dir):
+    app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
+
+    @app.get("/")
+    async def serve_index():
+        index_file = os.path.join(frontend_dir, "index.html")
+        if os.path.exists(index_file):
+            return FileResponse(index_file)
+        return {"status": "ok", "message": "Detective AI backend running"}

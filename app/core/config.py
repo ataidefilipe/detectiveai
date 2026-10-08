@@ -43,4 +43,16 @@ class Settings(BaseSettings):
     OUT_OF_CONTEXT_PENALTY_DEFAULT: float = -10.0
     OUT_OF_CONTEXT_PENALTY_SENSITIVE: float = -5.0
 
+    # --- Message Classifier (T1.2) ---
+    MESSAGE_CLASSIFIER_PROVIDER: str = "heuristic"  # "heuristic" | "openai"
+
+    # --- OpenAI Classifier (T6.1) ---
+    OPENAI_CLASSIFIER_MODEL: str = "gpt-5-mini"
+    OPENAI_CLASSIFIER_TIMEOUT_SECONDS: int = 4
+    OPENAI_CLASSIFIER_MAX_RETRIES: int = 1
+    OPENAI_CLASSIFIER_CONFIDENCE_THRESHOLD: float = 0.45
+
+    # --- Verdict Rules (T6.2) ---
+    REQUIRE_DISCOVERED_MOTIVE: bool = True
+
 settings = Settings()

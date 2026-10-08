@@ -101,7 +101,7 @@ def test_integration_vague_question_weak_signal(db_session):
     res = run_interrogation_turn(session_id=1, suspect_id=1, text="Hmm, qual é mesmo a sua cor favorita?", evidence_id=None, db=db_session)
     
     assert res["narrative_feedback"]["topic_read"] == "fraco"
-    assert res["narrative_feedback"]["guidance"] == "A pergunta foi muito aberta e não obteve um foco claro."
+    assert res["narrative_feedback"]["guidance"] == "A pergunta foi muito aberta. Tente especificar um horário, pessoa, lugar ou evidência."
     assert res["evidence_effect"] == "none"
 
 def test_integration_sensitive_topic_touch(db_session):

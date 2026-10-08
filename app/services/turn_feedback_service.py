@@ -101,9 +101,9 @@ def build_narrative_feedback(
     elif evidence_effect == "reaction_only":
         guidance = "O suspeito sentiu o golpe, mas a evidência não provou nada por si só."
     elif "pergunta muito vaga" in hints:
-        guidance = "A pergunta foi muito aberta e não obteve um foco claro."
+        guidance = "A pergunta foi muito aberta. Tente especificar um horário, pessoa, lugar ou evidência."
     elif "tópico já explorado" in hints:
-        guidance = "Parece que vocês estão andando em círculos sobre esse assunto."
+        guidance = "O assunto parece esgotado. O suspeito está ficando irritado com a repetição."
         
     if guidance is None and topic_signal == TopicSignal.none:
         guidance = "O suspeito não reagiu a nada de específico nessa troca."

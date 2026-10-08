@@ -22,6 +22,14 @@ from app.core.exceptions import NotFoundError, RuleViolationError
 from app.services.ai_adapter_factory import get_npc_ai_adapter
 from app.services.npc_context_builder import build_npc_context
 from app.services.npc_response_render_context_builder import build_render_context
+from app.services.session_narrative_memory_service import (
+    load_narrative_memory,
+    save_narrative_memory,
+    derive_relational_event_from_analysis,
+    record_relational_event,
+    resolve_dynamic_flavor_slots,
+    build_narrative_memory_view,
+)
 from app.api.schemas.chat import MessageAnalysisResult, StateTransitionResult
 
 ai = get_npc_ai_adapter()
@@ -217,7 +225,9 @@ def _build_suspect_state_for_ai(
         claim_dict_map = {claim["claim_id"]: claim for claim in suspect.claims}
         for cs in broken_claim_states:
             if cs.claim_id in claim_dict_map:
-                broken_claims.append(claim_dict_map[cs.claim_id].get("statement", "Uma de minhas afirmações"))
+                claim_item = claim_dict_map[cs.claim_id]
+                claim_text = claim_item.get("text") or claim_item.get("statement") or "Uma de minhas afirmações"
+                broken_claims.append(claim_text)
 
     suspect_state = {
         "suspect_id": suspect_id,
@@ -333,6 +343,32 @@ def add_npc_reply(
             pressure_points=pressure_points,
         )
 
+        # Memória Narrativa da Sessão (Relacional e Flavor)
+        narrative_mem = load_narrative_memory(state)
+        if msg_analysis:
+            rel_event = derive_relational_event_from_analysis(
+                analysis=msg_analysis,
+                player_text=player_message_dict.get("text"),
+                source_message_id=player_message_id
+            )
+            if rel_event:
+                record_relational_event(narrative_mem, rel_event)
+
+        suspect_flavor_slots = getattr(suspect, "flavor_slots", None) or []
+        resolve_dynamic_flavor_slots(
+            player_text=player_message_dict.get("text", "") if player_message_dict else "",
+            suspect_flavor_slots=suspect_flavor_slots,
+            memory=narrative_mem,
+            session_id=session_id,
+            suspect_id=suspect_id,
+            message_id=player_message_id
+        )
+
+        narrative_view = build_narrative_memory_view(
+            memory=narrative_mem,
+            suspect_flavor_slots=suspect_flavor_slots
+        )
+
         # Prepare Context for LLM Prompts
         render_context = build_render_context(
             transition=state_transition,
@@ -342,7 +378,9 @@ def add_npc_reply(
             new_knowledge_this_turn=new_knowledge_this_turn,
             suspect=suspect,
             evidence_effect=evidence_effect,
-            newly_broken_claims=newly_broken_claims
+            newly_broken_claims=newly_broken_claims,
+            current_stance=state.stance,
+            narrative_memory=narrative_view
         )
 
         reply_text = _generate_npc_text_with_fallback(
@@ -356,7 +394,23 @@ def add_npc_reply(
             effective_message_ids
         )
 
-        # Save NPC message
+        # ── Sprint 3 T5.3: Guard pós-resposta ───────────────────────────────
+        motive_text = None
+        if scenario.true_motive_key and scenario.motive_options:
+            for m in scenario.motive_options:
+                if m.get("key") == scenario.true_motive_key:
+                    motive_text = m.get("label")
+                    break
+
+        from app.services.npc_response_guard import guard_npc_response
+        reply_text, was_blocked = guard_npc_response(
+            response_text=reply_text,
+            hidden_secrets=[s["content"] for s in suspect_state.get("hidden_secrets", [])],
+            true_motive=motive_text,
+        )
+        # ───────────────────────────────────────────────────────────────────
+
+        # Save NPC message and narrative memory
         npc_msg = NpcChatMessageModel(
             session_id=session_id,
             suspect_id=suspect_id,
@@ -365,6 +419,7 @@ def add_npc_reply(
         )
 
         db.add(npc_msg)
+        save_narrative_memory(state, narrative_mem)
         db.flush()
         db.refresh(npc_msg)
 

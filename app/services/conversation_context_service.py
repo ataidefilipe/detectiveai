@@ -15,6 +15,8 @@ from app.infra.db_models import (
     NpcChatMessageModel,
     SessionSuspectStateModel,
     SessionSuspectTopicStateModel,
+    SessionClaimStateModel,   # NOVO
+    SuspectModel,             # NOVO
 )
 from app.core.config import settings
 
@@ -112,12 +114,39 @@ def build_conversation_context(
     active_topic_id = persisted_last_topic_id
     context_inherited = active_topic_id is not None
 
+    # ── 6. Carregar claims recentes (Sprint 2 T3.1) ─────────────────────────
+    recent_claim_ids: list[str] = []
+
+    claim_states = db.query(SessionClaimStateModel).filter(
+        SessionClaimStateModel.session_id == session_id,
+        SessionClaimStateModel.suspect_id == suspect_id,
+    ).all()
+
+    for cs in claim_states:
+        # Claims quebradas recentemente
+        if cs.status == "broken" and cs.claim_id not in recent_claim_ids:
+            recent_claim_ids.append(cs.claim_id)
+
+        # Claims reveladas (ativas e conhecidas pelo jogador)
+        if cs.is_revealed and cs.status == "active" and cs.claim_id not in recent_claim_ids:
+            recent_claim_ids.append(cs.claim_id)
+
+    # Cruzar claims com tópico ativo
+    if persisted_last_topic_id:
+        suspect = db.query(SuspectModel).filter(SuspectModel.id == suspect_id).first()
+        if suspect and suspect.claims:
+            for c in suspect.claims:
+                if c.get("topic_id") == persisted_last_topic_id:
+                    cid = c.get("claim_id")
+                    if cid not in recent_claim_ids:
+                        recent_claim_ids.append(cid)
+
     return ConversationMemory(
         active_topic_id=active_topic_id,
         last_topic_id=persisted_last_topic_id,
         recent_topic_ids=recent_topic_ids,
         recent_intents=[],  # Preenchido por turns futuros quando armazenarmos intent por msg
         recent_evidence_ids=recent_evidence_ids,
-        recent_claim_ids=[],  # Preenchido pelo Sprint 2 (claims)
+        recent_claim_ids=recent_claim_ids,  # ← agora preenchido
         context_inherited=context_inherited,
     )

@@ -19,6 +19,8 @@ def apply_evidence_to_suspect(
     evidence_id: int,
     conversation_memory: ConversationMemory,
     detected_topics: Optional[List[str]] = None,
+    referenced_evidence_ids: Optional[List[int]] = None,  # NOVO
+    target_claim_ids: Optional[List[str]] = None,          # NOVO
     db: Optional[Session] = None
 ) -> Tuple[List[Dict[str, Any]], str]:
     """
@@ -54,6 +56,8 @@ def apply_evidence_to_suspect(
             evidence_id=evidence_id,
             conversation_memory=conversation_memory,
             detected_topics=detected_topics,
+            referenced_evidence_ids=referenced_evidence_ids,  # NOVO
+            target_claim_ids=target_claim_ids,                # NOVO
             db=db
         )
 

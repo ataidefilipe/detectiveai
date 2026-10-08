@@ -14,7 +14,7 @@ from app.services.case_file_service import get_session_case_file
 from app.api.schemas.case_file import CaseFileResponse
 
 from app.infra.db import SessionLocal
-from app.infra.db_models import NpcChatMessageModel, SessionModel, SessionSuspectStateModel, SuspectModel, ScenarioModel, EvidenceModel
+from app.infra.db_models import NpcChatMessageModel, SessionModel, SessionSuspectStateModel, SessionSuspectTopicStateModel, SessionClaimStateModel, SuspectModel, ScenarioModel, EvidenceModel
 
 
 router = APIRouter()
@@ -214,7 +214,13 @@ def get_suspect_status(session_id: int, suspect_id: int):
             "pressure": state.pressure,
             "rapport": state.rapport,
             "last_topic_id": state.last_topic_id,
-            "broken_lie_ids": state.broken_lie_ids,
+            "broken_claim_ids": [
+                c.claim_id for c in db.query(SessionClaimStateModel).filter(
+                    SessionClaimStateModel.session_id == session_id,
+                    SessionClaimStateModel.suspect_id == suspect_id,
+                    SessionClaimStateModel.status == "broken"
+                ).all()
+            ],
             "revealed_secret_ids": state.revealed_secret_ids,
             "topic_states": [
                 {

@@ -172,7 +172,7 @@ def test_build_narrative_feedback_vague_question():
     )
     assert narrative_fb.suspect_reaction == SuspectReaction.neutro
     assert narrative_fb.topic_read == TopicRead.fraco
-    assert narrative_fb.guidance == "A pergunta foi muito aberta e não obteve um foco claro."
+    assert narrative_fb.guidance == "A pergunta foi muito aberta. Tente especificar um horário, pessoa, lugar ou evidência."
 
 def test_build_narrative_feedback_generic_guidance():
     narrative_fb = build_narrative_feedback(

@@ -17,7 +17,7 @@ def test_build_npc_prompt_injects_new_context():
             "id": 1,
             "name": "John Doe",
             "personality": "Arrogant and defensive.",
-            "backstory": "Grew up in the slums, hates the police.",
+            "public_bio": "Grew up in the slums.",
             "initial_statement": "I was at home watching TV.",
             "final_phrase": "You will never prove anything!",
             "is_closed": False,
@@ -32,12 +32,8 @@ def test_build_npc_prompt_injects_new_context():
 
     render_context = NpcResponseRenderContext(
         npc_stance="hostile",
-        response_mode=ResponseMode.final_phrase,
-        new_secrets_this_turn=[],
-        new_knowledge_this_turn=[],
-        broken_lies_this_turn=[],
-        effectiveness=1.0,
-        motive_score=0.0
+        response_mode=ResponseMode.neutral_answer,
+        new_knowledge_this_turn=[]
     )
 
     chat_history = [
@@ -52,10 +48,9 @@ def test_build_npc_prompt_injects_new_context():
     sys_prompt = messages[0]["content"]
 
     # Check injections
-    assert "História Pessoal / Backstory: Grew up in the slums, hates the police." in sys_prompt
-    assert "Sua Declaração Inicial: I was at home watching TV." in sys_prompt
-    assert "Responda APENAS E EXATAMENTE a sua Frase Final: 'You will never prove anything!'" in sys_prompt
-    assert "Nome: John Doe" in sys_prompt
+    assert "Contexto pessoal: Grew up in the slums." in sys_prompt
+    assert '"I was at home watching TV."' in sys_prompt
+    assert "Voce e John Doe" in sys_prompt
     
     # Check default fallbacks if missing
     npc_context_missing = {
@@ -66,8 +61,8 @@ def test_build_npc_prompt_injects_new_context():
     
     msgs2 = build_npc_prompt(npc_context_missing, [], render_context)
     sys2 = msgs2[0]["content"]
-    assert "História Pessoal / Backstory: Desconhecido." in sys2
-    assert "Sua Declaração Inicial: Nada declarado." in sys2
+    assert "Contexto pessoal: " in sys2
+    assert '""' in sys2
     
 def test_build_npc_prompt_injects_claim_pressure():
     npc_context = {
@@ -82,6 +77,6 @@ def test_build_npc_prompt_injects_claim_pressure():
     messages = build_npc_prompt(npc_context, [], render_context)
     sys_prompt = messages[0]["content"]
     
-    assert "=== PRESSÃO ATUAL ===" in sys_prompt
+    assert "O detetive esta confrontando diretamente estas afirmacoes suas:" in sys_prompt
     assert "Eu não vi ninguém" in sys_prompt
     assert "Eu estava no trabalho" in sys_prompt

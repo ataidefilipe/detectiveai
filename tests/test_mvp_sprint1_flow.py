@@ -43,7 +43,7 @@ def test_mvp_sprint1_flow_end_to_end():
         ).first()
 
         evidence_testemunho = db.query(EvidenceModel).filter(
-            EvidenceModel.name == "Testemunho da Estagiária"
+            EvidenceModel.name == "Testemunho de Clara Martins"
         ).first()
 
         evidence_cartao.related_topic_id = "presenca_local"
@@ -94,7 +94,7 @@ def test_mvp_sprint1_flow_end_to_end():
         assert turn1_resp.status_code == 200
         turn1_data = turn1_resp.json()
         
-        assert turn1_data["narrative_feedback"]["guidance"] == "A pergunta foi muito aberta e não obteve um foco claro."
+        assert turn1_data["narrative_feedback"]["guidance"] == "A pergunta foi muito aberta. Tente especificar um horário, pessoa, lugar ou evidência."
 
     # -------------------------
     # 4. Turno 2 - Contexto Promissor (MVP-004)

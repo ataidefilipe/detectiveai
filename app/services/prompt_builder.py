@@ -1,130 +1,236 @@
+"""
+prompt_builder.py
+
+Contrato com a LLM:
+  1. O NPC responde à pergunta do jogador.
+  2. O backend controla o que ele pode revelar — não o script de atuação.
+  3. initial_statement foi dito uma vez. Não se repete.
+  4. O NPC não pede ao jogador para explicar evidências.
+  5. O NPC não verbaliza o que não foi desbloqueado mecanicamente.
+"""
+
 from typing import Optional, List
-from app.api.schemas.render_context import NpcResponseRenderContext
+from app.api.schemas.render_context import NpcResponseRenderContext, ResponseMode
+
+
+_TONE_MAP = {
+    ResponseMode.evasive:               "Você responde, mas desvia de detalhes específicos. Vago, não mudo.",
+    ResponseMode.neutral_answer:        "Você responde de forma direta e controlada, sem revelar mais do que o necessário.",
+    ResponseMode.clarify:               "Você está um pouco mais aberto, esclarece sem ser expansivo.",
+    ResponseMode.partial_admission:     "Você cede com relutância — admite só o que foi confrontado diretamente, nada além.",
+    ResponseMode.deny:                  "Você nega a premissa ou acusação, mas ainda responde ao que foi perguntado.",
+    ResponseMode.guarded:               "Você está na defensiva. Pesa cada palavra. Não se abre além do mínimo.",
+    ResponseMode.pressured_deflection:  "Você está claramente desconfortável. Tenta desviar sem parecer óbvio.",
+    ResponseMode.contradiction_repair:  "Você foi pego em contradição. Tenta consertar a história sem se incriminar mais.",
+    ResponseMode.context_request:       "Você não entendeu a pergunta ou o assunto. Pede para o detetive ser mais específico.",
+    ResponseMode.irritated_repeat:      "Você está irritado porque já respondeu isso. Responda de forma mais curta e ríspida.",
+    ResponseMode.final_phrase:          "ENCERRADO.",
+    # Sprint 3 T5.2
+    ResponseMode.claim_reaction:        "Uma afirmação sua foi confrontada. Reaja com surpresa, reparo ou admissão parcial.",
+    ResponseMode.evidence_reaction:     "A evidência apresentada é forte. Reaja reconhecendo o impacto sem entregar tudo.",
+    ResponseMode.guarded_answer:        "Você responde, mas pesa cada palavra. Mínimo necessário.",
+    ResponseMode.soft_cooperation:      "Você está mais aberto. Colabora sem ser expansivo demais.",
+}
 
 
 def _select_history(
     chat_history: list,
     effective_message_ids: Optional[List[int]],
-    limit: int = 10
+    limit: int = 10,
 ) -> list:
-    """
-    AI-002: Selects the chat history to send to the AI.
-    Always includes turns where an effective evidence was presented,
-    then fills up with the most recent messages up to `limit`.
-    Deduplication preserves chronological order.
-    """
+    if not chat_history:
+        return []
     if not effective_message_ids:
         return chat_history[-limit:]
 
+    # Always ensure the last message (current turn's player message) is included
+    latest_msg = chat_history[-1]
     effective_set = set(effective_message_ids)
 
-    # Pinned: messages whose id is in effective_message_ids
-    pinned = [m for m in chat_history if m.get("id") in effective_set]
-
-    # Recents: the last N messages that are NOT already pinned
+    pinned = [m for m in chat_history[:-1] if m.get("id") in effective_set]
     pinned_ids = {m.get("id") for m in pinned}
-    recent = [m for m in chat_history if m.get("id") not in pinned_ids]
-    recent = recent[-(limit - len(pinned)):] if len(pinned) < limit else []
 
-    # Merge in chronological order, deduplicated
+    available_recent_slots = max(0, limit - 1 - len(pinned))
+    recent = [m for m in chat_history[:-1] if m.get("id") not in pinned_ids]
+    recent = recent[-available_recent_slots:] if available_recent_slots > 0 else []
+
     selected_ids = {m.get("id") for m in pinned + recent}
+    selected_ids.add(latest_msg.get("id"))
+
     result = [m for m in chat_history if m.get("id") in selected_ids]
-    return result[-limit:]  # safety clamp
+    return result[-limit:]
+
 
 def build_npc_prompt(
-    npc_context,
-    chat_history,
+    npc_context: dict,
+    chat_history: list,
     render_context: NpcResponseRenderContext,
-    effective_message_ids: Optional[List[int]] = None
-):
-    
-    # 1. Format Allowed Facts and Knowledge
-    all_secrets = npc_context.get("revealed_secrets", [])
-    allowed_facts_str = "\n".join(f"- {s['content']}" for s in all_secrets) \
-        if all_secrets else "Nenhum segredo revelado até agora."
-        
+    effective_message_ids: Optional[List[int]] = None,
+) -> list:
+    suspect = npc_context["suspect"]
+    name = suspect["name"]
+
+    # -- Caso especial: frase final -------------------------------------------
+    if render_context.response_mode == ResponseMode.final_phrase:
+        final_phrase = suspect.get("final_phrase", "Nao tenho mais nada a dizer.")
+        system_prompt = (
+            f"Voce e {name}. O interrogatorio acabou para voce.\n"
+            f"Responda APENAS com exatamente esta frase, sem nenhuma adicao:\n"
+            f"{final_phrase}"
+        )
+        selected = _select_history(chat_history, effective_message_ids)
+        messages = [{"role": "system", "content": system_prompt}]
+        for msg in selected:
+            role = "assistant" if msg["sender"] == "npc" else "user"
+            messages.append({"role": role, "content": msg["text"]})
+        return messages
+
+    # -- Identidade publica ---------------------------------------------------
+    personality  = suspect.get("personality", "neutro")
+    public_bio   = suspect.get("public_bio", "")
+    initial_stmt = suspect.get("initial_statement", "")
+
+    # -- Conhecimento ja revelado (persistido pelo backend) -------------------
+    all_secrets   = npc_context.get("revealed_secrets", [])
     all_knowledge = npc_context.get("revealed_knowledge", [])
-    # Usa o histórico persistido do banco, não render_context.allowed_knowledge
-    allowed_knowledge_str = "\n".join(f"- {k}" for k in all_knowledge) \
-        if all_knowledge else "Nenhum cenário já discutido."
-        
-    all_broken_claims = npc_context.get("broken_claims", [])
-    broken_claims_str = "\n".join(f"- {c}" for c in all_broken_claims) \
-        if all_broken_claims else "Nenhuma contradição apontada."
+    broken_claims = npc_context.get("broken_claims", [])
 
-    new_knowledge_str = "\n".join(f"- {k}" for k in render_context.new_knowledge_this_turn) \
-        if render_context.new_knowledge_this_turn else ""
+    known_lines = (
+        [f"- {s['content']}" for s in all_secrets] +
+        [f"- {k}" for k in all_knowledge]
+    )
+    known_facts_str = "\n".join(known_lines) if known_lines else "(nenhum fato revelado ainda)"
 
-    mandatory_section = ""
-    if new_knowledge_str:
-        mandatory_section = f"""
-=== INSTRUÇÃO DE CONTEÚDO MANDATÓRIA ===
-ATENÇÃO: Os seguintes fatos novos DEVEM aparecer na sua resposta, integrados à sua fala:
-{new_knowledge_str}
-========================================
+    broken_str = (
+        "\n".join(f"- {c}" for c in broken_claims)
+        if broken_claims else None
+    )
+
+    # -- Conteudo novo obrigatorio neste turno --------------------------------
+    must_say = render_context.must_say
+    mandatory_block = ""
+    if must_say:
+        items = "\n".join(f"- {k}" for k in must_say)
+        mandatory_block = f"""
+=== CONTEUDO OBRIGATORIO NESTE TURNO ===
+Os fatos abaixo DEVEM aparecer na sua resposta integrados naturalmente.
+Nao os liste como topicos — incorpore-os como parte da conversa.
+{items}
+=========================================
 """
 
-    # 2. Map Response Mode to Prompt Instruction
-    final_phrase_content = npc_context["suspect"].get("final_phrase", "Não tenho mais nada a dizer.")
-    
-    mode_instructions = {
-        "evasive": "Aja de forma evasiva. Desvie do assunto e não dê respostas diretas.",
-        "neutral_answer": "Responda de forma neutra e direta apenas o que foi perguntado.",
-        "clarify": "Esclareça a dúvida mencionada, mas mantenha-se em seu personagem.",
-        "partial_admission": "Faça uma admissão relutante e parcial do fato confrontado.",
-        "deny": "Negue veementemente a acusação ou suposição feita pelo detetive.",
-        "guarded": "Seja cauteloso(a). Sinta-se pressionado(a), mas mantenha-se firme.",
-        "pressured_deflection": "Tente defletir a pressão. O detetive está muito perto de uma contradição sua.",
-        "contradiction_repair": "Você foi pego(a) em uma contradição. Tente 'consertar' sua história ou admita o erro se não houver saída.",
-        "final_phrase": f"O interrogatório está ENCERRADO. Responda APENAS E EXATAMENTE a sua Frase Final: '{final_phrase_content}'"
-    }
-    
-    mode_rule = mode_instructions.get(render_context.response_mode.value, mode_instructions["neutral_answer"])
+    # -- Conteudo opcional (pode dizer se quiser) -----------------------------
+    may_say = render_context.may_say
+    optional_block = ""
+    if may_say:
+        items = "\n".join(f"- {k}" for k in may_say)
+        optional_block = f"""
+=== CONTEUDO OPCIONAL (VOCE PODE FALAR SOBRE ESTES) ===
+Se o detetive insistir nesses pontos, voce pode admitir ou confirmar estes fatos:
+{items}
+======================================================
+"""
 
-    system_prompt = f"""
-Você é um personagem em um jogo investigativo sendo interrogado.
+    # -- Topicos proibidos ---------------------------------------------------
+    must_not_say = render_context.must_not_say
+    forbidden_block = ""
+    if must_not_say:
+        items = "\n".join(f"- {k}" for k in must_not_say)
+        forbidden_block = f"""
+=== TOPICOS PROIBIDOS (NAO FALE SOBRE ESTES) ===
+Nao responda nada especifico sobre: {items}. 
+Mude de assunto ou diga que nao quer falar disso se for pressionado.
+================================================
+"""
 
-== SEU PERSONAGEM == 
-Nome: {npc_context["suspect"]["name"]}
-Personalidade: {npc_context["suspect"]["personality"]}
-História Pessoal / Backstory: {npc_context["suspect"].get("backstory", "Desconhecido.")}
+    # -- Tom emocional (dica, nao script) ------------------------------------
+    tone_hint = _TONE_MAP.get(
+        render_context.response_mode,
+        _TONE_MAP[ResponseMode.neutral_answer]
+    )
 
-=== CONTEXTO DO CASO (SUA VISÃO) ===
-Sua Declaração Inicial: {npc_context["suspect"].get("initial_statement", "Nada declarado.")}
-{mandatory_section}
-{f"=== PRESSÃO ATUAL ===\nO detetive está te pressionando especificamente sobre estas suas afirmações:\n" + "\n".join("- " + p for p in render_context.claim_pressure_summary) if render_context.claim_pressure_summary else ""}
-=== POSTURA DRAMÁTICA ===
-Postura Atual com o Detetive: {render_context.npc_stance.upper()}
-Instrução de Tom e Estilo: {mode_rule}
-A Instrução de Tom e Estilo define APENAS COMO você fala (sua atitude). Se houver uma INSTRUÇÃO DE CONTEÚDO MANDATÓRIA acima, você NÃO DEVE omitir os fatos exigidos, devendo revelá-los usando o tom apropriado.
+    # -- Pressao por claims confrontadas -------------------------------------
+    claim_pressure = ""
+    if render_context.claim_pressure_summary:
+        items = "\n".join(f'- "{p}"' for p in render_context.claim_pressure_summary)
+        claim_pressure = f"""
+O detetive esta confrontando diretamente estas afirmacoes suas:
+{items}
+Reaja a isso dentro do seu tom atual — nao ignore o confronto.
+"""
 
-=== MEMÓRIA - O QUE VOCÊ JÁ REVELOU E ESTÁ PERMITIDO FALAR ===
-ATENÇÃO: Você SÓ PODE MENCIONAR os seguintes fatos se perguntarem. Se um fato não estiver aqui E não for mandatório, FINJA QUE NÃO SABE OU SEJA EVASIVO.
+    # -- Contradicoes ja expostas --------------------------------------------
+    broken_memory_note = ""
+    if broken_str:
+        broken_memory_note = f"""
+Contradicoes que o detetive ja provou:
+{broken_str}
+Voce nao pode mais negar essas. Pode tentar explicar, minimizar ou reparar — mas nao reverter.
+"""
 
-Segredos Pessoais que você já revelou:
-{allowed_facts_str}
+    # -- Memória narrativa da sessão (relacional e flavor) --------------------
+    narrative_block = ""
+    flavor_block = ""
+    narrative_mem = getattr(render_context, "narrative_memory", None)
+    if narrative_mem:
+        notes = []
+        if narrative_mem.relational_notes:
+            notes.extend([f"- {n}" for n in narrative_mem.relational_notes])
+        if narrative_mem.active_commitments:
+            notes.extend([f"- {c}" for c in narrative_mem.active_commitments])
+        if notes:
+            items_str = "\n".join(notes)
+            narrative_block = f"""
+== MEMORIA DESTA CONVERSA ==
+{items_str}
+Lembre-se disso ao responder — use como contexto de atitude e continuidade dramatica.
+"""
 
-Conhecimento do Cenário (Já Revelado Anteriormente):
-{allowed_knowledge_str}
+        if narrative_mem.established_details:
+            items_str = "\n".join(f"- {d}" for d in narrative_mem.established_details)
+            flavor_block = f"""
+== DETALHES PESSOAIS JA ESTABELECIDOS ==
+{items_str}
+Estes sao gostos e habitos pessoais confirmados por voce. Mantenha coerencia estrita com eles.
+"""
 
-Contradições/Mentiras suas que o detetive já quebrou com evidências:
-{broken_claims_str}
+    system_prompt = f"""Voce e {name}, sendo interrogado por um detetive sobre um crime.
 
-=== REGRAS ABSOLUTAS ===
-- FALE SEMPRE EM PRIMEIRA PESSOA. Você é o personagem, não um narrador. Nunca escreva "{npc_context['suspect']['name']} [verbo]:" ou qualquer narração em terceira pessoa.
-- Responda diretamente ao detetive como se fosse uma conversa real face a face.
-- NUNCA invente fatos novos.
-- NUNCA revele fatos que não estão listados como mandatórios ou já revelados.
-- Se o detetive perguntar de algo não listado, seja evasivo ou negue.
-- Se a Instrução de Tom exigir a sua Frase Final, retorne apenas ela e encerre.
-""".strip()
+== QUEM VOCE E ==
+Personalidade: {personality}
+Contexto pessoal: {public_bio}
 
-    selected_history = _select_history(chat_history, effective_message_ids)
+IMPORTANTE — seu initial_statement foi dito apenas uma vez, no inicio da conversa:
+"{initial_stmt}"
+NAO repita essa frase nem partes dela nas suas respostas. Ela ja foi dita.
+
+{mandatory_block}{optional_block}{forbidden_block}
+== O QUE VOCE SABE E PODE FALAR ==
+Estes sao os unicos fatos que voce revelou ou admitiu ate agora.
+Voce pode confirmar ou expandir levemente o que esta aqui.
+O que NAO esta aqui: voce nao sabe, nao lembra, ou nao vai comentar.
+
+{known_facts_str}
+{broken_memory_note}{claim_pressure}{narrative_block}{flavor_block}
+== SEU TOM AGORA ==
+{tone_hint}
+Isso define COMO voce fala — nao O QUE voce fala.
+Voce ainda responde a pergunta feita pelo detetive, com esse filtro emocional.
+
+== REGRAS ABSOLUTAS ==
+- Fale SEMPRE em primeira pessoa. Voce e {name}.
+- Responda a pergunta que foi feita. Nao ignore o que o detetive disse.
+- Se o detetive mostrar uma evidencia, reaja a ela — nao peca para ele explicar o que ela diz.
+- NUNCA invente fatos fora da secao O QUE VOCE SABE.
+- Preserve os detalhes pessoais ja estabelecidos nesta conversa e nao os contradiga.
+- Se perguntarem algo que nao esta na secao de fatos: seja vago, diga que nao sabe, ou negue — mas responda.
+- NUNCA repita o initial_statement como prefixo ou abertura de resposta.
+- Tente responder em 1 a 3 frases, mantendo a conversa fluida.""".strip()
+
+    selected = _select_history(chat_history, effective_message_ids)
     messages = [{"role": "system", "content": system_prompt}]
-
-    for msg in selected_history:
+    for msg in selected:
         role = "assistant" if msg["sender"] == "npc" else "user"
         messages.append({"role": role, "content": msg["text"]})
 
     return messages
-

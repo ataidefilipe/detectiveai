@@ -59,6 +59,12 @@ class MessageAnalysisResult(BaseModel):
     is_reframe: bool = False           # Jogador reformulou a pergunta (não é repetição)
     is_meta_behavior_read: bool = False # Jogador leu o comportamento do NPC ("você hesitou")
     inferred_claim_targets: List[str] = Field(default_factory=list)  # Claims inferidos como alvo
+    # Campos semânticos (backlog14 T1.1)
+    move_type: Optional[str] = None                          # SemanticMoveType value, None para heurístico
+    target_claim_ids: list[str] = Field(default_factory=list) # Claims que o jogador parece mirar
+    referenced_evidence_ids: list[int] = Field(default_factory=list) # Evidências mencionadas indiretamente
+    analysis_provider: str = "heuristic"                      # "heuristic" | "openai"
+    fallback_reason: Optional[str] = None                     # "timeout" | "low_confidence" | "error"
 
 class ConversationEffect(str, Enum):
     none = "none"
@@ -159,6 +165,10 @@ class PlayerTurnResponse(BaseModel):
     suspect_state: dict
     message_analysis: Optional[MessageAnalysisResult] = None
     state_transition: Optional[StateTransitionResult] = None
+    move_type: Optional[str] = None  # T0.1: Expose computed MoveType to frontend
+    # Sprint 3 T2.3
+    mechanical_effect: Optional[str] = None   # "none"|"revealed_secret"|"broke_claim"|"out_of_context"
+    narrative_effect: Optional[str] = None    # "suspect_reacted_defensively"|"no_reaction"|etc
 
     # Systemic Discrete Feedback removed for MVP-011 (T1)
 

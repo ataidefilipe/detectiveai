@@ -103,9 +103,25 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
                 for c in s.claims:
                     if c.topic_id not in valid_topic_ids:
                         raise DomainError(f"Claim '{c.claim_id}' for '{s.id}' references unknown topic_id '{c.topic_id}'")
-                    for evid in c.breakable_by_evidence_ids:
-                        if evid not in valid_evidence_ids:
-                            raise DomainError(f"Claim '{c.claim_id}' references unknown breakable_by_evidence_ids '{evid}'")
+                    breakable_codes = getattr(c, 'breakable_by_evidence_codes', None) or []
+                    for code in breakable_codes:
+                        if code not in valid_evidence_ids:
+                            import logging
+                            logging.getLogger(__name__).warning(
+                                f"[loader] Claim '{c.claim_id}': evidence code '{code}' "
+                                f"not found in scenario evidences."
+                            )
+                    
+                    legacy_ids = getattr(c, 'breakable_by_evidence_ids', None) or []
+                    if legacy_ids and not breakable_codes:
+                        import logging
+                        logging.getLogger(__name__).warning(
+                            f"[loader] Claim '{c.claim_id}' is using legacy breakable_by_evidence_ids. "
+                            f"Please update scenario to use breakable_by_evidence_codes."
+                        )
+                        for evid in legacy_ids:
+                            if evid not in valid_evidence_ids:
+                                raise DomainError(f"Claim '{c.claim_id}' references unknown breakable_by_evidence_ids '{evid}'")
                     for other_claim in c.breakable_by_claim_ids:
                         if other_claim not in valid_claim_ids:
                             raise DomainError(f"Claim '{c.claim_id}' references unknown breakable_by_claim_ids '{other_claim}'")
@@ -113,6 +129,33 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
                 for k in s.knowledge:
                     if k.topic_id not in valid_topic_ids:
                         raise DomainError(f"KnowledgeItem '{k.id}' for suspect '{s.id}' references unknown topic_id '{k.topic_id}'")
+            if s.flavor_slots:
+                slot_keys = set()
+                for slot in s.flavor_slots:
+                    if slot.key in slot_keys:
+                        raise DomainError(f"Suspect '{s.id}' has duplicate flavor slot key '{slot.key}'")
+                    slot_keys.add(slot.key)
+                    opt_ids = set()
+                    for opt in slot.options:
+                        if opt.id in opt_ids:
+                            raise DomainError(f"Flavor slot '{slot.key}' in suspect '{s.id}' has duplicate option id '{opt.id}'")
+                        opt_ids.add(opt.id)
+
+        # -------------------------
+        # 3.7 Validações de Motive Clues
+        # -------------------------
+        if config.motive_clues:
+            for mc in config.motive_clues:
+                if config.motives:
+                    valid_motive_keys = {m.key for m in config.motives}
+                    if mc.motive_key not in valid_motive_keys:
+                        raise DomainError(f"MotiveClue '{mc.id}' references unknown motive_key '{mc.motive_key}'")
+                if mc.topic_id not in valid_topic_ids:
+                    raise DomainError(f"MotiveClue '{mc.id}' references unknown topic_id '{mc.topic_id}'")
+                if mc.revealed_by.suspect_id and mc.revealed_by.suspect_id not in suspect_ids:
+                    raise DomainError(f"MotiveClue '{mc.id}' references unknown suspect '{mc.revealed_by.suspect_id}'")
+                if mc.revealed_by.evidence_code and mc.revealed_by.evidence_code not in valid_evidence_ids:
+                    raise DomainError(f"MotiveClue '{mc.id}' references unknown evidence '{mc.revealed_by.evidence_code}'")
 
         # -------------------------
         # 4. Create Scenario
@@ -125,6 +168,7 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
             topics=[t.model_dump() for t in config.topics] if config.topics else [],
             motive_options=[m.model_dump() for m in config.motives] if config.motives else [],
             true_motive_key=config.true_motive_key,
+            motive_clues=[mc.model_dump() for mc in config.motive_clues] if config.motive_clues else [],
             required_broken_claim_ids=config.required_broken_claim_ids or []
         )
         db.add(scenario)
@@ -143,6 +187,7 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
         for s in config.suspects:
             suspect = SuspectModel(
                 scenario_id=scenario.id,
+                suspect_code=s.id,
                 name=s.name,
                 backstory=s.backstory,
                 personality=s.personality,
@@ -150,9 +195,13 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
                 initial_statement=s.initial_statement,
                 final_phrase=s.final_phrase,
                 true_timeline=s.true_timeline,
-                claims=[c.model_dump() for c in s.claims] if s.claims else [],
+                claims=[
+                    {**c.model_dump(), "breakable_by_evidence_ids": c.breakable_by_evidence_codes}
+                    for c in s.claims
+                ] if s.claims else [],
                 knowledge_items=[k.model_dump() for k in s.knowledge] if s.knowledge else [],
-                profile=s.profile.model_dump() if s.profile else None
+                profile=s.profile.model_dump() if s.profile else None,
+                flavor_slots=[slot.model_dump() for slot in s.flavor_slots] if s.flavor_slots else []
             )
             db.add(suspect)
             db.flush()
@@ -168,6 +217,7 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
         for e in config.evidences:
             evidence = EvidenceModel(
                 scenario_id=scenario.id,
+                evidence_code=e.id,
                 name=e.name,
                 description=e.description,
                 internal_note=e.internal_note,

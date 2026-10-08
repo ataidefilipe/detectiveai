@@ -13,6 +13,7 @@ from app.infra.db_models import (
 )
 from app.core.exceptions import NotFoundError, RuleViolationError
 from app.core.telemetry import telemetry_logger
+from app.core.config import settings
 import json
 
 
@@ -81,6 +82,15 @@ def evaluate_verdict(
             valid_motive_keys = [m.get("key") for m in scenario.motive_options]
             if motive_key not in valid_motive_keys:
                 raise NotFoundError(f"Motive {motive_key} is not valid for this scenario.")
+                
+        # Validate motive clue was discovered
+        if settings.REQUIRE_DISCOVERED_MOTIVE and scenario.motive_clues:
+            from app.services.case_file_service import get_session_case_file
+            case_file = get_session_case_file(session_id, db)
+            discovered_motive_keys = {mc.motive_key for mc in case_file.motive_clues}
+            
+            if motive_key not in discovered_motive_keys:
+                raise RuleViolationError(f"Motive {motive_key} was not discovered in the case file.")
 
         # ----------------------------------------
         # 2.5. Validate User Input (B2)

@@ -65,6 +65,11 @@ class DummyNpcAIAdapter(NpcAIAdapter):
         mode = render_context.response_mode
 
         def get_allowed_content():
+            if render_context.must_say:
+                return render_context.must_say[0]
+            if render_context.may_say:
+                return render_context.may_say[0]
+            # Legacy fallbacks
             if render_context.new_knowledge_this_turn:
                 return render_context.new_knowledge_this_turn[0]
             if render_context.allowed_knowledge:
@@ -104,6 +109,27 @@ class DummyNpcAIAdapter(NpcAIAdapter):
 
         elif mode == ResponseMode.contradiction_repair:
             return "Espera, eu me confundi antes. O que eu quis dizer foi outra coisa, veja bem..."
+
+        # ── Sprint 3 T5.2 ──
+        elif mode == ResponseMode.claim_reaction:
+            if content:
+                return f"Você está certo sobre eu mentir antes. {content}. Não era minha intenção te enganar."
+            return "Tudo bem, você me pegou. Minha afirmação anterior não estava totalmente correta."
+
+        elif mode == ResponseMode.evidence_reaction:
+            if content:
+                return f"Essa evidência é forte... {content}. Eu não esperava que você encontrasse isso."
+            return "Essa evidência... bem, ela fala por si, não é?"
+
+        elif mode == ResponseMode.guarded_answer:
+            if content:
+                return f"Vou dizer apenas isto: {content}."
+            return "Não tenho nada a acrescentar além do que já foi dito."
+
+        elif mode == ResponseMode.soft_cooperation:
+            if content:
+                return f"Vou te ajudar um pouco mais. {content}. Espero que isso ajude."
+            return "Vou tentar ser mais aberto. Pergunte o que precisa."
         if personality == "agressivo":
             return (
                 "Chega de perguntas. Se tem prova de alguma coisa, mostre. "

@@ -11,7 +11,14 @@ class ResponseMode(str, Enum):
     guarded = "guarded"
     pressured_deflection = "pressured_deflection"
     contradiction_repair = "contradiction_repair"
+    context_request = "context_request"
+    irritated_repeat = "irritated_repeat"
     final_phrase = "final_phrase"
+    # Sprint 3 T5.2
+    claim_reaction = "claim_reaction"
+    evidence_reaction = "evidence_reaction"
+    guarded_answer = "guarded_answer"
+    soft_cooperation = "soft_cooperation"
 
 class NpcResponseRenderContext(BaseModel):
     """
@@ -38,3 +45,15 @@ class NpcResponseRenderContext(BaseModel):
     player_intent: str = "unknown"
     claim_pressure_summary: List[str] = Field(default_factory=list)
     active_topic_id: Optional[str] = None
+    # Sprint 3 T5.1
+    must_say: List[str] = Field(default_factory=list)
+    may_say: List[str] = Field(default_factory=list)
+    must_not_say: List[str] = Field(default_factory=list)
+    # Memória Narrativa da Sessão (Híbrida e Determinística)
+    narrative_memory: "NarrativeMemoryView" = Field(default_factory=lambda: NarrativeMemoryView())
+
+
+class NarrativeMemoryView(BaseModel):
+    relational_notes: List[str] = Field(default_factory=list)
+    established_details: List[str] = Field(default_factory=list)
+    active_commitments: List[str] = Field(default_factory=list)

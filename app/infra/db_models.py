@@ -32,6 +32,9 @@ class ScenarioModel(Base):
     )
     
     true_motive_key = Column(String, nullable=True)
+    motive_clues = Column(
+        MutableList.as_mutable(JSON), default=list
+    )
 
     required_broken_claim_ids = Column(
         MutableList.as_mutable(JSON), default=list, comment="Claim IDs required to be broken for a correct verdict"
@@ -44,6 +47,7 @@ class ScenarioModel(Base):
 class SuspectModel(Base):
     __tablename__ = "suspects"
     id = Column(Integer, primary_key=True, index=True)
+    suspect_code = Column(String, nullable=True, index=True)
     scenario_id = Column(Integer, ForeignKey("scenarios.id"), nullable=False)
     name = Column(String, nullable=False)
     backstory = Column(String)
@@ -55,6 +59,7 @@ class SuspectModel(Base):
     claims = Column(JSON, default=list)
     knowledge_items = Column(JSON, default=list)
     profile = Column(JSON, nullable=True)
+    flavor_slots = Column(JSON, default=list)
 
     scenario = relationship("ScenarioModel", back_populates="suspects")
     secrets = relationship("SecretModel", back_populates="suspect")
@@ -66,6 +71,7 @@ class SuspectModel(Base):
 class EvidenceModel(Base):
     __tablename__ = "evidences"
     id = Column(Integer, primary_key=True, index=True)
+    evidence_code = Column(String, nullable=True, index=True)
     scenario_id = Column(Integer, ForeignKey("scenarios.id"), nullable=False)
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
@@ -120,6 +126,7 @@ class SessionSuspectStateModel(Base):
     pressure = Column(Float, default=0.0)
     rapport = Column(Float, default=0.0, comment="[DORMANT IN MVP CORE MECHANICS] Only used for narrative tone.")
     last_topic_id = Column(String, nullable=True)
+    narrative_memory = Column(JSON, nullable=False, default=dict)
 
     session = relationship("SessionModel", back_populates="session_states")
     suspect = relationship("SuspectModel", back_populates="session_states")
@@ -157,6 +164,11 @@ class SessionEvidenceUsageModel(Base):
     evidence_id = Column(Integer, ForeignKey("evidences.id"), primary_key=True)
     used_at = Column(DateTime, default=datetime.now)
     was_effective = Column(Boolean, default=False)
+    # Sprint 2 T2.2
+    was_contextual = Column(Boolean, default=False)
+    effect_type = Column(String, nullable=True)  # none|out_of_context|revealed_secret|broke_claim|reaction_only|duplicate|motive_clue
+    times_presented = Column(Integer, default=1)
+    last_used_at = Column(DateTime, default=datetime.now)
 
     session = relationship("SessionModel", back_populates="evidence_usages")
     suspect = relationship("SuspectModel", back_populates="evidence_usages")
@@ -178,6 +190,7 @@ class SessionClaimStateModel(Base):
     suspect_id = Column(Integer, ForeignKey("suspects.id"), primary_key=True)
     claim_id = Column(String, primary_key=True)
     status = Column(String, default="active") # active, broken
+    is_revealed = Column(Boolean, default=False)
     broken_by_evidence_id = Column(Integer, ForeignKey("evidences.id"), nullable=True)
     broken_by_claim_id = Column(String, nullable=True)
     broken_at = Column(DateTime, nullable=True)

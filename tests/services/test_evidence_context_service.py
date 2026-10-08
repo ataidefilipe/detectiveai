@@ -150,3 +150,82 @@ def test_evidence_short_term_context_accepted(evidence_scenario_db):
     # T6/T7: The evidence is accepted based on the short-term context history
     assert effect == "revealed_secret"
     assert len(revealed) == 2
+
+
+# ── T2.1: Semantic Evidence Context ──────────────────────────────────────────
+
+def test_evidence_referenced_by_gpt_is_accepted(evidence_scenario_db):
+    """Caso NOVO 1: evidence_id em referenced_evidence_ids → True (válida)"""
+    db = evidence_scenario_db["db"]
+    
+    revealed, effect = apply_evidence_to_suspect(
+        session_id=evidence_scenario_db["session_id"],
+        suspect_id=evidence_scenario_db["suspect_id"],
+        evidence_id=evidence_scenario_db["ev_contextual_id"],
+        conversation_memory=ConversationMemory(recent_topic_ids=[], active_topic_id=None, last_topic_id=None, recent_intents=[], recent_evidence_ids=[], recent_claim_ids=[], context_inherited=False),
+        detected_topics=["wrong"], 
+        referenced_evidence_ids=[evidence_scenario_db["ev_contextual_id"]],
+        db=db
+    )
+    
+    assert effect == "revealed_secret"
+    assert len(revealed) == 2
+
+
+def test_evidence_targeting_claim_is_accepted(evidence_scenario_db):
+    """Caso NOVO 2: evidence_code quebra claim alvo → True (válida)"""
+    db = evidence_scenario_db["db"]
+    
+    # Adicionar uma claim ao suspeito
+    suspect = db.query(SuspectModel).filter(SuspectModel.id == evidence_scenario_db["suspect_id"]).first()
+    ev_contextual = db.query(EvidenceModel).filter(EvidenceModel.id == evidence_scenario_db["ev_contextual_id"]).first()
+    ev_contextual.evidence_code = "weapon_code_01"
+    
+    suspect.claims = [{
+        "claim_id": "claim_no_weapon",
+        "topic_id": "weapon",
+        "text": "Não uso armas",
+        "breakable_by_evidence_codes": ["weapon_code_01"]
+    }]
+    db.commit()
+    
+    revealed, effect = apply_evidence_to_suspect(
+        session_id=evidence_scenario_db["session_id"],
+        suspect_id=evidence_scenario_db["suspect_id"],
+        evidence_id=evidence_scenario_db["ev_contextual_id"],
+        conversation_memory=ConversationMemory(recent_topic_ids=[], active_topic_id=None, last_topic_id=None, recent_intents=[], recent_evidence_ids=[], recent_claim_ids=[], context_inherited=False),
+        detected_topics=["wrong"], 
+        target_claim_ids=["claim_no_weapon"],
+        db=db
+    )
+    
+    assert effect == "revealed_secret"
+
+
+def test_target_claim_ids_without_match_is_blocked(evidence_scenario_db):
+    """Caso NOVO 4: target_claim_ids sem match de evidence_code → False"""
+    db = evidence_scenario_db["db"]
+    
+    suspect = db.query(SuspectModel).filter(SuspectModel.id == evidence_scenario_db["suspect_id"]).first()
+    ev_contextual = db.query(EvidenceModel).filter(EvidenceModel.id == evidence_scenario_db["ev_contextual_id"]).first()
+    ev_contextual.evidence_code = "weapon_code_01"
+    
+    suspect.claims = [{
+        "claim_id": "claim_no_weapon",
+        "topic_id": "weapon",
+        "text": "Não uso armas",
+        "breakable_by_evidence_codes": ["other_evidence_code"]
+    }]
+    db.commit()
+    
+    revealed, effect = apply_evidence_to_suspect(
+        session_id=evidence_scenario_db["session_id"],
+        suspect_id=evidence_scenario_db["suspect_id"],
+        evidence_id=evidence_scenario_db["ev_contextual_id"],
+        conversation_memory=ConversationMemory(recent_topic_ids=[], active_topic_id=None, last_topic_id=None, recent_intents=[], recent_evidence_ids=[], recent_claim_ids=[], context_inherited=False),
+        detected_topics=["wrong"], 
+        target_claim_ids=["claim_no_weapon"],
+        db=db
+    )
+    
+    assert effect == "out_of_context"

@@ -26,7 +26,7 @@ def test_evaluate_verdict_correct(db_session):
     marina = db_session.query(SuspectModel).filter_by(name="Marina Souza", scenario_id=scenario.id).first()
     relatorio = db_session.query(EvidenceModel).filter_by(name="Relatório Contábil Alterado", scenario_id=scenario.id).first()
     cartao = db_session.query(EvidenceModel).filter_by(name="Cartão de Acesso de Marina", scenario_id=scenario.id).first()
-    testemunho = db_session.query(EvidenceModel).filter_by(name="Testemunho da Estagiária", scenario_id=scenario.id).first()
+    testemunho = db_session.query(EvidenceModel).filter_by(name="Testemunho de Clara Martins", scenario_id=scenario.id).first()
     
     # Create simple session
     session = SessionModel(scenario_id=scenario.id, status="in_progress")
@@ -38,6 +38,12 @@ def test_evaluate_verdict_correct(db_session):
     usage2 = SessionEvidenceUsageModel(session_id=session.id, suspect_id=marina.id, evidence_id=cartao.id, was_effective=True)
     usage3 = SessionEvidenceUsageModel(session_id=session.id, suspect_id=marina.id, evidence_id=testemunho.id, was_effective=True)
     db_session.add_all([usage1, usage2, usage3])
+    
+    from app.infra.db_models import SessionClaimStateModel
+    from datetime import datetime
+    broken_claim = SessionClaimStateModel(session_id=session.id, suspect_id=marina.id, claim_id="claim_marina_alibi_01", status="broken", broken_at=datetime.now())
+    db_session.add(broken_claim)
+    
     db_session.commit()
 
     verdict = evaluate_verdict(
@@ -57,7 +63,7 @@ def test_evaluate_verdict_partial_wrong_motivation(db_session):
     marina = db_session.query(SuspectModel).filter_by(name="Marina Souza", scenario_id=scenario.id).first()
     
     # Get required evidences
-    req_evidence_names = ["Relatório Contábil Alterado", "Cartão de Acesso de Marina", "Testemunho da Estagiária"]
+    req_evidence_names = ["Relatório Contábil Alterado", "Cartão de Acesso de Marina", "Testemunho de Clara Martins"]
     req_evidences = db_session.query(EvidenceModel).filter(
         EvidenceModel.name.in_(req_evidence_names), EvidenceModel.scenario_id == scenario.id
     ).all()

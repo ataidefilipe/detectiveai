@@ -33,11 +33,26 @@ class ClaimConfig(BaseModel):
     text: str = Field(..., description="The textual statement of the claim")
     claim_type: str = Field(..., description="Enum: alibi, relationship, timeline, denial, motive, object, location")
     importance: str = Field(default="medium", description="Enum: low, medium, high, critical")
-    breakable_by_evidence_ids: List[str] = Field(default_factory=list, description="IDs of evidences that can break this claim")
+    breakable_by_evidence_codes: List[str] = Field(
+        default_factory=list,
+        description="Evidence codes that can break this claim",
+        alias="breakable_by_evidence_ids"
+    )
     breakable_by_claim_ids: List[str] = Field(default_factory=list, description="IDs of other claims that contradict this one")
     reveal_on_break: List[str] = Field(default_factory=list, description="IDs of knowledge or secrets to reveal when broken")
 
 
+
+class RevealedByConfig(BaseModel):
+    suspect_id: Optional[str] = Field(default=None, description="Suspect ID that reveals this clue")
+    evidence_code: Optional[str] = Field(default=None, description="Evidence code that reveals this clue")
+
+class MotiveClueConfig(BaseModel):
+    id: str = Field(..., description="Unique string identifier for the motive clue")
+    motive_key: str = Field(..., description="Key of the motivation it hints at")
+    topic_id: str = Field(..., description="The slug of the Topic it relates to")
+    revealed_by: RevealedByConfig = Field(..., description="Condition to reveal this clue")
+    content: str = Field(..., description="Text of the clue")
 
 class TopicAffinityProfile(BaseModel):
     pressure_tolerance: float = Field(default=0.5, description="How well the suspect handles pressure (0.0 to 1.0)")
@@ -77,6 +92,20 @@ class SuspectConfig(BaseModel):
         default=None,
         description="Behavioral profile modifiers for suspect reactions"
     )
+    flavor_slots: Optional[List["FlavorSlotConfig"]] = Field(
+        default_factory=list,
+        description="Optional cosmetic narrative slots pre-authored for this suspect"
+    )
+
+class FlavorOptionConfig(BaseModel):
+    id: str = Field(..., description="Unique string identifier for the option")
+    text: str = Field(..., description="Canonical textual statement of this flavor option")
+
+class FlavorSlotConfig(BaseModel):
+    key: str = Field(..., description="Unique slug for the flavor slot, e.g., 'preferred_food'")
+    description: Optional[str] = Field(default=None, description="Internal description of the slot theme")
+    trigger_keywords: List[str] = Field(default_factory=list, description="Keywords in player messages that can trigger this slot")
+    options: List[FlavorOptionConfig] = Field(default_factory=list, description="Allowed choices for this slot")
 
 class EvidenceConfig(BaseModel):
     id: str = Field(..., description="Stable string identifier for the evidence")
@@ -109,5 +138,6 @@ class ScenarioConfig(BaseModel):
     motives: Optional[List[MotivationConfig]] = Field(default=None, description="List of possible motives for the crime")
     true_motive_key: Optional[str] = Field(default=None, description="The key of the true motivation (must exist in motives)")
     required_broken_claim_ids: Optional[List[str]] = Field(default_factory=list, description="Claim IDs that must be broken for a correct verdict")
+    motive_clues: Optional[List[MotiveClueConfig]] = Field(default_factory=list, description="List of clues pointing to motives")
 
 

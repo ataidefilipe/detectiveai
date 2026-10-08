@@ -421,7 +421,9 @@
        JAVASCRIPT
   ════════════════════════════════════════════════════════ -->
   <script>
-    const API = 'http://localhost:8000';
+    const API = (window.location.protocol.startsWith('http') && window.location.host)
+      ? window.location.origin
+      : 'http://localhost:8000';
 
     // ── State ──────────────────────────────────────────────
     let state = {

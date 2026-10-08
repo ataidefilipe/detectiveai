@@ -18,12 +18,25 @@ def determine_response_mode(
     * claim quebrado -> partial_admission ou contradiction_repair
     """
 
-    # 1. Admissões ou reparos por quebra
-    if has_newly_broken_claims or has_revealed_secrets or has_new_knowledge:
-        # Se foi pressionado a admitir ou quebrado com evidência, contradiction_repair ou partial_admission
+    # 1. Admissões ou reparos por quebra (Sprint 3 T5.2)
+    if has_newly_broken_claims:
+        return ResponseMode.claim_reaction
+        
+    if has_revealed_secrets:
+        return ResponseMode.evidence_reaction
+
+    if has_new_knowledge:
         if transition.npc_shift == NpcShift.more_defensive:
             return ResponseMode.contradiction_repair
         return ResponseMode.partial_admission
+
+    # 1.5. Repetição e Falta de Especificidade
+    from app.api.schemas.chat import NoveltyLevel, SpecificityLevel
+    if analysis.novelty == NoveltyLevel.repeat:
+        return ResponseMode.irritated_repeat
+        
+    if analysis.specificity == SpecificityLevel.low and not analysis.detected_topic_ids:
+        return ResponseMode.context_request
 
     # 2. Deflexão sob pressão ou efeito adverso de evidência
     if evidence_effect == "out_of_context":

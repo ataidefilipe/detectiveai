@@ -38,7 +38,7 @@ def test_happy_path_piloto_end_to_end():
         ).first()
 
         evidence_testemunho = db.query(EvidenceModel).filter(
-            EvidenceModel.name == "Testemunho da Estagiária"
+            EvidenceModel.name == "Testemunho de Clara Martins"
         ).first()
 
         scenario_id = scenario.id

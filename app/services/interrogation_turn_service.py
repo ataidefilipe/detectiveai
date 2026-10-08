@@ -14,7 +14,8 @@ from app.services.conversation_context_service import build_conversation_context
 from app.services.move_classification_service import classify_move
 from app.infra.db_models import (
     SessionEvidenceUsageModel, SessionModel, ScenarioModel, 
-    NpcChatMessageModel, SuspectModel, SessionSuspectKnowledgeStateModel
+    NpcChatMessageModel, SuspectModel, SessionSuspectKnowledgeStateModel,
+    SessionClaimStateModel
 )
 from app.api.schemas.chat import (
     MessageAnalysisResult,
@@ -81,14 +82,63 @@ def run_interrogation_turn(
     ]
 
     # 1.2 Analyze player message against known topics
-    msg_analysis = analyze_message(text, available_topics=available_topics, player_history=recent_player_msgs)
+    # Sprint 1 T1.2: Build semantic context for classifier
+    from app.services.semantic_context_builder import build_semantic_analysis_context
 
-    # 1.2.5 Classify the move type (game design language)
-    move_type = classify_move(
-        analysis=msg_analysis,
-        context=conversation_context,
-        evidence_id=evidence_id
+    semantic_ctx = build_semantic_analysis_context(
+        session_id=session_id,
+        suspect_id=suspect_id,
+        scenario=scenario,
+        suspect=suspect_model,
+        conversation_memory=conversation_context,
+        db=db,
     )
+
+    msg_analysis = analyze_message(
+        text,
+        available_topics=available_topics,
+        player_history=recent_player_msgs,
+        claims=semantic_ctx["public_claims"],
+        evidences=semantic_ctx["public_evidences"],
+        suspect_state=semantic_ctx["suspect_state"],
+        active_topic_id=semantic_ctx["active_topic_id"],
+    )
+
+    # 1.2.5 Resolve move_type: GPT tem precedência, com validação (T1.4)
+    if msg_analysis.move_type:
+        from app.api.schemas.chat import MoveType
+        try:
+            move_type = MoveType(msg_analysis.move_type)
+        except ValueError:
+            # move_type do GPT não é um MoveType válido — mapear tipos semânticos
+            _semantic_to_move = {
+                "confront_claim": MoveType.pressure,
+                "confront_evidence": MoveType.confront_evidence,
+                "explore": MoveType.explore,
+                "deepen": MoveType.deepen,
+                "pressure": MoveType.pressure,
+                "calm": MoveType.calm,
+                "accuse_in_chat": MoveType.accuse_soft,
+                "clarify": MoveType.deepen,
+                "off_topic": MoveType.continue_flow,
+            }
+            move_type = _semantic_to_move.get(msg_analysis.move_type, classify_move(
+                analysis=msg_analysis,
+                context=conversation_context,
+                evidence_id=evidence_id,
+            ))
+
+        # Validação pós-resolução
+        if evidence_id is not None and move_type == MoveType.explore:
+            move_type = MoveType.confront_evidence
+        if msg_analysis.target_claim_ids and move_type not in (MoveType.pressure, MoveType.confront_evidence):
+            move_type = MoveType.pressure
+    else:
+        move_type = classify_move(
+            analysis=msg_analysis,
+            context=conversation_context,
+            evidence_id=evidence_id,
+        )
 
 
     # 1.3 Resolve turn mechanics (State Transition)
@@ -161,6 +211,8 @@ def run_interrogation_turn(
             evidence_id=evidence_id,
             conversation_memory=conversation_context,
             detected_topics=msg_analysis.detected_topic_ids,
+            referenced_evidence_ids=msg_analysis.referenced_evidence_ids,  # NOVO
+            target_claim_ids=msg_analysis.target_claim_ids,                # NOVO
             db=db
         )
         
@@ -185,7 +237,23 @@ def run_interrogation_turn(
             SessionEvidenceUsageModel.evidence_id == evidence_id
         ).first()
 
+        # Determinar effect_type
+        def _resolve_effect_type(evidence_effect, newly_broken_claims, was_contextual):
+            if not was_contextual:
+                return "out_of_context"
+            if evidence_effect == "revealed_secret":
+                return "revealed_secret"
+            if newly_broken_claims:
+                return "broke_claim"
+            if evidence_effect == "reaction_only":
+                return "reaction_only"
+            if evidence_effect == "duplicate":
+                return "duplicate"
+            return "none"
+
         is_effective = len(revealed_secrets) > 0 or len(newly_broken_claims) > 0
+        was_contextual = evidence_effect != "out_of_context"
+        effect_type = _resolve_effect_type(evidence_effect, newly_broken_claims, was_contextual)
 
         if not usage:
             was_previously_used = False
@@ -193,13 +261,22 @@ def run_interrogation_turn(
                 session_id=session_id,
                 suspect_id=suspect_id,
                 evidence_id=evidence_id,
-                was_effective=is_effective
+                was_effective=is_effective,
+                was_contextual=was_contextual,
+                effect_type=effect_type,
+                times_presented=1,
             )
             db.add(usage)
         else:
             was_previously_used = True
+            from datetime import datetime
+            usage.times_presented += 1
+            usage.last_used_at = datetime.now()
             if is_effective and not usage.was_effective:
                 usage.was_effective = True
+            if was_contextual:
+                usage.was_contextual = True
+            usage.effect_type = effect_type  # último efeito prevalece
         
         db.flush()
 
@@ -213,39 +290,74 @@ def run_interrogation_turn(
     allowed_knowledge = knowledge_facts.get("known_knowledge", [])
     new_knowledge = knowledge_facts.get("new_knowledge_this_turn", [])
 
-    # MVP-004: Force reveal knowledge from claim_rewards
+    # 2.55 Reveal Claims for Detected Topics (Task 4.3)
+    if msg_analysis.detected_topic_ids:
+        suspect = db.query(SuspectModel).filter(SuspectModel.id == suspect_id).first()
+        if suspect and suspect.claims:
+            claim_ids_to_reveal = [
+                c.get("claim_id") for c in suspect.claims 
+                if c.get("topic_id") in msg_analysis.detected_topic_ids
+            ]
+            if claim_ids_to_reveal:
+                db.query(SessionClaimStateModel).filter(
+                    SessionClaimStateModel.session_id == session_id,
+                    SessionClaimStateModel.suspect_id == suspect_id,
+                    SessionClaimStateModel.claim_id.in_(claim_ids_to_reveal),
+                    SessionClaimStateModel.is_revealed == False
+                ).update({"is_revealed": True}, synchronize_session=False)
+                db.flush()
+
+    # MVP-004: Force reveal knowledge from claim_rewards (Sprint 3 T3.3)
     if claim_rewards:
         suspect = db.query(SuspectModel).filter(SuspectModel.id == suspect_id).first()
         if suspect and suspect.knowledge_items:
+            # Map reward list to dict for easier lookup
+            reward_map = {}
+            for r in claim_rewards:
+                if isinstance(r, dict):
+                    reward_map[str(r.get("id"))] = r.get("depth")
+                else:
+                    reward_map[str(r)] = None # None means reveal all layers
+
             for k_item in suspect.knowledge_items:
-                kid = k_item.get("id")
-                if kid in claim_rewards:
+                kid = str(k_item.get("id"))
+                if kid in reward_map:
+                    max_depth_target = reward_map[kid]
+                    layers = k_item.get("content_layers", [])
+                    
                     k_state = db.query(SessionSuspectKnowledgeStateModel).filter(
                         SessionSuspectKnowledgeStateModel.session_id == session_id,
                         SessionSuspectKnowledgeStateModel.suspect_id == suspect_id,
-                        SessionSuspectKnowledgeStateModel.knowledge_id == str(kid)
+                        SessionSuspectKnowledgeStateModel.knowledge_id == kid
                     ).first()
                     
-                    layers = k_item.get("content_layers", [])
-                    max_available = len(layers)
-                    current_depth = k_state.max_revealed_depth if k_state else 0
-                    
-                    if current_depth < max_available:
-                        for i in range(current_depth, max_available):
-                            # Append to new_knowledge if not already there
-                            if layers[i] not in new_knowledge and layers[i] not in allowed_knowledge:
-                                new_knowledge.append(layers[i])
-                        
-                        if not k_state:
-                            k_state = SessionSuspectKnowledgeStateModel(
-                                session_id=session_id,
-                                suspect_id=suspect_id,
-                                knowledge_id=str(kid),
-                                max_revealed_depth=max_available
-                            )
-                            db.add(k_state)
+                    if k_state:
+                        current_depth = k_state.max_revealed_depth
+                        if max_depth_target is None:
+                            new_depth = len(layers)
                         else:
-                            k_state.max_revealed_depth = max_available
+                            new_depth = max(current_depth, min(max_depth_target, len(layers)))
+                        
+                        if new_depth > current_depth:
+                            # Adicionar as novas camadas reveladas ao new_knowledge para o prompt
+                            for i in range(current_depth, new_depth):
+                                if layers[i] not in new_knowledge:
+                                    new_knowledge.append(layers[i])
+                            k_state.max_revealed_depth = new_depth
+                        db.flush()
+                    else:
+                        # Se não existe estado, cria um com a profundidade alvo
+                        new_depth = len(layers) if max_depth_target is None else min(max_depth_target, len(layers))
+                        k_state = SessionSuspectKnowledgeStateModel(
+                            session_id=session_id,
+                            suspect_id=suspect_id,
+                            knowledge_id=kid,
+                            max_revealed_depth=new_depth
+                        )
+                        db.add(k_state)
+                        for i in range(new_depth):
+                            if layers[i] not in new_knowledge:
+                                new_knowledge.append(layers[i])
                         db.flush()
 
     # AI-002: Build list of message IDs where evidence was effective so prompt_builder can pin them
@@ -301,6 +413,11 @@ def run_interrogation_turn(
                 
                 if is_sensitive or has_reaction:
                     evidence_effect = "reaction_only"
+                
+    # ── Sprint 3 T2.3: Separar efeitos ───────────────────────────────────────
+    mechanical_effect = evidence_effect if evidence_effect in ("revealed_secret","broke_claim","out_of_context") else "none"
+    narrative_effect = "suspect_reacted_defensively" if state_transition.npc_shift.value in ("more_defensive","pressured") else "no_reaction"
+    # ───────────────────────────────────────────────────────────────────
                 
     # Feedback Sistêmico (Epic G) via service extraído
     t_signal, hints = build_turn_feedback(
@@ -365,4 +482,7 @@ def run_interrogation_turn(
         "active_topic_id": conversation_context.active_topic_id,
         "context_inherited": conversation_context.context_inherited,
         "move_type": move_type.value,
+        # Sprint 3 T2.3
+        "mechanical_effect": mechanical_effect,
+        "narrative_effect": narrative_effect,
     }
