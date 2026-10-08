@@ -8,7 +8,6 @@ gpt.py
 /agents
 /backlog
 /decisions
-/docs
 /logs
 /state
 /src
@@ -16,5 +15,7 @@ gpt.py
 /work
 /memory-bank
 *.md
+!docs/**
+!docs/*.md
 __pycache__/
 *.pyc

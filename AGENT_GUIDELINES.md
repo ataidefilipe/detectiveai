@@ -81,3 +81,15 @@ Por favor, atualize este arquivo sempre que um novo padrão for estabelecido ou 
 * **Eventos Críticos:** Sempre utilize o `telemetry_logger.info(json.dumps({...}))` para eventos como `interrogation_turn` e `lie_broken`. 
 * **Campos Obrigatórios:** Garanta que o log inclua `session_id`, `suspect_id` e contadores relevantes (`broken_lies_count`, `revealed_secrets_count`) para facilitar a análise de sessões.
 
+---
+
+## 8. Deploy e Produção (Railway & Nixpacks)
+
+### 8.1. Configuração de Inicialização e Portas
+* **Railway Port:** O Railway injeta dinamicamente a variável de ambiente `PORT` no contêiner. O comando de inicialização no `Procfile` e `railway.json` deve sempre referenciar `${PORT:-8000}` (ex: `uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}`).
+* **Nixpacks Detection:** Ao adicionar novos pacotes utilizados em runtime (como `pydantic-settings`, `python-dotenv` ou `openai`), lembre-se de sincronizar o `requirements.txt`. O Nixpacks instala estritamente as dependências listadas no `requirements.txt`.
+
+### 8.2. Frontend Estático Unificado
+* **Ponto de Acesso Web:** Para evitar custos com múltiplos serviços ou falhas de CORS, o frontend SPA (`frontend/index.html`) é servido diretamente pelo FastAPI na rota raiz (`GET /`).
+* **Resolução Dinâmica de API no Frontend:** O JavaScript no frontend deve sempre inferir `const API = (window.location.protocol.startsWith('http') && window.location.host) ? window.location.origin : 'http://localhost:8000';` para funcionar transparentemente tanto local quanto em produção.
+
