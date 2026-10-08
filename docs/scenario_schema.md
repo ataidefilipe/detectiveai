@@ -58,11 +58,31 @@ Referência completa do formato JSON usado para definir cenários do jogo.
 | `initial_statement` | string | ❌ | Declaração inicial mostrada ao entrar no interrogatório. |
 | `final_phrase` | string | ❌ | Frase dita quando o suspeito está `is_closed`. |
 | `true_timeline` | `List[str]` | ❌ | Linha do tempo verdadeira do suspeito (conhecimento interno do NPC). |
-| `profile` | `TopicAffinityProfile` | ❌ | Perfil de sensibilidade comportamental (`pressure_tolerance`, `empathy_receptivity`, `repetition_irritability`, `contradiction_fragility`). |
+| `profile` | `TopicAffinityProfile` | ❌ | Perfil comportamental e dinâmico de fala (`pressure_tolerance`, `empathy_receptivity`, `speech`, etc.). |
 | `flavor_slots` | lista de `FlavorSlotConfig` | ❌ | Slots narrativos cosméticos autorais acionados por palavras-chave. |
 | `lies` | lista de `LieConfig` | ❌ | Mentiras que o suspeito sustenta e que podem ser quebradas. |
 | `claims` | lista de `ClaimConfig` | ❌ | Asserções estruturadas feitas pelo suspeito que podem ser desafiadas. |
 | `knowledge` | lista de `KnowledgeItemConfig` | ❌ | Conhecimentos do cenário que o suspeito pode revelar por tópico. |
+
+---
+
+### `TopicAffinityProfile` & `SpeechProfile`
+
+Configurações psicológicas e dinâmicas de ritmo de fala do suspeito:
+
+| Campo | Tipo | Padrão | Descrição |
+|-------|------|--------|-----------|
+| `pressure_tolerance` | float | `0.5` | Tolerância a pressão (0.0 frágil, 1.0 resistente). |
+| `empathy_receptivity` | float | `0.5` | Receptividade a abordagens empáticas/calmas. |
+| `repetition_irritability` | float | `0.5` | Irritabilidade ao enfrentar perguntas repetitivas. |
+| `contradiction_fragility` | float | `0.5` | Rapidez com que quebra ao ser confrontado com contradições. |
+| `speech` | `SpeechProfile` | `{}` | Perfil dinâmico de verbosidade e ritmo. |
+
+#### `SpeechProfile`
+| Campo | Tipo | Padrão | Descrição |
+|-------|------|--------|-----------|
+| `base_verbosity` | float | `0.5` | Extensão habitual da fala (0.0 conciso/lacônico, 1.0 muito falante). |
+| `stress_verbosity_delta` | float | `0.0` | Modulação sob pressão (-1.0 fecha a boca/lacônico, +1.0 fala excessiva/ansiosa). |
 
 ---
 

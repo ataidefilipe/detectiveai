@@ -147,7 +147,7 @@ flowchart TD
 | Arquivo | Classes principais | Uso |
 |---------|-------------------|-----|
 | [chat.py](../app/api/schemas/chat.py) | Enums `MessageIntent`, `MoveType`, `SensitivityLevel`, `NoveltyLevel`, `SpecificityLevel`, `ConversationEffect`, `NpcShift`, `TopicSignal`, `SuspectReaction`, `TopicRead`; modelos `MessageAnalysisResult`, `StateTransitionResult`, `NarrativeFeedback`, `PlayerChatInput`, `ChatMessageInfo`, `TurnDebugTrace`, `ClaimEvent`, `ConversationMemory`, `PlayerTurnResponse` | **Schema central** — usado por quase todos os serviços do turno. |
-| [render_context.py](../app/api/schemas/render_context.py) | `ResponseMode` (enum), `NpcResponseRenderContext` (contrato backend→IA), `NarrativeMemoryView` | Pipeline de IA. |
+| [render_context.py](../app/api/schemas/render_context.py) | `ResponseMode` (enum), `NpcResponseRenderContext` (contrato backend→IA), `SpeechDirective` (ritmo e limites de fala), `NarrativeMemoryView` | Pipeline de IA. |
 | [message_semantics.py](../app/api/schemas/message_semantics.py) | `SemanticMoveType`, `SemanticMessageAnalysisResult` | Saída estruturada do classificador GPT. |
 | [case_file.py](../app/api/schemas/case_file.py) | `CaseFileEvidenceSchema`, `CaseFileClaimSchema`, `CaseFileFactSchema`, `MotiveClueSchema`, `CaseFileSuspectSummarySchema`, `CaseFileResponse` | Dossiê. |
 | [log.py](../app/api/schemas/log.py) | `TurnLogItemSchema`, `SessionTurnsLogResponse`, `VerdictLogResponse` | APIs analíticas de logs. |
@@ -230,7 +230,7 @@ flowchart TD
 | [secret_service.py](../app/services/secret_service.py) | `apply_evidence_to_suspect(...)` | Aplica evidência: revela segredos ou marca fora de contexto. |
 | [evidence_context_service.py](../app/services/evidence_context_service.py) | `evaluate_evidence_context(...)` | Valida se a evidência é pertinente ao momento da conversa. |
 | [reveal_policy_service.py](../app/services/reveal_policy_service.py) | `evaluate_reveal_layer`, `get_allowed_knowledge_facts` | Política de camadas: quanto de cada knowledge item pode ser dito. |
-| [turn_feedback_service.py](../app/services/turn_feedback_service.py) | `build_turn_feedback`, `build_narrative_feedback` | Sinais para UI (`TopicSignal`, hints) e feedback diegético. |
+| [turn_feedback_service.py](../app/services/turn_feedback_service.py) | `build_turn_feedback`, `build_narrative_feedback` | Sinais para UI (`TopicSignal`, hints) e feedback diegético (precedência mecânica de quebras e cooldown anti-spam). |
 
 #### Pipeline de IA (resposta do NPC)
 
@@ -238,8 +238,8 @@ flowchart TD
 |---------|-------------------|-----------|
 | [chat_service.py](../app/services/chat_service.py) | `add_player_message`, `add_npc_reply`, `_load_turn_context_for_npc_reply`, `_build_suspect_state_for_ai`, `_generate_npc_text_with_fallback` | Persiste mensagens; monta contexto, chama o adapter (fallback p/ Dummy em erro), aplica guard. |
 | [npc_context_builder.py](../app/services/npc_context_builder.py) | `build_npc_context`, `_public_persona` | Contexto de persona enviado à LLM (só o público + segredos já revelados). |
-| [npc_response_render_context_builder.py](../app/services/npc_response_render_context_builder.py) | `build_render_context(...)` | Monta `NpcResponseRenderContext` (fatos permitidos, modo, memória). |
-| [npc_mode_policy_service.py](../app/services/npc_mode_policy_service.py) | `determine_response_mode(...)` | Escolhe `ResponseMode` (guarded, pressured_deflection, contradiction_repair…). |
+| [npc_response_render_context_builder.py](../app/services/npc_response_render_context_builder.py) | `build_render_context(...)` | Monta `NpcResponseRenderContext` (fatos permitidos, desduplicação léxica, diretiva de fala, modo, memória). |
+| [npc_mode_policy_service.py](../app/services/npc_mode_policy_service.py) | `determine_response_mode(...)`, `determine_speech_directive(...)` | Escolhe `ResponseMode` e modula deterministamente `SpeechDirective` (verbosidade e ritmo por estresse). |
 | [session_narrative_memory_service.py](../app/services/session_narrative_memory_service.py) | `load_/save_narrative_memory`, `record_relational_event`, `derive_relational_event_from_analysis`, `record_flavor_choice`, `resolve_dynamic_flavor_slots`, `format_relational_note`, `format_flavor_note`, `build_narrative_memory_view` | Memória narrativa: eventos relacionais e "flavor slots" cosméticos consistentes. |
 | [prompt_builder.py](../app/services/prompt_builder.py) | `build_npc_prompt`, `_select_history` | Monta prompt anti-spoiler; fixa mensagens com evidência eficaz no histórico. |
 | [ai_adapter.py](../app/services/ai_adapter.py) | `NpcAIAdapter.generate_reply` | Interface base. |

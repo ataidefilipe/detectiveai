@@ -174,19 +174,26 @@ Quando o jogador envia uma pergunta (`POST /sessions/{id}/suspects/{id}/messages
    -> Avalia se níveis de pressão ou empatia destravaram novos segredos
                  │
                  ▼
-6. Construção do Render Context
+6. Construção do Render Context & Diretiva de Fala
    -> Define response_mode (guarded, pressured_deflection, contradiction_repair, etc.)
-   -> Consolida fatos estritamente permitidos para fala neste turno
+   -> Calcula deterministamente SpeechDirective (min/max frases, target words, ritmo por estresse)
+   -> Desduplica fatos obrigatórios (must_say) vs contextuais (may_say) para evitar dumping
                  │
                  ▼
 7. Síntese do Prompt & Chamada LLM
-   -> Monta prompt rigoroso anti-spoiler
-   -> Invoca OpenAI API (ou adapter Dummy)
+   -> Monta prompt rigoroso anti-spoiler com regras anti-repetição de listas
+   -> Injeta limitações dinâmicas de extensão e ritmo da fala
+   -> Invoca OpenAI API (ou adapter Dummy) com fallback automático
    -> Passa pelo Response Guard para checagem de consistência
                  │
                  ▼
-8. Persistência & Retorno
-   -> Salva mensagens e novo estado no SQLite
+8. Feedback Sistêmico & Narrativo
+   -> Avalia precedência mecânica (quebras e revelações sobrepõem diagnóstico de vagueza)
+   -> Aplica supressão de dicas negativas e cooldown anti-spam de 3 turnos
+                 │
+                 ▼
+9. Persistência & Retorno
+   -> Salva mensagens, estado atualizado e turn_logs analíticos no SQLite
    -> Retorna resposta ao frontend
 ```
 
