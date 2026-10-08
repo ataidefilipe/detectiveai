@@ -1,11 +1,12 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 from app.api.schemas.chat import PlayerChatInput, PlayerTurnResponse
 from app.api.schemas.verdict import AccuseRequest, AccuseResponse
 from app.api.schemas.evidence import EvidenceResponse
 from app.api.schemas.suspect import SuspectSessionResponse
+from app.api.schemas.log import SessionTurnsLogResponse, TurnLogItemSchema, VerdictLogResponse
 
 from app.services.interrogation_turn_service import run_interrogation_turn
 from app.services.session_finalize_service import finalize_session
@@ -14,7 +15,11 @@ from app.services.case_file_service import get_session_case_file
 from app.api.schemas.case_file import CaseFileResponse
 
 from app.infra.db import SessionLocal
-from app.infra.db_models import NpcChatMessageModel, SessionModel, SessionSuspectStateModel, SessionSuspectTopicStateModel, SessionClaimStateModel, SuspectModel, ScenarioModel, EvidenceModel
+from app.infra.db_models import (
+    NpcChatMessageModel, SessionModel, SessionSuspectStateModel,
+    SessionSuspectTopicStateModel, SessionClaimStateModel, SuspectModel,
+    ScenarioModel, EvidenceModel, TurnLogModel, VerdictLogModel
+)
 
 
 router = APIRouter()
@@ -369,4 +374,103 @@ def list_session_suspects(session_id: int):
 
     finally:
         db.close()
+
+
+@router.get(
+    "/sessions/{session_id}/logs/turns",
+    response_model=SessionTurnsLogResponse
+)
+def get_session_turn_logs(
+    session_id: int,
+    suspect_id: Optional[int] = None,
+    include_prompt: bool = False
+):
+    """
+    Returns the analytical turn logs for a session, optionally filtered by suspect.
+    """
+    db = SessionLocal()
+    try:
+        session = db.query(SessionModel).filter(SessionModel.id == session_id).first()
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+
+        query = db.query(TurnLogModel).filter(TurnLogModel.session_id == session_id)
+        if suspect_id is not None:
+            query = query.filter(TurnLogModel.suspect_id == suspect_id)
+
+        rows = query.order_by(TurnLogModel.id.asc()).all()
+
+        turns = [
+            TurnLogItemSchema(
+                id=r.id,
+                session_id=r.session_id,
+                suspect_id=r.suspect_id,
+                turn_number=r.turn_number,
+                created_at=r.created_at.isoformat() if r.created_at else "",
+                player_message_id=r.player_message_id,
+                npc_message_id=r.npc_message_id,
+                player_text=r.player_text,
+                npc_text=r.npc_text,
+                evidence_id=r.evidence_id,
+                intent=r.intent,
+                move_type=r.move_type,
+                primary_topic_id=r.primary_topic_id,
+                analysis_provider=r.analysis_provider,
+                evidence_effect=r.evidence_effect,
+                response_mode=r.response_mode,
+                state_before=r.state_before,
+                state_after=r.state_after,
+                analysis=r.analysis,
+                transition=r.transition,
+                effects=r.effects,
+                ai=r.ai,
+                prompt=r.prompt if include_prompt else None,
+            )
+            for r in rows
+        ]
+
+        return SessionTurnsLogResponse(
+            session_id=session_id,
+            total_turns=len(turns),
+            turns=turns
+        )
+    finally:
+        db.close()
+
+
+@router.get(
+    "/sessions/{session_id}/logs/verdict",
+    response_model=VerdictLogResponse
+)
+def get_session_verdict_log(session_id: int):
+    """
+    Returns the final verdict log for a finished session.
+    """
+    db = SessionLocal()
+    try:
+        session = db.query(SessionModel).filter(SessionModel.id == session_id).first()
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+
+        verdict_log = db.query(VerdictLogModel).filter(VerdictLogModel.session_id == session_id).first()
+        if not verdict_log:
+            raise HTTPException(status_code=404, detail=f"No verdict log found for session {session_id}")
+
+        return VerdictLogResponse(
+            id=verdict_log.id,
+            session_id=verdict_log.session_id,
+            scenario_id=verdict_log.scenario_id,
+            created_at=verdict_log.created_at.isoformat() if verdict_log.created_at else "",
+            result_type=verdict_log.result_type,
+            chosen_suspect_id=verdict_log.chosen_suspect_id,
+            real_culprit_id=verdict_log.real_culprit_id,
+            chosen_motive_key=verdict_log.chosen_motive_key,
+            motive_result=verdict_log.motive_result,
+            evidence_ids=verdict_log.evidence_ids or [],
+            verdict=verdict_log.verdict,
+            session_summary=verdict_log.session_summary,
+        )
+    finally:
+        db.close()
+
 

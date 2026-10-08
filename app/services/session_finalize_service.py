@@ -1,8 +1,10 @@
+from datetime import datetime
 from typing import List, Dict, Any, Optional
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.infra.db import SessionLocal
-from app.infra.db_models import SessionModel
+from app.infra.db_models import SessionModel, NpcChatMessageModel, VerdictLogModel
 from app.services.verdict_service import evaluate_verdict
 from app.core.exceptions import NotFoundError, RuleViolationError
 
@@ -61,6 +63,33 @@ def finalize_session(
         session.chosen_evidence_ids = evidence_ids or []
         session.result_type = verdict["result_type"]
         session.status = "finished"
+
+        # Analytics: registro do veredito
+        turns_per_suspect = dict(
+            db.query(NpcChatMessageModel.suspect_id, func.count(NpcChatMessageModel.id))
+            .filter(
+                NpcChatMessageModel.session_id == session_id,
+                NpcChatMessageModel.sender_type == "player"
+            )
+            .group_by(NpcChatMessageModel.suspect_id)
+            .all()
+        )
+        db.add(VerdictLogModel(
+            session_id=session_id,
+            scenario_id=session.scenario_id,
+            result_type=verdict["result_type"],
+            chosen_suspect_id=chosen_suspect_id,
+            real_culprit_id=verdict.get("real_culprit_id"),
+            chosen_motive_key=motive_key,
+            motive_result=verdict.get("motive_result"),
+            evidence_ids=evidence_ids or [],
+            verdict=verdict,
+            session_summary={
+                "duration_seconds": int((datetime.now() - session.created_at).total_seconds()) if session.created_at else None,
+                "total_turns": sum(turns_per_suspect.values()),
+                "turns_per_suspect": {str(k): v for k, v in turns_per_suspect.items()},
+            },
+        ))
 
         db.commit()
         db.refresh(session)

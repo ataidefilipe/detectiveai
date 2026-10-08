@@ -197,3 +197,58 @@ class SessionClaimStateModel(Base):
     
     session = relationship("SessionModel", back_populates="claim_states")
     suspect = relationship("SuspectModel", back_populates="claim_states")
+
+
+class TurnLogModel(Base):
+    """
+    Registro analítico de um turno de interrogatório (append-only).
+    Colunas planas para filtros comuns; JSON para o snapshot completo.
+    """
+    __tablename__ = "turn_logs"
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("sessions.id"), nullable=False, index=True)
+    suspect_id = Column(Integer, ForeignKey("suspects.id"), nullable=False)
+    turn_number = Column(Integer, nullable=False)  # sequencial por (sessão, suspeito)
+    created_at = Column(DateTime, default=datetime.now)
+
+    player_message_id = Column(Integer, nullable=True)
+    npc_message_id = Column(Integer, nullable=True)
+    player_text = Column(String, nullable=False)
+    npc_text = Column(String, nullable=True)
+    evidence_id = Column(Integer, nullable=True)
+
+    # Filtros rápidos
+    intent = Column(String, nullable=True)
+    move_type = Column(String, nullable=True)
+    primary_topic_id = Column(String, nullable=True)
+    analysis_provider = Column(String, nullable=True)
+    evidence_effect = Column(String, nullable=True)
+    response_mode = Column(String, nullable=True)
+
+    # Snapshots completos
+    state_before = Column(JSON, nullable=True)
+    state_after = Column(JSON, nullable=True)
+    analysis = Column(JSON, nullable=True)      # MessageAnalysisResult completo
+    transition = Column(JSON, nullable=True)    # StateTransitionResult completo (deltas, reason codes)
+    effects = Column(JSON, nullable=True)       # segredos, claims, conhecimento, feedback, contexto
+    ai = Column(JSON, nullable=True)            # adapter, modelo, latência, fallback, guard, render context
+    prompt = Column(JSON, nullable=True)        # mensagens enviadas à LLM
+
+
+class VerdictLogModel(Base):
+    """Registro analítico do veredito final de uma sessão."""
+    __tablename__ = "verdict_logs"
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("sessions.id"), nullable=False, index=True)
+    scenario_id = Column(Integer, ForeignKey("scenarios.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.now)
+
+    result_type = Column(String, nullable=False)
+    chosen_suspect_id = Column(Integer, nullable=False)
+    real_culprit_id = Column(Integer, nullable=True)
+    chosen_motive_key = Column(String, nullable=True)
+    motive_result = Column(String, nullable=True)
+    evidence_ids = Column(JSON, nullable=True)
+
+    verdict = Column(JSON, nullable=True)        # dict completo (reason_codes, faltantes)
+    session_summary = Column(JSON, nullable=True)  # duração, turnos por suspeito

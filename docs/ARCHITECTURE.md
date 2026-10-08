@@ -94,8 +94,12 @@ O banco de dados SQLite (`game.db`) é estruturado em modelos relacionais via SQ
     - `revealed_secrets` (JSON): Lista de IDs de segredos já admitidos pelo suspeito.
 - **`session_claim_states` (`SessionClaimStateModel`):**
   - Rastreamento fino de cada alegação/mentira do suspeito na sessão (`is_broken`, turno de quebra).
-- **`messages` (`MessageModel`):**
+- **`messages` (`NpcChatMessageModel`):**
   - Histórico de turnos gravados na sessão (`sender_type`: "player" ou "npc", texto, evidência vinculada, timestamp).
+- **`turn_logs` (`TurnLogModel`):**
+  - Registro analítico completo e atômico de cada turno de interrogatório (intenção, jogada, deltas de pressão e paciência, segredos/claims quebradas, telemetria da IA e prompt).
+- **`verdict_logs` (`VerdictLogModel`):**
+  - Registro analítico do encerramento da sessão e acusação final (resultado, culpado, motivo, evidências, reason codes e sumário de turnos/duração).
 
 ---
 

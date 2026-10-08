@@ -15,8 +15,9 @@ from app.services.move_classification_service import classify_move
 from app.infra.db_models import (
     SessionEvidenceUsageModel, SessionModel, ScenarioModel, 
     NpcChatMessageModel, SuspectModel, SessionSuspectKnowledgeStateModel,
-    SessionClaimStateModel
+    SessionClaimStateModel, TurnLogModel
 )
+from fastapi.encoders import jsonable_encoder
 from app.api.schemas.chat import (
     MessageAnalysisResult,
     StateTransitionResult,
@@ -391,6 +392,7 @@ def run_interrogation_turn(
         effective_message_ids=effective_message_ids,
         db=db
     )
+    ai_trace = npc_msg.pop("ai_trace", None) or {}
 
     # 4. Fetch updated suspect state (snapshot for UX)
     suspect_state = get_suspect_state(
@@ -443,6 +445,52 @@ def run_interrogation_turn(
             allowed_knowledge=allowed_knowledge,
             new_knowledge_this_turn=new_knowledge
         )
+
+    # Analytics: um registro por turno, na mesma transação do turno
+    previous_turns = db.query(TurnLogModel).filter(
+        TurnLogModel.session_id == session_id,
+        TurnLogModel.suspect_id == suspect_id
+    ).count()
+    render_ctx = ai_trace.get("render_context") or {}
+    db.add(TurnLogModel(
+        session_id=session_id,
+        suspect_id=suspect_id,
+        turn_number=previous_turns + 1,
+        player_message_id=player_msg["id"],
+        npc_message_id=npc_msg["id"],
+        player_text=text,
+        npc_text=npc_msg["text"],
+        evidence_id=evidence_id,
+        intent=msg_analysis.intent.value,
+        move_type=move_type.value,
+        primary_topic_id=msg_analysis.primary_topic_id,
+        analysis_provider=msg_analysis.analysis_provider,
+        evidence_effect=evidence_effect,
+        response_mode=render_ctx.get("response_mode"),
+        state_before=jsonable_encoder(initial_suspect_state),
+        state_after=jsonable_encoder(suspect_state),
+        analysis=jsonable_encoder(msg_analysis),
+        transition=jsonable_encoder(state_transition),
+        effects=jsonable_encoder({
+            "revealed_secrets": revealed_secrets,
+            "newly_broken_claims": newly_broken_claims,
+            "claim_rewards": claim_rewards,
+            "allowed_knowledge": allowed_knowledge,
+            "new_knowledge_this_turn": new_knowledge,
+            "evidence_was_previously_used": was_previously_used,
+            "mechanical_effect": mechanical_effect,
+            "narrative_effect": narrative_effect,
+            "topic_signal": t_signal,
+            "feedback_hints": hints,
+            "narrative_feedback": narrative_fb,
+            "conversation_context": conversation_context,
+            "semantic_context": semantic_ctx,
+            "effective_message_ids": effective_message_ids,
+        }),
+        ai=jsonable_encoder({k: v for k, v in ai_trace.items() if k != "prompt"}),
+        prompt=jsonable_encoder(ai_trace.get("prompt")),
+    ))
+    db.flush()
         
     telemetry_logger.info(json.dumps({
         "event": "interrogation_turn",

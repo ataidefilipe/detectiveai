@@ -1,5 +1,6 @@
 from typing import Optional, Dict, Any, List
 import logging
+import time
 from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
@@ -22,6 +23,7 @@ from app.core.exceptions import NotFoundError, RuleViolationError
 from app.services.ai_adapter_factory import get_npc_ai_adapter
 from app.services.npc_context_builder import build_npc_context
 from app.services.npc_response_render_context_builder import build_render_context
+from app.services.prompt_builder import build_npc_prompt
 from app.services.session_narrative_memory_service import (
     load_narrative_memory,
     save_narrative_memory,
@@ -257,7 +259,8 @@ def _generate_npc_text_with_fallback(
     render_context: dict,
     revealed_now: list,
     effective_message_ids: Optional[List[int]] = None
-) -> str:
+) -> tuple:
+    """Returns (reply_text, fallback_error). fallback_error is None when the main adapter succeeded."""
     try:
         reply_text = ai.generate_reply(
             suspect_state=suspect_state,
@@ -268,6 +271,7 @@ def _generate_npc_text_with_fallback(
             revealed_now=revealed_now,
             effective_message_ids=effective_message_ids
         )
+        return reply_text, None
     except Exception as e:
         logger.error(f"LLM Adapter failed for suspect {suspect_id}. Falling back to Dummy adapter. Error: {e}", exc_info=True)
         from app.services.ai_adapter_dummy import DummyNpcAIAdapter
@@ -281,7 +285,7 @@ def _generate_npc_text_with_fallback(
             revealed_now=revealed_now,
             effective_message_ids=effective_message_ids
         )
-    return reply_text
+        return reply_text, f"{type(e).__name__}: {e}"
 
 
 def add_npc_reply(
@@ -383,7 +387,8 @@ def add_npc_reply(
             narrative_memory=narrative_view
         )
 
-        reply_text = _generate_npc_text_with_fallback(
+        started = time.perf_counter()
+        reply_text, fallback_error = _generate_npc_text_with_fallback(
             suspect_id,
             suspect_state,
             npc_context,
@@ -393,6 +398,8 @@ def add_npc_reply(
             revealed_now,
             effective_message_ids
         )
+        latency_ms = int((time.perf_counter() - started) * 1000)
+        raw_reply = reply_text
 
         # ── Sprint 3 T5.3: Guard pós-resposta ───────────────────────────────
         motive_text = None
@@ -426,6 +433,23 @@ def add_npc_reply(
         if close_session:
             db.commit()
 
+        # Trace analítico (consumido pelo turn log; não vai para a API)
+        try:
+            prompt = build_npc_prompt(npc_context, chat_history, render_context, effective_message_ids)
+        except Exception:
+            prompt = None  # logging nunca deve quebrar o turno
+        ai_trace = {
+            "adapter": type(ai).__name__,
+            "model": getattr(ai, "model", None),
+            "latency_ms": latency_ms,
+            "fallback_error": fallback_error,
+            "guard_blocked": was_blocked,
+            "raw_reply": raw_reply,
+            "render_context": render_context.model_dump(mode="json") if hasattr(render_context, "model_dump") else None,
+            "narrative_memory": narrative_mem.model_dump(mode="json") if hasattr(narrative_mem, "model_dump") else None,
+            "prompt": prompt,
+        }
+
         return {
             "id": npc_msg.id,
             "session_id": npc_msg.session_id,
@@ -433,7 +457,8 @@ def add_npc_reply(
             "sender_type": npc_msg.sender_type,
             "text": npc_msg.text,
             "evidence_id": npc_msg.evidence_id,
-            "timestamp": npc_msg.timestamp.isoformat()
+            "timestamp": npc_msg.timestamp.isoformat(),
+            "ai_trace": ai_trace,
         }
 
     finally:

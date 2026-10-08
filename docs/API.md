@@ -29,9 +29,12 @@ Esta documentação descreve todos os endpoints disponibilizados pela API do **D
    - `POST /sessions/{session_id}/suspects/{suspect_id}/messages` — Executar turno de interrogatório
    - `GET /sessions/{session_id}/suspects/{suspect_id}/messages` — Obter histórico de mensagens com o suspeito
 5. [Dossiê da Investigação (Case File)](#5-dossiê-da-investigação-case-file)
-   - `GET /sessions/{session_id}/case_file` — Obter dossiê consolidado
+   - `GET /sessions/{session_id}/case-file` — Obter dossiê consolidado
 6. [Acusação & Veredito Final (Verdict)](#6-acusação--veredito-final-verdict)
    - `POST /sessions/{session_id}/accuse` — Realizar acusação formal e concluir caso
+7. [Logs Analíticos (Analytics & Logs)](#7-logs-analíticos-analytics--logs)
+   - `GET /sessions/{session_id}/logs/turns` — Histórico analítico dos turnos
+   - `GET /sessions/{session_id}/logs/verdict` — Log analítico do veredito final
 
 ---
 
@@ -330,6 +333,119 @@ Finaliza a investigação formalizando a acusação contra um suspeito.
     ],
     "summary": "Você acertou o culpado, mas a acusação foi incompleta perante o tribunal.",
     "score": 60
+  }
+}
+```
+
+---
+
+## 7. Logs Analíticos (Analytics & Logs)
+
+### `GET /sessions/{session_id}/logs/turns`
+Retorna a lista cronológica de turnos de interrogatório da sessão com todos os dados analíticos registrados (intenção, jogada, deltas de pressão/paciência, efeitos de evidências, modo de resposta e telemetria da IA).
+
+**Parâmetros de Query:**
+- `suspect_id` *(opcional, int)*: Filtra apenas os turnos realizados com um suspeito específico.
+- `include_prompt` *(opcional, bool, padrão `false`)*: Se `true`, inclui o payload completo do prompt enviado à LLM naquele turno.
+
+**Resposta `200 OK`:**
+```json
+{
+  "session_id": 1,
+  "total_turns": 1,
+  "turns": [
+    {
+      "id": 1,
+      "session_id": 1,
+      "suspect_id": 1,
+      "turn_number": 1,
+      "created_at": "2026-10-08T14:49:48.042123",
+      "player_message_id": 10,
+      "npc_message_id": 11,
+      "player_text": "Onde você estava na hora do crime?",
+      "npc_text": "Eu estava no meu escritório trabalhando...",
+      "evidence_id": null,
+      "intent": "ask",
+      "move_type": "explore",
+      "primary_topic_id": "alibi",
+      "analysis_provider": "heuristic",
+      "evidence_effect": "none",
+      "response_mode": "neutral_answer",
+      "state_before": {
+        "patience": 50.0,
+        "pressure": 0.0,
+        "rapport": 0.0,
+        "stance": "neutral"
+      },
+      "state_after": {
+        "patience": 50.0,
+        "pressure": 2.0,
+        "rapport": 0.0,
+        "stance": "neutral"
+      },
+      "analysis": {
+        "intent": "ask",
+        "novelty": "new",
+        "sensitivity_hit": "none",
+        "confidence": 1.0
+      },
+      "transition": {
+        "conversation_effect": "new_topic",
+        "npc_shift": "none",
+        "state_deltas": { "pressure": 2.0 }
+      },
+      "effects": {
+        "revealed_secrets": [],
+        "newly_broken_claims": [],
+        "allowed_knowledge": []
+      },
+      "ai": {
+        "adapter": "DummyNpcAIAdapter",
+        "latency_ms": 12,
+        "guard_blocked": false
+      },
+      "prompt": null
+    }
+  ]
+}
+```
+
+---
+
+### `GET /sessions/{session_id}/logs/verdict`
+Retorna o log analítico consolidado do veredito final da sessão (registrado no momento da acusação).
+
+**Resposta `200 OK`:**
+```json
+{
+  "id": 1,
+  "session_id": 1,
+  "scenario_id": 1,
+  "created_at": "2026-10-08T15:20:10.123456",
+  "result_type": "correct",
+  "chosen_suspect_id": 1,
+  "real_culprit_id": 1,
+  "chosen_motive_key": "financial_gain",
+  "motive_result": "correct",
+  "evidence_ids": [1, 2],
+  "verdict": {
+    "result_type": "correct",
+    "missing_evidence_ids": [],
+    "required_evidence_ids": [1, 2],
+    "chosen_suspect_id": 1,
+    "real_culprit_id": 1,
+    "chosen_motive_key": "financial_gain",
+    "motive_result": "correct",
+    "reason_codes": [],
+    "missing_claim_ids": []
+  },
+  "session_summary": {
+    "duration_seconds": 320,
+    "total_turns": 14,
+    "turns_per_suspect": {
+      "1": 8,
+      "2": 6
+    }
   }
 }
 ```

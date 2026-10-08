@@ -137,6 +137,7 @@ def evaluate_verdict(
         
         # T11: Reason Codes
         reason_codes = []
+        missing_claim_ids = []
 
         # ----------------------------------------
         # 4. Wrong culprit → immediate fail
@@ -152,7 +153,8 @@ def evaluate_verdict(
                 "real_culprit_id": real_culprit_id,
                 "chosen_motive_key": motive_key,
                 "motive_result": motive_result,
-                "reason_codes": reason_codes
+                "reason_codes": reason_codes,
+                "missing_claim_ids": missing_claim_ids
             }
             telemetry_logger.info(json.dumps({
                 "event": "session_verdict",
@@ -199,7 +201,8 @@ def evaluate_verdict(
             "real_culprit_id": real_culprit_id,
             "chosen_motive_key": motive_key,
             "motive_result": motive_result,
-            "reason_codes": reason_codes
+            "reason_codes": reason_codes,
+            "missing_claim_ids": missing_claim_ids
         }
         
         telemetry_logger.info(json.dumps({
