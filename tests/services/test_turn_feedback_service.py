@@ -184,3 +184,84 @@ def test_build_narrative_feedback_generic_guidance():
     assert narrative_fb.suspect_reaction == SuspectReaction.neutro
     assert narrative_fb.topic_read == TopicRead.nenhum
     assert narrative_fb.guidance == "O suspeito não reagiu a nada de específico nessa troca."
+
+
+def test_build_turn_feedback_breakthrough_suppresses_vague():
+    analysis = MessageAnalysisResult(
+        intent=MessageIntent.ask,
+        detected_topic_ids=[],
+        sensitivity_hit=SensitivityLevel.low
+    )
+    transition = StateTransitionResult(
+        conversation_effect=ConversationEffect.none,
+        npc_shift=NpcShift.none,
+        state_deltas={},
+        debug_reason_codes=[]
+    )
+    # Mesmo sem tópicos, quebra de claim garante sinal forte e impede 'pergunta muito vaga'
+    t_signal, hints = build_turn_feedback(
+        analysis=analysis,
+        transition=transition,
+        evidence_effect="none",
+        newly_broken_claims=["claim_01"]
+    )
+    assert t_signal == TopicSignal.strong
+    assert "contradição desfeita" in hints
+    assert "pergunta muito vaga" not in hints
+
+
+def test_build_turn_feedback_pressure_not_vague():
+    analysis = MessageAnalysisResult(
+        intent=MessageIntent.pressure,
+        detected_topic_ids=[],
+        sensitivity_hit=SensitivityLevel.low
+    )
+    transition = StateTransitionResult(
+        conversation_effect=ConversationEffect.none,
+        npc_shift=NpcShift.none,
+        state_deltas={},
+        debug_reason_codes=[]
+    )
+    # Acusação/pressão sem tópicos detectados não é pergunta vaga
+    t_signal, hints = build_turn_feedback(
+        analysis=analysis,
+        transition=transition,
+        evidence_effect="none"
+    )
+    assert "pergunta muito vaga" not in hints
+
+
+def test_build_narrative_feedback_breakthrough_suppresses_generic():
+    # Quebra de claim com npc_shift="none" NUNCA deve dizer "O suspeito não reagiu..."
+    narrative_fb = build_narrative_feedback(
+        npc_shift="none",
+        topic_signal=TopicSignal.strong,
+        evidence_effect="none",
+        hints=["contradição desfeita"],
+        newly_broken_claims=["claim_marina_relatorio_01"]
+    )
+    assert narrative_fb.guidance is None
+    assert narrative_fb.topic_read == TopicRead.sensivel
+
+
+def test_build_narrative_feedback_anti_spam_cooldown():
+    # Primeira vez: exibe a dica de pergunta vaga
+    vague_text = "A pergunta foi muito aberta. Tente especificar um horário, pessoa, lugar ou evidência."
+    fb_first = build_narrative_feedback(
+        npc_shift="none",
+        topic_signal=TopicSignal.weak,
+        evidence_effect="none",
+        hints=["pergunta muito vaga"],
+        recent_guidances=[]
+    )
+    assert fb_first.guidance == vague_text
+
+    # Turno seguinte com vague_text no histórico recente: suprime e retorna None
+    fb_second = build_narrative_feedback(
+        npc_shift="none",
+        topic_signal=TopicSignal.weak,
+        evidence_effect="none",
+        hints=["pergunta muito vaga"],
+        recent_guidances=[vague_text]
+    )
+    assert fb_second.guidance is None

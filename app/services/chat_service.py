@@ -384,7 +384,9 @@ def add_npc_reply(
             evidence_effect=evidence_effect,
             newly_broken_claims=newly_broken_claims,
             current_stance=state.stance,
-            narrative_memory=narrative_view
+            narrative_memory=narrative_view,
+            pressure=state.pressure,
+            patience=state.patience
         )
 
         started = time.perf_counter()

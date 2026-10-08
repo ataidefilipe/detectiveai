@@ -54,11 +54,16 @@ class MotiveClueConfig(BaseModel):
     revealed_by: RevealedByConfig = Field(..., description="Condition to reveal this clue")
     content: str = Field(..., description="Text of the clue")
 
+class SpeechProfile(BaseModel):
+    base_verbosity: float = Field(default=0.5, ge=0.0, le=1.0, description="Extensão habitual da fala (0.0 conciso/lacônico, 1.0 muito falante)")
+    stress_verbosity_delta: float = Field(default=0.0, ge=-1.0, le=1.0, description="Direção e intensidade da mudança sob pressão (-1.0 fecha a boca, +1.0 fala demais/desespera-se)")
+
 class TopicAffinityProfile(BaseModel):
     pressure_tolerance: float = Field(default=0.5, description="How well the suspect handles pressure (0.0 to 1.0)")
     empathy_receptivity: float = Field(default=0.5, description="How well the suspect responds to calm approaches (0.0 to 1.0)")
     repetition_irritability: float = Field(default=0.5, description="How easily the suspect gets annoyed by repeats (0.0 to 1.0)")
     contradiction_fragility: float = Field(default=0.5, description="How quickly the suspect breaks when contradicted (0.0 to 1.0)")
+    speech: SpeechProfile = Field(default_factory=SpeechProfile, description="Perfil de verbosidade e ritmo do personagem")
 
 class SuspectConfig(BaseModel):
     id: str = Field(..., description="Stable string identifier for the suspect")

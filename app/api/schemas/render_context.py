@@ -51,6 +51,15 @@ class NpcResponseRenderContext(BaseModel):
     must_not_say: List[str] = Field(default_factory=list)
     # Memória Narrativa da Sessão (Híbrida e Determinística)
     narrative_memory: "NarrativeMemoryView" = Field(default_factory=lambda: NarrativeMemoryView())
+    # Perfil e Diretriz de Fala (Sprint 3 / Astra UX)
+    speech_directive: Optional["SpeechDirective"] = None
+
+
+class SpeechDirective(BaseModel):
+    min_sentences: int = Field(default=2, ge=1)
+    max_sentences: int = Field(default=3, ge=1)
+    target_max_words: int = Field(default=65, ge=1)
+    rhythm_hint: Optional[str] = None
 
 
 class NarrativeMemoryView(BaseModel):

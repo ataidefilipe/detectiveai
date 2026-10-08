@@ -416,25 +416,51 @@ def run_interrogation_turn(
                 if is_sensitive or has_reaction:
                     evidence_effect = "reaction_only"
                 
-    # ── Sprint 3 T2.3: Separar efeitos ───────────────────────────────────────
-    mechanical_effect = evidence_effect if evidence_effect in ("revealed_secret","broke_claim","out_of_context") else "none"
-    narrative_effect = "suspect_reacted_defensively" if state_transition.npc_shift.value in ("more_defensive","pressured") else "no_reaction"
+    # ── Sprint 3 T2.3 / Parecer Astra: Consolidar efeitos e precedências ────
+    if newly_broken_claims:
+        mechanical_effect = "broke_claim"
+    elif revealed_secrets:
+        mechanical_effect = "revealed_secret"
+    elif evidence_effect in ("revealed_secret", "broke_claim", "out_of_context", "reaction_only", "duplicate"):
+        mechanical_effect = evidence_effect
+    else:
+        mechanical_effect = "none"
+
+    narrative_effect = "suspect_reacted_defensively" if state_transition.npc_shift.value in ("more_defensive", "pressured") else "no_reaction"
     # ───────────────────────────────────────────────────────────────────
                 
-    # Feedback Sistêmico (Epic G) via service extraído
+    # Histórico recente de guidances para anti-spam / cooldown (últimos 3 turnos)
+    recent_logs = db.query(TurnLogModel).filter(
+        TurnLogModel.session_id == session_id,
+        TurnLogModel.suspect_id == suspect_id
+    ).order_by(TurnLogModel.id.desc()).limit(3).all()
+
+    recent_guidances = []
+    for log in recent_logs:
+        if log.effects and isinstance(log.effects, dict):
+            n_fb = log.effects.get("narrative_feedback")
+            if isinstance(n_fb, dict) and n_fb.get("guidance"):
+                recent_guidances.append(n_fb["guidance"])
+
+    # Feedback Sistêmico (Epic G) via service extraído com precedência mecânica
     t_signal, hints = build_turn_feedback(
         analysis=msg_analysis,
         transition=state_transition,
         evidence_effect=evidence_effect,
-        topic_state=primary_topic_state
+        topic_state=primary_topic_state,
+        newly_broken_claims=newly_broken_claims,
+        revealed_secrets=revealed_secrets,
     )
     
-    # Narrative Feedback (MVP-001)
+    # Narrative Feedback (MVP-001) com supressão em conquistas e anti-spam
     narrative_fb = build_narrative_feedback(
         npc_shift=state_transition.npc_shift.value,
         topic_signal=t_signal,
         evidence_effect=evidence_effect,
-        hints=hints
+        hints=hints,
+        newly_broken_claims=newly_broken_claims,
+        revealed_secrets=revealed_secrets,
+        recent_guidances=recent_guidances,
     )
 
     debug_trace = None

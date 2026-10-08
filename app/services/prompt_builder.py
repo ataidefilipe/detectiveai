@@ -113,8 +113,9 @@ def build_npc_prompt(
         items = "\n".join(f"- {k}" for k in must_say)
         mandatory_block = f"""
 === CONTEUDO OBRIGATORIO NESTE TURNO ===
-Os fatos abaixo DEVEM aparecer na sua resposta integrados naturalmente.
-Nao os liste como topicos — incorpore-os como parte da conversa.
+Os fatos abaixo DEVEM ser admitidos ou comunicados na sua resposta de forma integrada e humana.
+Voce pode sintetizar os fatos em uma fala coesa em vez de repetir cada frase literalmente.
+Mantenha um ritmo natural de interrogatorio: admita o essencial sem descarregar um monologo atropelado.
 {items}
 =========================================
 """
@@ -194,6 +195,23 @@ Lembre-se disso ao responder — use como contexto de atitude e continuidade dra
 Estes sao gostos e habitos pessoais confirmados por voce. Mantenha coerencia estrita com eles.
 """
 
+    # -- Diretriz de Extensão e Ritmo (Sprint 3 / Astra UX) -------------------
+    speech_directive = getattr(render_context, "speech_directive", None)
+    if speech_directive:
+        rhythm_text = speech_directive.rhythm_hint or "natural e adequado ao tom"
+        speech_block = f"""
+== EXTENSAO E RITMO ==
+- EXTENSAO: prefira {speech_directive.min_sentences} a {speech_directive.max_sentences} frases, ate cerca de {speech_directive.target_max_words} palavras.
+- RITMO: {rhythm_text}.
+- Responda apenas ao ponto atual. Nao recapitule todo o caso.
+- Mais fala NAO autoriza mais fatos: use o espaco para hesitar, justificar ou se explicar, mas preserve estritamente os fatos autorizados.
+- Preserve o conteudo obrigatorio; nao o comprima em uma frase interminavel nem invente novas pistas.
+"""
+        length_rule = f"- Respeite a extensao indicada: prefira {speech_directive.min_sentences} a {speech_directive.max_sentences} frases (ate ~{speech_directive.target_max_words} palavras), mantendo a conversa fluida."
+    else:
+        speech_block = ""
+        length_rule = "- Tente responder em 1 a 3 frases, mantendo a conversa fluida."
+
     system_prompt = f"""Voce e {name}, sendo interrogado por um detetive sobre um crime.
 
 == QUEM VOCE E ==
@@ -207,7 +225,7 @@ NAO repita essa frase nem partes dela nas suas respostas. Ela ja foi dita.
 {mandatory_block}{optional_block}{forbidden_block}
 == O QUE VOCE SABE E PODE FALAR ==
 Estes sao os unicos fatos que voce revelou ou admitiu ate agora.
-Voce pode confirmar ou expandir levemente o que esta aqui.
+Voce pode reformular e explicar os fatos autorizados, sem acrescentar novas atribuicoes, acontecimentos, pessoas, horarios ou pistas materiais.
 O que NAO esta aqui: voce nao sabe, nao lembra, ou nao vai comentar.
 
 {known_facts_str}
@@ -216,7 +234,7 @@ O que NAO esta aqui: voce nao sabe, nao lembra, ou nao vai comentar.
 {tone_hint}
 Isso define COMO voce fala — nao O QUE voce fala.
 Voce ainda responde a pergunta feita pelo detetive, com esse filtro emocional.
-
+{speech_block}
 == REGRAS ABSOLUTAS ==
 - Fale SEMPRE em primeira pessoa. Voce e {name}.
 - Responda a pergunta que foi feita. Nao ignore o que o detetive disse.
@@ -225,7 +243,9 @@ Voce ainda responde a pergunta feita pelo detetive, com esse filtro emocional.
 - Preserve os detalhes pessoais ja estabelecidos nesta conversa e nao os contradiga.
 - Se perguntarem algo que nao esta na secao de fatos: seja vago, diga que nao sabe, ou negue — mas responda.
 - NUNCA repita o initial_statement como prefixo ou abertura de resposta.
-- Tente responder em 1 a 3 frases, mantendo a conversa fluida.""".strip()
+- Em perguntas de acompanhamento sobre o mesmo assunto, responda apenas ao novo angulo do detetive. NAO repita listas de tarefas, rotinas ou explicacoes detalhadas que voce ja acabou de dar nos turnos recentes.
+- Se o detetive insistir no mesmo assunto e nao houver fatos novos autorizados, reaja a duvida de forma conversacional, defensiva ou pedindo que ele seja especifico — sem inventar pistas e sem repetir o texto anterior inteiro.
+{length_rule}""".strip()
 
     selected = _select_history(chat_history, effective_message_ids)
     messages = [{"role": "system", "content": system_prompt}]

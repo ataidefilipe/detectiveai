@@ -1,5 +1,6 @@
 from app.api.schemas.chat import StateTransitionResult, NpcShift, MessageAnalysisResult, MessageIntent
-from app.api.schemas.render_context import ResponseMode
+from app.api.schemas.render_context import ResponseMode, SpeechDirective
+from app.domain.schema_scenario import SpeechProfile
 from typing import Optional, List, Dict, Any
 
 def determine_response_mode(
@@ -62,3 +63,73 @@ def determine_response_mode(
         return ResponseMode.clarify
 
     return ResponseMode.neutral_answer
+
+
+def determine_speech_directive(
+    profile: Optional[SpeechProfile] = None,
+    pressure: float = 0.0,
+    patience: float = 50.0,
+    stance: str = "neutral",
+    response_mode: Optional[ResponseMode] = None,
+) -> SpeechDirective:
+    """
+    Calcula deterministamente a diretriz de verbosidade e ritmo do suspeito
+    com base no perfil de fala, estado de estresse/pressão e modo de resposta.
+    """
+    if profile is None:
+        profile = SpeechProfile()
+
+    p = max(0.0, min(1.0, float(pressure) / 100.0))
+    impatience = max(0.0, min(1.0, 1.0 - (float(patience) / 100.0)))
+
+    raw_verbosity = profile.base_verbosity + (profile.stress_verbosity_delta * p) - (0.15 * impatience)
+    verbosity = max(0.0, min(1.0, raw_verbosity))
+
+    if response_mode == ResponseMode.context_request:
+        return SpeechDirective(
+            min_sentences=1,
+            max_sentences=1,
+            target_max_words=25,
+            rhythm_hint="pergunta curta e direta pedindo especificidade, sem reapresentação ou rodeios"
+        )
+
+    if response_mode == ResponseMode.irritated_repeat:
+        return SpeechDirective(
+            min_sentences=1,
+            max_sentences=2,
+            target_max_words=40,
+            rhythm_hint="impaciente e cortante com a repetição; corte rodeios"
+        )
+
+    if verbosity < 0.30:
+        min_s = 1
+        max_s = 2
+        words = 35
+        if p > 0.6 and profile.stress_verbosity_delta < 0:
+            rhythm = "fala extremamente seca, lacônica e contida sob pressão; respostas curtas, cortantes e econômicas"
+        else:
+            rhythm = "fala seca, contida e econômica; respostas diretas e curtas"
+    elif verbosity <= 0.70:
+        min_s = 2
+        max_s = 3
+        words = 65
+        rhythm = "tom equilibrado e ponderado; respostas naturais e objetivas"
+    else:
+        min_s = 3
+        max_s = 5
+        words = 95
+        if p > 0.6 and profile.stress_verbosity_delta > 0:
+            rhythm = "ansiosa e detalhista sob pressão, com tentativas de se explicar, justificar ou corrigir; sem gagueira caricatural"
+        else:
+            rhythm = "expressiva e detalhista; respostas mais articuladas e explicativas"
+
+    if stance == "defensive" and verbosity <= 0.70:
+        rhythm += "; defensivo e evasivo, medindo as palavras"
+
+    return SpeechDirective(
+        min_sentences=min_s,
+        max_sentences=max_s,
+        target_max_words=words,
+        rhythm_hint=rhythm
+    )
+
