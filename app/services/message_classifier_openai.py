@@ -150,19 +150,23 @@ class OpenAISemanticMessageClassifier(MessageClassifier):
         """Calls OpenAI with Structured Outputs and returns validated result."""
         start = time.time()
 
-        response = self.client.responses.create(
-            model=self.model,
-            input=[
+        create_kwargs = {
+            "model": self.model,
+            "input": [
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_prompt},
             ],
-            text={
+            "text": {
                 "format": {
                     "type": "json_schema",
                     "json_schema": CLASSIFICATION_JSON_SCHEMA,
                 }
             },
-        )
+        }
+        if "gpt-6" in self.model:
+            create_kwargs["reasoning"] = {"effort": "none"}
+
+        response = self.client.responses.create(**create_kwargs)
 
         elapsed_ms = int((time.time() - start) * 1000)
         raw_text = response.output_text.strip()

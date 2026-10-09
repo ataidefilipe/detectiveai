@@ -46,9 +46,10 @@ class Settings(BaseSettings):
     # --- Message Classifier (T1.2) ---
     MESSAGE_CLASSIFIER_PROVIDER: str = "heuristic"  # "heuristic" | "openai"
 
-    # --- OpenAI Classifier (T6.1) ---
-    OPENAI_CLASSIFIER_MODEL: str = "gpt-5-mini"
-    OPENAI_CLASSIFIER_TIMEOUT_SECONDS: int = 4
+    # --- OpenAI Settings ---
+    OPENAI_MODEL: str = "gpt-6-luna"
+    OPENAI_CLASSIFIER_MODEL: str = "gpt-6-luna"
+    OPENAI_CLASSIFIER_TIMEOUT_SECONDS: int = 6
     OPENAI_CLASSIFIER_MAX_RETRIES: int = 1
     OPENAI_CLASSIFIER_CONFIDENCE_THRESHOLD: float = 0.45
 

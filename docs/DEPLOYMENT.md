@@ -54,7 +54,7 @@ No painel do Railway (ou via ferramenta MCP `set-variables`), as seguintes vari�
 | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` | Conexão gerenciada com o banco PostgreSQL persistente |
 | `OPENAI_API_KEY` | `sk-proj-...` | Credencial para chamar o modelo da OpenAI |
 | `NPC_AI_PROVIDER` | `openai` | Habilita o adaptador real de IA (ou `dummy` para testes) |
-| `OPENAI_MODEL` | `gpt-5-mini` | Modelo utilizado nas conversas com os suspeitos |
+| `OPENAI_MODEL` | `gpt-6-luna` | Modelo utilizado nas conversas com os suspeitos |
 | `PORT` | *(injetada pelo Railway)* | Porta em que o container escuta requisições |
 
 ---

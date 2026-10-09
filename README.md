@@ -60,7 +60,7 @@ Em **Detective AI**, você assume o papel de um investigador responsável por so
   |    Interrogation Engine     |             |      AI / Prompt Pipeline       |
   | - Move Classifier           |             | - Prompt Builder                |
   | - Topic State Tracking      |             | - Response Render Context       |
-  | - Claim Resolution          |             | - OpenAI Adapter (gpt-5-mini)   |
+  | - Claim Resolution          |             | - OpenAI Adapter (gpt-6-luna)   |
   | - Secret & Reveal Policies  |             | - Fallback & Response Guard     |
   | - Suspect Psychological FSM |             +---------------------------------+
   +--------------+--------------+                              |
@@ -77,7 +77,7 @@ Em **Detective AI**, você assume o papel de um investigador responsável por so
 
 - **Backend:** FastAPI (Python 3.12/3.13) com arquitetura em camadas (`api`, `core`, `domain`, `infra`, `services`).
 - **Persistência:** PostgreSQL gerenciado em produção no Railway (com volume persistente de 5 GB, imune a reinicializações) e SQLite local (`game.db`) via SQLAlchemy ORM.
-- **Integração IA:** OpenAI Responses API (`gpt-5-mini`) com fallback automático para modo determinístico (`dummy`).
+- **Integração IA:** OpenAI Responses API (`gpt-6-luna`) com fallback automático para modo determinístico (`dummy`).
 - **Frontend:** SPA responsivo e sem dependências pesadas, empacotado em arquivo único em `frontend/index.html` servido diretamente pelo FastAPI.
 
 ---
@@ -154,7 +154,7 @@ Edite o arquivo `.env` e preencha sua `OPENAI_API_KEY`:
 ```ini
 OPENAI_API_KEY=sk-proj-sua-chave-aqui
 NPC_AI_PROVIDER=openai
-OPENAI_MODEL=gpt-5-mini
+OPENAI_MODEL=gpt-6-luna
 ```
 *(Se preferir testar sem gastar tokens da OpenAI, basta definir `NPC_AI_PROVIDER=dummy`)*.
 

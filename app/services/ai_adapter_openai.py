@@ -22,8 +22,9 @@ class OpenAINpcAIAdapter(NpcAIAdapter):
         if not api_key:
             raise RuntimeError("OPENAI_API_KEY not set")
 
+        from app.core.config import settings
         self.client = OpenAI(api_key=api_key)
-        self.model = os.getenv("OPENAI_MODEL", "gpt-5-mini")
+        self.model = os.getenv("OPENAI_MODEL", settings.OPENAI_MODEL)
 
     def generate_reply(
         self,
