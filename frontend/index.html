@@ -43,6 +43,14 @@
     .app-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 12px; }
     .app-header .logo { font-family: 'Playfair Display', serif; font-size: 1.25rem; color: var(--accent); letter-spacing: 0.5px; }
     .app-header .subtitle { font-size: 0.78rem; color: var(--text-muted); margin-left: auto; }
+    .nav-links { display: flex; gap: 8px; margin-left: 16px; }
+    .nav-tab { background: none; border: 1px solid transparent; color: var(--text-muted); padding: 6px 14px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.85rem; font-weight: 500; font-family: inherit; transition: all .2s; }
+    .nav-tab:hover { color: var(--text); border-color: var(--border); }
+    .nav-tab.active { background: var(--surface2); color: var(--accent); border-color: var(--accent); }
+    .session-card { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .session-info { flex: 1; min-width: 240px; }
+    .session-title { font-weight: 600; font-size: 1.05rem; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    .session-meta { font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
     .btn-back { background: none; border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.82rem; transition: all .2s; }
     .btn-back:hover { border-color: var(--accent); color: var(--accent); }
 
@@ -275,10 +283,42 @@
 <body>
   <div id="toast-container"></div>
 
+  <!-- ════ SCREEN 0: Sessions List ════════════════════════════ -->
+  <section id="screen-sessions" class="screen">
+    <header class="app-header">
+      <span class="logo">🔍 Detective AI</span>
+      <div class="nav-links">
+        <button class="nav-tab" onclick="showScenariosScreen()">📁 Novo Caso</button>
+        <button class="nav-tab active" onclick="showSessionsScreen()">📜 Minhas Sessões</button>
+      </div>
+      <span class="subtitle">Powered by IA Generativa</span>
+    </header>
+    <div class="container">
+      <div class="hero" style="padding: 40px 0 20px; text-align: center;">
+        <h1 style="font-family:'Playfair Display',serif;font-size:2.4rem;color:var(--accent);margin-bottom:8px;">Sessões de Investigação</h1>
+        <p style="color:var(--text-muted);font-size:1rem;margin-bottom:20px;">Retome investigações em andamento ou confira o resultado de casos encerrados.</p>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+        <span id="sessions-total-label" style="font-size:0.85rem; color:var(--text-muted);">Carregando sessões...</span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-secondary" onclick="loadSessionsList()" style="padding:6px 14px; font-size:0.82rem;">🔄 Atualizar</button>
+          <button class="btn btn-primary" onclick="showScenariosScreen()" style="padding:6px 14px; font-size:0.82rem;">➕ Novo Caso</button>
+        </div>
+      </div>
+      <div id="sessions-list" style="display:grid; gap:14px; padding-bottom:40px;">
+        <div class="loading"><div class="spinner"></div> Carregando sessões…</div>
+      </div>
+    </div>
+  </section>
+
   <!-- ════ SCREEN 1: Scenarios ═══════════════════════════════ -->
   <section id="screen-scenarios" class="screen">
     <header class="app-header">
       <span class="logo">🔍 Detective AI</span>
+      <div class="nav-links">
+        <button class="nav-tab active" onclick="showScenariosScreen()">📁 Novo Caso</button>
+        <button class="nav-tab" onclick="showSessionsScreen()">📜 Minhas Sessões</button>
+      </div>
       <span class="subtitle">Powered by IA Generativa</span>
     </header>
     <div class="container">
@@ -295,8 +335,9 @@
   <!-- ════ SCREEN 2: Briefing ════════════════════════════════ -->
   <section id="screen-briefing" class="screen">
     <header class="app-header">
-      <button class="btn-back" onclick="showScreen('screen-scenarios')">← Voltar</button>
+      <button class="btn-back" onclick="showScenariosScreen()">← Voltar</button>
       <span class="logo">🔍 Detective AI</span>
+      <button class="btn-back" style="margin-left:auto;" onclick="showSessionsScreen()">📜 Minhas Sessões</button>
     </header>
     <div class="container">
       <div class="briefing-body">
@@ -315,6 +356,7 @@
   <!-- ════ SCREEN 3: Investigation Hub ══════════════════════ -->
   <section id="screen-investigation" class="screen">
     <div class="inv-header">
+      <button class="btn-back" onclick="showSessionsScreen()">← Sessões</button>
       <span class="case-name" id="inv-case-name">—</span>
       <button class="btn btn-secondary" onclick="openDossier()">📋 Dossiê</button>
       <button class="btn btn-danger" onclick="openAccusation()">⚖️ Acusar</button>
@@ -390,7 +432,10 @@
       <h2 class="verdict-type" id="verdict-type">—</h2>
       <p class="verdict-desc" id="verdict-desc">—</p>
       <div class="verdict-details" id="verdict-details"></div>
-      <button class="btn btn-primary" onclick="resetGame()">🔄 Jogar Novamente</button>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:12px;">
+        <button class="btn btn-primary" onclick="resetGame()">🔄 Novo Caso</button>
+        <button class="btn btn-secondary" onclick="showSessionsScreen()">📜 Minhas Sessões</button>
+      </div>
     </div>
   </section>
 
@@ -413,6 +458,21 @@
       <div style="display:flex;gap:12px;margin-top:8px;">
         <button class="btn btn-primary" id="btn-confirm-accuse" onclick="submitAccusation()">Confirmar Acusação</button>
         <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ MODAL: Session Not Found (Opção C) ═════════════════ -->
+  <div class="modal-overlay" id="modal-session-not-found">
+    <div class="modal" style="max-width: 480px; text-align: center;">
+      <div style="font-size: 3rem; margin-bottom: 12px;">⚠️</div>
+      <h2 style="color: var(--accent); margin-bottom: 10px;">Sessão Não Encontrada</h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin-bottom: 24px;" id="session-not-found-msg">
+        Esta sessão de investigação não foi encontrada no servidor (o servidor pode ter sido reiniciado ou a sessão expirou).
+      </p>
+      <div style="display:flex; gap:12px; justify-content:center;">
+        <button class="btn btn-primary" onclick="handleSessionNotFoundGoSessions()">📜 Ver Sessões</button>
+        <button class="btn btn-secondary" onclick="handleSessionNotFoundGoNew()">📁 Iniciar Novo Caso</button>
       </div>
     </div>
   </div>
@@ -446,7 +506,11 @@
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ detail: res.statusText }));
-        throw new Error(err.detail || `HTTP ${res.status}`);
+        const errMsg = err.detail || `HTTP ${res.status}`;
+        if (res.status === 404 && (errMsg.toLowerCase().includes('not found') || path.startsWith('/sessions/'))) {
+          openSessionNotFoundModal(state.sessionId);
+        }
+        throw new Error(errMsg);
       }
       return res.json();
     }
@@ -454,7 +518,40 @@
     // ── Screen navigation ──────────────────────────────────
     function showScreen(id) {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
+      const target = document.getElementById(id);
+      if (target) target.classList.add('active');
+    }
+
+    function showScenariosScreen() {
+      showScreen('screen-scenarios');
+      loadScenarios();
+    }
+
+    function showSessionsScreen() {
+      showScreen('screen-sessions');
+      loadSessionsList();
+    }
+
+    // ── Session Not Found Modal (Opção C) ──────────────────
+    function openSessionNotFoundModal(sessionId) {
+      const modal = document.getElementById('modal-session-not-found');
+      if (modal) {
+        const msg = document.getElementById('session-not-found-msg');
+        if (msg) {
+          msg.textContent = `A sessão #${sessionId || ''} não foi encontrada no servidor (o servidor pode ter sido reiniciado ou a sessão expirou).`;
+        }
+        modal.classList.add('open');
+      }
+    }
+
+    function handleSessionNotFoundGoSessions() {
+      document.getElementById('modal-session-not-found').classList.remove('open');
+      showSessionsScreen();
+    }
+
+    function handleSessionNotFoundGoNew() {
+      document.getElementById('modal-session-not-found').classList.remove('open');
+      resetGame();
     }
 
     // ── Toast ──────────────────────────────────────────────
@@ -468,6 +565,96 @@
 
     function closeModal() {
       document.getElementById('modal-accuse').classList.remove('open');
+    }
+
+    // ─────────────────────────────────────────────────────────
+    //  SCREEN 0: Sessions List
+    // ─────────────────────────────────────────────────────────
+    async function loadSessionsList() {
+      const list = document.getElementById('sessions-list');
+      const totalLabel = document.getElementById('sessions-total-label');
+      if (!list) return;
+      list.innerHTML = '<div class="loading"><div class="spinner"></div> Carregando sessões…</div>';
+
+      try {
+        const sessions = await api('/sessions');
+        if (totalLabel) {
+          totalLabel.textContent = `${sessions.length} sessão(ões) encontrada(s)`;
+        }
+
+        if (!sessions || sessions.length === 0) {
+          list.innerHTML = `
+            <div class="card" style="text-align:center; padding:40px 20px;">
+              <p style="color:var(--text-muted); margin-bottom:14px;">Nenhuma investigação ativa ou anterior encontrada.</p>
+              <button class="btn btn-primary" onclick="showScenariosScreen()">➕ Iniciar Primeiro Caso</button>
+            </div>
+          `;
+          return;
+        }
+
+        list.innerHTML = sessions.map(s => {
+          const dateStr = s.created_at ? new Date(s.created_at).toLocaleString('pt-BR') : 'Data desconhecida';
+          const isInProgress = s.status === 'in_progress';
+          let statusBadge = '';
+
+          if (isInProgress) {
+            statusBadge = `<span class="tag" style="background:rgba(202,138,4,.2);color:#fbbf24;">🟡 Em Andamento</span>`;
+          } else if (s.result_type === 'correct') {
+            statusBadge = `<span class="tag ok">🟢 Concluído (Correto)</span>`;
+          } else if (s.result_type === 'wrong') {
+            statusBadge = `<span class="tag fail">🔴 Concluído (Errado)</span>`;
+          } else {
+            statusBadge = `<span class="tag" style="background:rgba(59,130,246,.2);color:#93c5fd;">🔵 Finalizado</span>`;
+          }
+
+          const actionBtn = isInProgress
+            ? `<button class="btn btn-primary" onclick="resumeSession(${s.id})" style="font-size:0.85rem;padding:8px 16px;">▶️ Continuar</button>`
+            : `<button class="btn btn-secondary" onclick="resumeSession(${s.id})" style="font-size:0.85rem;padding:8px 16px;">👁️ Ver Caso</button>`;
+
+          return `
+            <div class="card session-card">
+              <div class="session-info">
+                <div class="session-title">
+                  <span>#${s.id} — ${s.scenario_title}</span>
+                  ${statusBadge}
+                </div>
+                <div class="session-meta">
+                  <span>📅 ${dateStr}</span>
+                  <span>💬 ${s.messages_count} mensagem(ns)</span>
+                  <span>📁 Cenário #${s.scenario_id}</span>
+                </div>
+              </div>
+              <div>
+                ${actionBtn}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+      } catch (e) {
+        list.innerHTML = `<p style="color:var(--red)">Erro ao carregar sessões: ${e.message}</p>`;
+      }
+    }
+
+    async function resumeSession(sessionId) {
+      try {
+        state.sessionId = sessionId;
+        const overview = await api(`/sessions/${sessionId}`);
+        state.scenarioId = overview.scenario.id;
+        state.motives = overview.scenario.motive_options || [];
+        document.getElementById('inv-case-name').textContent = '📁 ' + overview.scenario.title;
+
+        await loadInvestigation();
+        showScreen('screen-investigation');
+
+        if (overview.session.status === 'completed') {
+          toast('Caso Concluído', `Esta investigação foi concluída (${overview.session.result_type || 'finalizada'}).`, 'hint');
+        } else {
+          toast('Sessão Retomada', `Investigação #${sessionId} carregada com sucesso.`, 'hint');
+        }
+      } catch (e) {
+        toast('Erro ao retomar sessão', e.message, 'lie');
+      }
     }
 
     // ─────────────────────────────────────────────────────────
@@ -1018,15 +1205,13 @@
         effectiveEvidenceIds: new Set()
       };
       document.getElementById('chat-messages').innerHTML = '';
-      showScreen('screen-scenarios');
-      loadScenarios();
+      showScenariosScreen();
     }
 
     // ─────────────────────────────────────────────────────────
     //  Init
     // ─────────────────────────────────────────────────────────
-    showScreen('screen-scenarios');
-    loadScenarios();
+    showScenariosScreen();
   </script>
 </body>
 </html>

@@ -365,3 +365,36 @@ def update_suspect_state_from_deltas(
         "last_topic_id": state.last_topic_id
     }
 
+
+def list_sessions(db: Optional[Session] = None) -> list[Dict[str, Any]]:
+    """
+    Returns a list of all game sessions ordered by creation date descending.
+    """
+    close_session = False
+    if db is None:
+        db = SessionLocal()
+        close_session = True
+
+    try:
+        sessions = (
+            db.query(SessionModel)
+            .order_by(SessionModel.created_at.desc(), SessionModel.id.desc())
+            .all()
+        )
+
+        results = []
+        for s in sessions:
+            results.append({
+                "id": s.id,
+                "scenario_id": s.scenario_id,
+                "scenario_title": s.scenario.title if s.scenario else f"Cenário #{s.scenario_id}",
+                "status": s.status,
+                "result_type": s.result_type,
+                "created_at": s.created_at.isoformat() if s.created_at else None,
+                "messages_count": len(s.chat_messages) if s.chat_messages is not None else 0
+            })
+        return results
+    finally:
+        if close_session:
+            db.close()
+

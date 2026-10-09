@@ -10,7 +10,9 @@ from app.api.schemas.log import SessionTurnsLogResponse, TurnLogItemSchema, Verd
 
 from app.services.interrogation_turn_service import run_interrogation_turn
 from app.services.session_finalize_service import finalize_session
-from app.services.session_service import create_session, get_session_overview, get_suspect_state
+from app.services.session_service import (
+    create_session, get_session_overview, get_suspect_state, list_sessions
+)
 from app.services.case_file_service import get_session_case_file
 from app.api.schemas.case_file import CaseFileResponse
 
@@ -26,19 +28,34 @@ router = APIRouter()
 
 
 # -----------------------------
-# Request schema
+# Request & Response schemas
 # -----------------------------
 class CreateSessionRequest(BaseModel):
     scenario_id: int
 
 
-# -----------------------------
-# Response schema
-# -----------------------------
 class CreateSessionResponse(BaseModel):
     session_id: int
     scenario_id: int
     status: str
+
+
+class SessionSummaryResponse(BaseModel):
+    id: int
+    scenario_id: int
+    scenario_title: str
+    status: str
+    result_type: Optional[str] = None
+    created_at: Optional[str] = None
+    messages_count: int = 0
+
+
+# -----------------------------
+# GET /sessions
+# -----------------------------
+@router.get("/sessions", response_model=List[SessionSummaryResponse])
+def api_list_sessions():
+    return list_sessions()
 
 
 # -----------------------------
