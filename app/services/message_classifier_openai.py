@@ -159,7 +159,9 @@ class OpenAISemanticMessageClassifier(MessageClassifier):
             "text": {
                 "format": {
                     "type": "json_schema",
-                    "json_schema": CLASSIFICATION_JSON_SCHEMA,
+                    "name": CLASSIFICATION_JSON_SCHEMA["name"],
+                    "schema": CLASSIFICATION_JSON_SCHEMA["schema"],
+                    "strict": CLASSIFICATION_JSON_SCHEMA["strict"],
                 }
             },
         }
