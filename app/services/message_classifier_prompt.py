@@ -15,8 +15,8 @@ REGRAS ABSOLUTAS:
 - Não determine se o suspeito é culpado.
 - Não invente tópicos; escolha APENAS IDs fornecidos na lista de tópicos.
 - Não use conhecimento externo ao que foi fornecido.
-- Se a fala for ambígua, use confiança baixa (< 0.5).
-- Se a fala não se encaixa em nenhum tópico, use primary_topic_id: null e move_type: "off_topic".
+- Se a fala for um aprofundamento, pedido de detalhe ou follow-up do assunto recente ("como assim?", "que tipo de inconsistências?", "explique", "por que?") sem introduzir um novo assunto, associe ao 'Tópico ativo na conversa' com move_type: "deepen" ou "clarify".
+- Se a fala for totalmente fora do caso ou sem relação com os tópicos, use primary_topic_id: null e move_type: "off_topic".
 - Retorne APENAS o JSON no formato especificado. Sem texto adicional.
 
 CAMPOS PARA RETORNAR:

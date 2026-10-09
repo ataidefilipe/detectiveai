@@ -121,6 +121,22 @@ class HeuristicMessageClassifier(MessageClassifier):
             if detected_topic_ids:
                 # Naive primary assignment for MVP
                 primary_topic_id = detected_topic_ids[0]
+            else:
+                active_topic_id = kwargs.get("active_topic_id")
+                if active_topic_id and available_topics:
+                    is_follow_up = (
+                        "?" in text or
+                        detected_intent in (MessageIntent.ask, MessageIntent.pressure, MessageIntent.unknown) or
+                        any(p in text_lower for p in ["que tipo", "como", "qual", "quais", "por que", "porque", "quem", "inconsist", "inconsit"])
+                    )
+                    if is_follow_up:
+                        active_topic = next((t for t in available_topics if t.get("id") == active_topic_id), None)
+                        if active_topic:
+                            detected_topic_ids.append(active_topic_id)
+                            primary_topic_id = active_topic_id
+                            if active_topic.get("is_sensitive"):
+                                sensitive_topic_ids.append(active_topic_id)
+                                sensitivity_hit = SensitivityLevel.high
 
         # 4. Novelty análise com histórico
         novelty = NoveltyLevel.new

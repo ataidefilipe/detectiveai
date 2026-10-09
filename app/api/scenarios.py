@@ -74,3 +74,14 @@ def get_scenario_detail(scenario_id: int):
 
     finally:
         db.close()
+
+
+# -----------------------------
+# POST /scenarios/reload
+# -----------------------------
+@router.post("/reload")
+def reload_scenarios():
+    from app.services.bootstrap_service import bootstrap_game
+    bootstrap_game()
+    return {"status": "ok", "message": "Scenarios reloaded successfully"}
+

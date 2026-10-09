@@ -57,7 +57,13 @@
         "arquivo",
         "financeiro",
         "contas",
-        "auditoria"
+        "auditoria",
+        "inconsistência",
+        "inconsistências",
+        "inconsistencia",
+        "inconsistencias",
+        "inconsitencia",
+        "inconsitencias"
       ],
       "is_sensitive": true,
       "priority": 3
@@ -169,7 +175,15 @@
         "há quanto tempo",
         "ha quanto tempo",
         "suas funções",
-        "suas responsabilidades"
+        "suas responsabilidades",
+        "o que você fez",
+        "o que voce fez",
+        "o que fez",
+        "o que fez hoje",
+        "seu dia",
+        "ao longo do dia",
+        "durante o dia",
+        "passou o dia"
       ],
       "is_sensitive": false,
       "priority": 1
@@ -306,7 +320,7 @@
           "reliability": "high",
           "content_layers": [
             "O relatório contábil estava sendo revisado naquela semana. Faz parte da minha rotina.",
-            "Detectei algumas inconsistências nos números, mas achei que eram erros de digitação.",
+            "Detectei inconsistências em notas fiscais de consultoria e fornecedores sem comprovante de entrega, mas achei que eram erros de digitação.",
             "A vítima me pediu para não comentar com ninguém sobre certas linhas do documento."
           ]
         },
@@ -377,7 +391,8 @@
           "reliability": "high",
           "content_layers": [
             "Trabalho na Solarium Corp há cinco anos como assistente financeira, cuidando de conciliação bancária, lançamento de notas fiscais e relatórios operacionais.",
-            "Minha rotina envolvia dar suporte direto à diretoria financeira e fechar balancetes periódicos das despesas internas."
+            "Minha rotina envolvia dar suporte direto à diretoria financeira e fechar balancetes periódicos das despesas internas.",
+            "Naquela sexta-feira passei a tarde inteira na minha mesa conferindo notas de fornecedores e planilhas com Heitor antes de ir para o hotel."
           ]
         }
       ],

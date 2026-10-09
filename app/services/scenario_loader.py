@@ -56,7 +56,48 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
         )
 
         if existing:
-            print(f"[loader] Cenário '{config.scenario_code}' já existe. Ignorando atualização (para forçar o update, delete o arquivo game.db).")
+            # Sincroniza metadados do cenário, tópicos, suspeitos e evidências sem alterar IDs de banco
+            existing.title = config.title
+            existing.description = config.description
+            existing.case_summary = config.case_summary
+            existing.topics = [t.model_dump() for t in config.topics] if config.topics else []
+            existing.motive_options = [m.model_dump() for m in config.motives] if config.motives else []
+            existing.true_motive_key = config.true_motive_key
+            existing.motive_clues = [mc.model_dump() for mc in config.motive_clues] if config.motive_clues else []
+            existing.required_broken_claim_ids = config.required_broken_claim_ids or []
+
+            db_suspects = db.query(SuspectModel).filter(SuspectModel.scenario_id == existing.id).all()
+            suspect_map = {s.suspect_code: s for s in db_suspects}
+            for s in config.suspects:
+                if s.id in suspect_map:
+                    target = suspect_map[s.id]
+                    target.name = s.name
+                    target.backstory = s.backstory
+                    target.personality = s.personality
+                    target.internal_note = s.internal_note
+                    target.initial_statement = s.initial_statement
+                    target.final_phrase = s.final_phrase
+                    target.true_timeline = s.true_timeline
+                    target.claims = [
+                        {**c.model_dump(), "breakable_by_evidence_ids": c.breakable_by_evidence_codes}
+                        for c in s.claims
+                    ] if s.claims else []
+                    target.knowledge_items = [k.model_dump() for k in s.knowledge] if s.knowledge else []
+                    target.profile = s.profile.model_dump() if s.profile else None
+                    target.flavor_slots = [slot.model_dump() for slot in s.flavor_slots] if s.flavor_slots else []
+
+            db_evidences = db.query(EvidenceModel).filter(EvidenceModel.scenario_id == existing.id).all()
+            evidence_map = {e.evidence_code: e for e in db_evidences}
+            for e in config.evidences:
+                if e.id in evidence_map:
+                    target_e = evidence_map[e.id]
+                    target_e.name = e.name
+                    target_e.description = e.description
+                    target_e.internal_note = e.internal_note
+                    target_e.related_topic_id = e.related_topic_id
+
+            db.commit()
+            print(f"[loader] Cenário '{config.scenario_code}' sincronizado com sucesso a partir do JSON.")
             return existing
 
         # -------------------------

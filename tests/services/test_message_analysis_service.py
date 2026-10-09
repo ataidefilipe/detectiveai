@@ -177,3 +177,20 @@ def test_inferred_claim_targets_defaults_empty():
     """inferred_claim_targets começa vazio (será preenchido no Sprint 2)."""
     result = analyze_message("onde você estava?")
     assert result.inferred_claim_targets == []
+
+
+def test_analyze_message_inherits_active_topic_id_on_follow_up():
+    available_topics = [
+        {"id": "relatorio_contabil", "aliases": ["relatório", "contábil"], "is_sensitive": True},
+        {"id": "alibi", "aliases": ["quarto", "hotel"], "is_sensitive": False}
+    ]
+    # Follow-up question without explicit alias but with active_topic_id
+    result = analyze_message(
+        "que tipo de inconsitencias?",
+        available_topics=available_topics,
+        active_topic_id="relatorio_contabil"
+    )
+    assert result.primary_topic_id == "relatorio_contabil"
+    assert "relatorio_contabil" in result.detected_topic_ids
+    assert result.sensitivity_hit == SensitivityLevel.high
+

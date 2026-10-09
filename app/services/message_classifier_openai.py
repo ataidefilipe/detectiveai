@@ -125,7 +125,7 @@ class OpenAISemanticMessageClassifier(MessageClassifier):
                         f"[classifier] Low confidence ({semantic_result.confidence:.2f}), "
                         f"falling back to heuristic."
                     )
-                    result = self._fallback.classify(text, available_topics, player_history)
+                    result = self._fallback.classify(text, available_topics, player_history, active_topic_id=active_topic_id)
                     result.fallback_reason = "low_confidence"
                     return result
 
@@ -139,12 +139,12 @@ class OpenAISemanticMessageClassifier(MessageClassifier):
                 )
                 if attempt == self.max_retries:
                     logger.error("[classifier] All retries exhausted, falling back to heuristic.")
-                    result = self._fallback.classify(text, available_topics, player_history)
+                    result = self._fallback.classify(text, available_topics, player_history, active_topic_id=active_topic_id)
                     result.fallback_reason = "timeout" if is_timeout else "error"
                     return result
 
         # Should not reach here, but safety net
-        return self._fallback.classify(text, available_topics, player_history)
+        return self._fallback.classify(text, available_topics, player_history, active_topic_id=active_topic_id)
 
     def _call_openai(self, user_prompt: str) -> SemanticMessageAnalysisResult:
         """Calls OpenAI with Structured Outputs and returns validated result."""
