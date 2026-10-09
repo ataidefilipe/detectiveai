@@ -3,7 +3,7 @@
 > Gerado em 2026-10-08 a partir da análise estática do código (AST + imports).
 > Complementa [ARCHITECTURE.md](ARCHITECTURE.md) (princípios/FSM) e [API.md](API.md) (contratos HTTP).
 
-**Stack:** Python · FastAPI · SQLAlchemy · SQLite (`game.db`) · Pydantic v2 · OpenAI (opcional) · SPA Vanilla JS.
+**Stack:** Python · FastAPI · SQLAlchemy · PostgreSQL (prod Railway com volume persistente) / SQLite (`game.db` local) · Pydantic v2 · OpenAI (opcional) · SPA Vanilla JS.
 
 ---
 
@@ -128,6 +128,7 @@ flowchart TD
 
 | Endpoint | Função | Descrição |
 |----------|--------|-----------|
+| `GET /sessions` | `api_list_sessions` | Lista todas as sessões registradas com status e contagem de mensagens (`SessionSummaryResponse`). |
 | `POST /sessions` | `api_create_session` | Cria sessão para um cenário (`CreateSessionRequest/Response`). |
 | `GET /sessions/{sid}` | `api_get_session_overview` | Visão geral da sessão (`SessionOverviewResponse`). |
 | `GET /sessions/{sid}/suspects` | `list_session_suspects` | Suspeitos + estado na sessão. |
@@ -177,7 +178,7 @@ flowchart TD
 
 | Arquivo | Conteúdo |
 |---------|----------|
-| [db.py](../app/infra/db.py) | Engine SQLAlchemy (SQLite), `SessionLocal`, `Base`; `init_db()` cria as tabelas. |
+| [db.py](../app/infra/db.py) | Engine SQLAlchemy configurável via `DATABASE_URL` (PostgreSQL em produção via `psycopg2`/`psycopg` com pool_pre_ping, ou SQLite `game.db` local), `SessionLocal`, `Base`; `init_db()` cria as tabelas. |
 | [db_models.py](../app/infra/db_models.py) | Tabelas ORM (ver abaixo). |
 
 | Modelo ORM | Tabela | Tipo |
@@ -203,7 +204,7 @@ flowchart TD
 | Arquivo | Funções | Descrição |
 |---------|---------|-----------|
 | [interrogation_turn_service.py](../app/services/interrogation_turn_service.py) | `run_interrogation_turn(session_id, suspect_id, text, evidence_id, db)` | **Orquestrador do turno** (ver §3). Depende de ~13 serviços. |
-| [session_service.py](../app/services/session_service.py) | `create_session`, `get_session_overview`, `calculate_suspect_progress` (read-only), `get_suspect_state`, `update_suspect_state_from_deltas` | CRUD e estado psicológico do suspeito na sessão. |
+| [session_service.py](../app/services/session_service.py) | `create_session`, `list_sessions`, `get_session_overview`, `calculate_suspect_progress` (read-only), `get_suspect_state`, `update_suspect_state_from_deltas` | CRUD, listagem e estado psicológico do suspeito na sessão. |
 | [session_finalize_service.py](../app/services/session_finalize_service.py) | `finalize_session(session_id, chosen_suspect_id, evidence_ids, motive_key, db)` | Fecha a sessão e chama o veredito. |
 | [bootstrap_service.py](../app/services/bootstrap_service.py) | `bootstrap_game()` | No startup: `init_db` + carrega cenários de `scenarios/`. |
 | [scenario_loader.py](../app/services/scenario_loader.py) | `load_scenario_from_json(path, db)` | Lê JSON, valida com `ScenarioConfig`, persiste nas tabelas estáticas (com rollback). |
@@ -264,11 +265,13 @@ SPA única (~53 KB). Cliente HTTP `api(path, opts)` + telas:
 
 | Fluxo | Funções JS |
 |-------|-----------|
-| Seleção de cenário / briefing | `loadScenarios`, `selectScenario`, `loadBriefing`, `goToInvestigation` |
+| Minhas Sessões (Histórico/Retomada) | `loadSessionsList`, `resumeSession`, `showSessionsScreen` |
+| Seleção de cenário / briefing | `loadScenarios`, `selectScenario`, `showScenariosScreen`, `loadBriefing`, `goToInvestigation` |
 | Painel de investigação | `loadInvestigation`, `toggleBackstory`, `renderEvidenceChips`, `selectEvidence` |
 | Interrogatório | `openInterrogation`, `loadChatHistory`, `sendMessage`, `appendMessage`, `appendNoteBubble`, `processTurnFeedback`, `updateStateBadge`, `getSuspectStateLabel` |
 | Dossiê | `openDossier`, `renderDossier` |
 | Acusação / veredito | `openAccusation`, `submitAccusation`, `renderVerdict`, `resetGame` |
+| Recuperação 404 / Sessão Expirada | `openSessionNotFoundModal`, `handleSessionNotFoundGoSessions`, `handleSessionNotFoundGoNew` |
 | Utilitários | `showScreen`, `toast`, `closeModal`, `scrollChat`, `handleChatKey` |
 
 ---
@@ -290,8 +293,8 @@ SPA única (~53 KB). Cliente HTTP `api(path, opts)` + telas:
 | Arquivo | Descrição |
 |---------|-----------|
 | `README.md`, `AGENT_GUIDELINES.md`, `gemini.md` | Documentação / regras para agentes. |
-| `requirements.txt` | fastapi, uvicorn, sqlalchemy, pydantic(-settings), python-dotenv, openai, alembic. |
-| `.env` / `.env.example` | `OPENAI_API_KEY`, `NPC_AI_PROVIDER`, `OPENAI_MODEL`, `MESSAGE_CLASSIFIER_PROVIDER`, `OPENAI_CLASSIFIER_MODEL`, `DEBUG_TURN_TRACE`. |
+| `requirements.txt` | fastapi, uvicorn, sqlalchemy, pydantic(-settings), python-dotenv, openai, alembic, psycopg2-binary, psycopg[binary]. |
+| `.env` / `.env.example` | `DATABASE_URL`, `OPENAI_API_KEY`, `NPC_AI_PROVIDER`, `OPENAI_MODEL`, `MESSAGE_CLASSIFIER_PROVIDER`, `OPENAI_CLASSIFIER_MODEL`, `DEBUG_TURN_TRACE`. |
 | `Procfile`, `railway.json` | Deploy (Railway/Nixpacks): `uvicorn app.main:app`. Ver [DEPLOYMENT.md](DEPLOYMENT.md). |
 | `game.db` | Banco SQLite local. |
 | `init_db.py` | Chama `init_db()`. |

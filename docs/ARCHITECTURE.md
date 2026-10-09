@@ -56,8 +56,8 @@ O projeto é guiado por quatro princípios de engenharia:
                                   ▼
 ┌─────────────────────────────────────────────────────────┐
 │ 5. Infrastructure Layer (app/infra/)                    │
-│    - db.py (Engine SQLAlchemy, SessionLocal)            │
-│    - db_models.py (Tabelas SQLite)                      │
+│    - db.py (Engine SQLAlchemy com suporte PostgreSQL / SQLite) │
+│    - db_models.py (Tabelas e Relacionamentos ORM)       │
 │    - scenario_loader.py (Loader de Cenários JSON)       │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -66,7 +66,7 @@ O projeto é guiado por quatro princípios de engenharia:
 
 ## 3. Modelo de Dados (Database Schema)
 
-O banco de dados SQLite (`game.db`) é estruturado em modelos relacionais via SQLAlchemy:
+O banco de dados relacional (PostgreSQL gerenciado em produção com volume persistente de 5 GB, e SQLite `game.db` em desenvolvimento local e suíte de testes) é estruturado em modelos via SQLAlchemy:
 
 ### Tabelas Estáticas / Pré-carregadas:
 - **`scenarios` (`ScenarioModel`):**
@@ -216,3 +216,32 @@ O `verdict_service.py` avalia:
 - `correct`: Acusação perfeita, caso solucionado com mérito policial.
 - `partial`: O suspeito era o culpado, mas faltaram provas suficientes ou a motivação correta.
 - `wrong`: Acusação equivocada; um inocente foi preso ou as evidências são completamente insuficientes.
+
+---
+
+## 7. Interface do Usuário (Frontend SPA) & Gestão de Sessões
+
+A interface web é construída como uma Single Page Application (SPA) em Vanilla JS, sem dependências de frameworks pesados, servida diretamente pelo FastAPI:
+
+### Fluxo de Telas (Screens):
+- **Tela de Sessões (`screen-sessions`):**
+  - Lista todas as investigações registradas (`GET /sessions`), permitindo acompanhar o progresso de cada caso.
+  - Oferece retomada imediata de investigações ativas (`▶️ Continuar`) e consulta de vereditos passados (`👁️ Ver Caso`).
+  - Navegável a qualquer momento via aba fixa no cabeçalho (*Minhas Sessões*).
+- **Tela de Cenários (`screen-scenarios`):**
+  - Catálogo de casos disponíveis para inicialização de novas investigações.
+- **Tela de Briefing (`screen-briefing`):**
+  - Apresentação do caso policial, biografia resumida e relação de suspeitos iniciais.
+- **Investigation Hub (`screen-investigation`):**
+  - Painel de controle da investigação ativa: lista de suspeitos com biografias expansíveis, evidências coletadas, atalho para o Dossiê e botão de Acusação formal.
+- **Interrogatório (`screen-interrogation`):**
+  - Chat dinâmico com indicador emocional em tempo real, seletor contextual de evidências, digitação do NPC e balões explicativos de quebra de contradição.
+- **Dossiê (`screen-dossier`):**
+  - Visão consolidada de todas as descobertas obtidas (segredos revelados, contradições quebradas).
+- **Veredito (`screen-verdict`):**
+  - Cartão de resultado final com análise detalhada do acerto policial e opções para reiniciar ou retornar às sessões.
+
+### Resiliência & Recuperação de Sessão (Error Recovery UX):
+- **Modal de Sessão Não Encontrada (`#modal-session-not-found`):**
+  - Se qualquer requisição retornar `404 Not Found` (decorrente de reinicialização ou sessão inexistente), a interface intercepta a falha e aciona um modal explicativo amigável em vez de travar o chat com erro genérico.
+  - O usuário é orientado com botões diretos para *Ver Todas as Sessões* ou *Iniciar Novo Caso*.

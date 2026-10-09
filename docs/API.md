@@ -23,6 +23,7 @@ Esta documentação descreve todos os endpoints disponibilizados pela API do **D
    - `GET /scenarios` — Listar cenários disponíveis
    - `GET /scenarios/{scenario_id}` — Detalhes de um cenário
 3. [Sessões de Jogo (Sessions)](#3-sessões-de-jogo-sessions)
+   - `GET /sessions` — Listar todas as sessões de investigação
    - `POST /sessions` — Iniciar uma nova sessão de investigação
    - `GET /sessions/{session_id}` — Visão geral da sessão ativa
 4. [Interrogatório (Chat & Messages)](#4-interrogatório-chat--messages)
@@ -117,6 +118,44 @@ Retorna os detalhes de um cenário específico.
 ---
 
 ## 3. Sessões de Jogo (Sessions)
+
+### `GET /sessions`
+Retorna a lista de todas as sessões de investigação registradas no sistema, ordenadas da mais recente para a mais antiga. Usado pela tela de histórico/seleção de sessões para retomar partidas ou consultar resultados.
+
+**Resposta `200 OK`:**
+```json
+[
+  {
+    "id": 1,
+    "scenario_id": 1,
+    "scenario_title": "O Caso do Escritório Trancado",
+    "status": "in_progress",
+    "result_type": null,
+    "created_at": "2026-10-09T00:17:52.885106",
+    "messages_count": 4
+  },
+  {
+    "id": 2,
+    "scenario_id": 1,
+    "scenario_title": "O Caso do Escritório Trancado",
+    "status": "completed",
+    "result_type": "correct",
+    "created_at": "2026-10-08T22:10:15.120400",
+    "messages_count": 12
+  }
+]
+```
+
+**Campos retornados:**
+- `id` (int): Identificador numérico único da sessão.
+- `scenario_id` (int): ID do cenário investigado.
+- `scenario_title` (string): Título do cenário associado.
+- `status` (string): Estado da sessão (`in_progress` ou `completed`).
+- `result_type` (string|null): Resultado final após acusação (`correct`, `partial`, `wrong` ou `null` se em andamento).
+- `created_at` (string|null): Timestamp ISO 8601 de criação da sessão.
+- `messages_count` (int): Quantidade de mensagens trocadas no interrogatório da sessão.
+
+---
 
 ### `POST /sessions`
 Inicializa uma nova sessão de investigação a partir de um cenário.

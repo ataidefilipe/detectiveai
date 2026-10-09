@@ -8,7 +8,10 @@ Este documento descreve como o **Detective AI** é empacotado, configurado e pub
 
 - **URL Pública:** [https://detective-ai-production.up.railway.app](https://detective-ai-production.up.railway.app)
 - **Projeto Railway:** `detective-ai` (`47f14c43-5f1a-403d-9070-5fa6dd8b0083`)
-- **Serviço Railway:** `detective-ai` (`b866edb3-2dd4-46b0-b4ed-4ab384ae1de6`)
+- **Serviços no Projeto:**
+  - `detective-ai` (`b866edb3-2dd4-46b0-b4ed-4ab384ae1de6`) — Backend FastAPI + Frontend SPA
+  - `Postgres` (`33592acf-b8fb-4bbc-aab8-571df3e15680`) — Banco relacional PostgreSQL gerenciado
+- **Volume Persistente:** `postgres-volume` (`3521d1c2-5831-4215-9600-4c2fde2d3adf`) — 5.000 MB montado em `/var/lib/postgresql/data`
 - **Ambiente:** `production` (`1ccf1048-c156-4c28-8a4a-ad353632e652`)
 - **Repositório Conectado:** `ataidefilipe/detectiveai` (branch `main`)
 
@@ -18,7 +21,7 @@ Este documento descreve como o **Detective AI** é empacotado, configurado e pub
 
 Para manter a simplicidade operacional e evitar custos com múltiplos serviços ou microserviços desnecessários:
 
-1. **Serviço Único:** O backend FastAPI serve tanto os endpoints REST (`/sessions`, `/scenarios`) quanto a interface web do usuário (`frontend/index.html`) através da rota raiz (`/`) e `/static`.
+1. **Serviço Único de Aplicação:** O backend FastAPI serve tanto os endpoints REST (`/sessions`, `/scenarios`) quanto a interface web do usuário (`frontend/index.html`) através da rota raiz (`/`) e `/static`.
 2. **Nixpacks Automático:** O Railway utiliza o builder **Nixpacks** para detectar automaticamente a versão do Python através de `requirements.txt`.
 3. **Ponto de Partida (`Procfile` & `railway.json`):**
    - O comando de execução é definido no [Procfile](file:///d:/Python%20Projetos/detective_ai/Procfile):
@@ -44,10 +47,11 @@ Para manter a simplicidade operacional e evitar custos com múltiplos serviços 
 
 ## 🔑 Variáveis de Ambiente no Railway
 
-No painel do Railway (ou via ferramenta MCP `set-variables`), as seguintes variáveis devem estar configuradas no serviço:
+No painel do Railway (ou via ferramenta MCP `set-variables`), as seguintes variáveis devem estar configuradas no serviço `detective-ai`:
 
 | Variável | Valor Recomendado | Finalidade |
 |----------|-------------------|------------|
+| `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` | Conexão gerenciada com o banco PostgreSQL persistente |
 | `OPENAI_API_KEY` | `sk-proj-...` | Credencial para chamar o modelo da OpenAI |
 | `NPC_AI_PROVIDER` | `openai` | Habilita o adaptador real de IA (ou `dummy` para testes) |
 | `OPENAI_MODEL` | `gpt-5-mini` | Modelo utilizado nas conversas com os suspeitos |
@@ -71,16 +75,17 @@ O serviço está configurado com integração contínua vinculada ao GitHub:
 
 ---
 
-## 💾 Persistência de Dados (SQLite e Volumes)
+## 💾 Persistência de Dados (PostgreSQL e Volumes)
 
-- **Comportamento Padrão:** O banco SQLite `game.db` é inicializado no contêiner. No startup do FastAPI, a função `bootstrap_game()` garante que todas as tabelas sejam criadas e que os cenários contidos na pasta `scenarios/*.json` sejam carregados automaticamente de forma idempotente.
-- **Volumes Persistentes no Railway (Opcional):**
-  - Caso seja necessário reter o estado de sessões antigas entre reinicializações e novos deploys, um Railway Volume pode ser criado e montado no caminho do banco (ex: `/data/game.db`).
-  - Para criar um volume via Railway MCP:
-    ```json
-    { "serviceId": "...", "mountPath": "/data" }
-    ```
-  - E apontar `SQLALCHEMY_DATABASE_URL = "sqlite:////data/game.db"` em `app/infra/db.py`.
+- **Produção (Railway):**
+  - O projeto utiliza um serviço dedicado de **PostgreSQL** (`Postgres`) com um volume persistente de **5 GB** (`postgres-volume`) montado em `/var/lib/postgresql/data`.
+  - A variável `DATABASE_URL` do serviço `detective-ai` conecta diretamente a `${{Postgres.DATABASE_URL}}`.
+  - Em `app/infra/db.py`, a URL de conexão é normalizada para o dialeto `postgresql+psycopg2://` com suporte a reconexão automática (`pool_pre_ping=True`).
+  - **Sobrevivência a Deploys:** Como os dados residem no volume persistente do PostgreSQL, novos deploys da aplicação, restarts ou escalonamentos preservam integralmente todas as sessões, mensagens e logs analíticos.
+- **Desenvolvimento Local e Testes:**
+  - Na ausência da variável `DATABASE_URL`, o sistema recorre automaticamente ao banco SQLite local (`sqlite:///./game.db`), garantindo que testes unitários (`pytest`) e desenvolvimento local funcionem sem dependências externas.
+- **Bootstrap Idempotente:**
+  - Na inicialização (`bootstrap_game()`), o SQLAlchemy cria automaticamente as tabelas necessárias (`init_db()`) e popula os cenários a partir de `scenarios/*.json` de forma idempotente (pulando registros existentes).
 
 ---
 

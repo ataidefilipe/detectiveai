@@ -3,7 +3,7 @@
 > Um jogo de dedução e investigação criminal onde você é o detetive. Interrogue suspeitos movidos por inteligência artificial, quebre álibis usando evidências, monte seu dossiê e formule a acusação final perante as autoridades.
 
 [![Deploy on Railway](https://railway.com/button.svg)](https://detective-ai-production.up.railway.app)
-[![Tests](https://img.shields.io/badge/tests-310%20passing-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-328%20passing-brightgreen)]()
 [![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13-blue)]()
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.118+-009688)]()
 
@@ -11,7 +11,7 @@
 
 ## 🌐 Jogue Online (Produção)
 
-O jogo está publicado e rodando no Railway:
+O jogo está publicado e rodando no Railway com banco de dados PostgreSQL persistente:
 👉 **[https://detective-ai-production.up.railway.app](https://detective-ai-production.up.railway.app)**
 
 ---
@@ -33,6 +33,9 @@ Em **Detective AI**, você assume o papel de um investigador responsável por so
    - Suas descobertas alimentam automaticamente um dossiê com fatos revelados, contradições desmascaradas e pistas de motivo.
 5. **Julgamento & Veredito Final:**
    - Ao se sentir pronto, acuse o suspeito principal, selecione as evidências de suporte e indique o motivo do crime. O motor avalia sua teoria contra a verdade objetiva do caso (`correct`, `partial` ou `wrong`).
+6. **Gestão e Retomada de Sessões:**
+   - Tela dedicada para consultar investigações anteriores, acompanhar status e retomar casos ativos de onde parou.
+   - Resiliência integrada com recuperação amigável de sessão em caso de desconexão.
 
 ---
 
@@ -73,7 +76,7 @@ Em **Detective AI**, você assume o papel de um investigador responsável por so
 ```
 
 - **Backend:** FastAPI (Python 3.12/3.13) com arquitetura em camadas (`api`, `core`, `domain`, `infra`, `services`).
-- **Persistência:** SQLite local (`game.db`) via SQLAlchemy ORM.
+- **Persistência:** PostgreSQL gerenciado em produção no Railway (com volume persistente de 5 GB, imune a reinicializações) e SQLite local (`game.db`) via SQLAlchemy ORM.
 - **Integração IA:** OpenAI Responses API (`gpt-5-mini`) com fallback automático para modo determinístico (`dummy`).
 - **Frontend:** SPA responsivo e sem dependências pesadas, empacotado em arquivo único em `frontend/index.html` servido diretamente pelo FastAPI.
 
@@ -89,7 +92,7 @@ detective_ai/
 │   │   └── schemas: case_file.py, chat.py, render_context.py, etc.
 │   ├── core/                 # Configurações globais (Settings), exceções e handlers
 │   ├── domain/               # Modelos de domínio puro (memória narrativa, regras)
-│   ├── infra/                # Banco de dados SQLite, sessões e modelos SQLAlchemy
+│   ├── infra/                # Engine SQLAlchemy (PostgreSQL / SQLite), sessões e modelos
 │   ├── services/             # Regras de negócio e motores:
 │   │   ├── interrogation_turn_service.py   # Orquestrador atômico do turno
 │   │   ├── prompt_builder.py               # Montagem de prompts isolados para IA
@@ -104,7 +107,7 @@ detective_ai/
 ├── scenarios/
 │   └── piloto.json           # Cenário inicial: "O Caso do Escritório Trancado"
 ├── scripts/                  # Scripts de utilidade e testes de simulação
-├── tests/                    # 310+ testes automatizados (unitários, integração e E2E)
+├── tests/                    # 328+ testes automatizados (unitários, integração e E2E)
 ├── Procfile                  # Comando de execução web para Nixpacks/Railway
 ├── railway.json              # Configurações de deploy no Railway
 └── requirements.txt          # Dependências do projeto
@@ -170,7 +173,7 @@ Abra seu navegador em:
 
 ## 🧪 Testes Automatizados
 
-O projeto possui uma cobertura extensiva com mais de **310 testes automatizados** validando regras de negócio, quebras de alegações, privacidade de segredos e fluxos de vitória.
+O projeto possui uma cobertura extensiva com **328 testes automatizados** validando regras de negócio, quebras de alegações, privacidade de segredos e fluxos de vitória.
 
 Para rodar a suíte completa de testes:
 ```bash
