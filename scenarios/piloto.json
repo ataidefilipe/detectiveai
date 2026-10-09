@@ -143,6 +143,36 @@
       ],
       "is_sensitive": false,
       "priority": 1
+    },
+    {
+      "id": "rotina_trabalho",
+      "label": "Rotina e Trabalho",
+      "aliases": [
+        "trabalho",
+        "trabalha",
+        "trabalham",
+        "função",
+        "funcao",
+        "funções",
+        "funcoes",
+        "cargo",
+        "rotina",
+        "o que faz",
+        "o que você faz",
+        "o que voce faz",
+        "dia a dia",
+        "responsabilidades",
+        "tarefas",
+        "departamento",
+        "setor",
+        "tempo de empresa",
+        "há quanto tempo",
+        "ha quanto tempo",
+        "suas funções",
+        "suas responsabilidades"
+      ],
+      "is_sensitive": false,
+      "priority": 1
     }
   ],
   "motives": [
@@ -339,6 +369,16 @@
             "Eduardo estava no andar mais cedo naquela noite. Vi ele no corredor quando saí.",
             "Clara costuma ficar até tarde. Ela é dedicada demais pra própria saúde."
           ]
+        },
+        {
+          "id": "know_marina_rotina_01",
+          "topic_id": "rotina_trabalho",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "Trabalho na Solarium Corp há cinco anos como assistente financeira, cuidando de conciliação bancária, lançamento de notas fiscais e relatórios operacionais.",
+            "Minha rotina envolvia dar suporte direto à diretoria financeira e fechar balancetes periódicos das despesas internas."
+          ]
         }
       ],
       "final_phrase": "Eu... ja disse tudo que tinha pra dizer. Preciso falar com meu advogado."
@@ -471,6 +511,16 @@
             "Não vi a Marina naquela noite, mas eu também não tava prestando atenção total, sinceramente.",
             "O sistema de cartão registra tudo. Se o cartão passou, passou. Eu não vi."
           ]
+        },
+        {
+          "id": "know_rogerio_rotina_01",
+          "topic_id": "rotina_trabalho",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "Trabalho como segurança patrimonial na Solarium há 12 anos. Minha função é controlar o acesso na portaria e fazer rondas preventivas.",
+            "No turno da noite fico na guarita monitorando as câmeras e checando se portas e salas dos andares estão trancadas."
+          ]
         }
       ],
       "final_phrase": "Ja falei tudo que eu sei, chefe."
@@ -602,6 +652,16 @@
           "content_layers": [
             "A Marina estava estressada nos últimos dias. Mais do que o normal.",
             "Ouvi ela discutindo ao telefone uma vez, mas nao entendi o que era."
+          ]
+        },
+        {
+          "id": "know_clara_rotina_01",
+          "topic_id": "rotina_trabalho",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "Sou estagiária de TI aqui há seis meses. Minhas tarefas são dar suporte aos funcionários, organizar cabeamento e verificar servidores.",
+            "Costumo ficar até mais tarde rodando rotinas de manutenção e backups programados na sala dos servidores do 9º andar."
           ]
         }
       ],
@@ -746,6 +806,16 @@
           "content_layers": [
             "Ouvi rumores de que o setor financeiro estava com problemas. Nao me meto nisso.",
             "Vi Marina e Heitor discutindo no corredor semanas atrás. Nao ouvi o que era."
+          ]
+        },
+        {
+          "id": "know_eduardo_rotina_01",
+          "topic_id": "rotina_trabalho",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "Sou gerente do setor comercial da Solarium. Cuido de grandes contas, contratos corporativos e gestão da equipe de vendas.",
+            "Meu departamento fica no 7º andar, mas circulo pelos demais andares para reuniões com a diretoria executiva."
           ]
         }
       ],

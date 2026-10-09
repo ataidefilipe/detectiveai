@@ -94,6 +94,7 @@ def build_npc_prompt(
     all_secrets   = npc_context.get("revealed_secrets", [])
     all_knowledge = npc_context.get("revealed_knowledge", [])
     broken_claims = npc_context.get("broken_claims", [])
+    active_claims = npc_context.get("active_claims", [])
 
     known_lines = (
         [f"- {s['content']}" for s in all_secrets] +
@@ -105,6 +106,37 @@ def build_npc_prompt(
         "\n".join(f"- {c}" for c in broken_claims)
         if broken_claims else None
     )
+
+    active_claims_block = ""
+    if active_claims:
+        claims_lines = "\n".join(f'- "{c}"' for c in active_claims)
+        active_claims_block = f"""
+== SUA VERSAO OFICIAL DOS FATOS (SUAS DECLARACOES / ALIBI) ==
+Estas sao as afirmacoes e a versao oficial que voce sustenta perante o detetive.
+Voce DEVE defender essa versao com firmeza, naturalidade e consistencia.
+Se o detetive perguntar sobre seu paradeiro, suas acoes, rotina ou relacao com o caso, use e defenda estas explicacoes:
+{claims_lines}
+Nao admita culpa e nao contradiga sua versao oficial por vontade propria.
+"""
+
+    # -- Evidencia apresentada neste turno ------------------------------------
+    presented_evidence = npc_context.get("presented_evidence")
+    evidence_block = ""
+    if presented_evidence:
+        ev_name = presented_evidence.get("name", "Evidência")
+        ev_desc = presented_evidence.get("description", "")
+        desc_line = f"\nO que a evidencia mostra: {ev_desc}" if ev_desc else ""
+        evidence_block = f"""
+=== EVIDENCIA APRESENTADA PELO DETETIVE NESTE TURNO ===
+O detetive acaba de confrontar voce diretamente com esta evidencia material:
+- Evidencia: {ev_name}{desc_line}
+
+Como voce deve reagir a esta evidencia:
+- Voce esta olhando para esta evidencia agora. Nao peca para o detetive explicar o que ela e.
+- Se for uma evidencia verdadeira que toca nas suas acoes ou contradicoes, reaja de forma condizente com seu estado emocional (tensao, surpresa, tentativa de explicar, minimizar ou admissao parcial).
+- Se a evidencia nao tiver relacao com voce ou pertencer a outra pessoa, voce pode estranhar, negar autoria ou demonstrar desconcerto sem inventar novos fatos.
+======================================================
+"""
 
     # -- Conteudo novo obrigatorio neste turno --------------------------------
     must_say = render_context.must_say
@@ -217,12 +249,13 @@ Estes sao gostos e habitos pessoais confirmados por voce. Mantenha coerencia est
 == QUEM VOCE E ==
 Personalidade: {personality}
 Contexto pessoal: {public_bio}
+(Voce pode falar com naturalidade sobre sua identidade profissional, cargo e rotina com base nisso).
 
 IMPORTANTE — seu initial_statement foi dito apenas uma vez, no inicio da conversa:
 "{initial_stmt}"
 NAO repita essa frase nem partes dela nas suas respostas. Ela ja foi dita.
 
-{mandatory_block}{optional_block}{forbidden_block}
+{mandatory_block}{optional_block}{forbidden_block}{evidence_block}{active_claims_block}
 == O QUE VOCE SABE E PODE FALAR ==
 Estes sao os unicos fatos que voce revelou ou admitiu ate agora.
 Voce pode reformular e explicar os fatos autorizados, sem acrescentar novas atribuicoes, acontecimentos, pessoas, horarios ou pistas materiais.
@@ -239,9 +272,9 @@ Voce ainda responde a pergunta feita pelo detetive, com esse filtro emocional.
 - Fale SEMPRE em primeira pessoa. Voce e {name}.
 - Responda a pergunta que foi feita. Nao ignore o que o detetive disse.
 - Se o detetive mostrar uma evidencia, reaja a ela — nao peca para ele explicar o que ela diz.
-- NUNCA invente fatos fora da secao O QUE VOCE SABE.
+- NUNCA invente fatos fora de SUA VERSAO OFICIAL e da secao O QUE VOCE SABE.
 - Preserve os detalhes pessoais ja estabelecidos nesta conversa e nao os contradiga.
-- Se perguntarem algo que nao esta na secao de fatos: seja vago, diga que nao sabe, ou negue — mas responda.
+- Se perguntarem algo que nao esta na secao de fatos ou na sua versao oficial: voce pode falar sobre sua profissao/rotina descrita no contexto pessoal, mas sobre o crime seja vago, diga que nao sabe, ou negue — mas responda.
 - NUNCA repita o initial_statement como prefixo ou abertura de resposta.
 - Em perguntas de acompanhamento sobre o mesmo assunto, responda apenas ao novo angulo do detetive. NAO repita listas de tarefas, rotinas ou explicacoes detalhadas que voce ja acabou de dar nos turnos recentes.
 - Se o detetive insistir no mesmo assunto e nao houver fatos novos autorizados, reaja a duvida de forma conversacional, defensiva ou pedindo que ele seja especifico — sem inventar pistas e sem repetir o texto anterior inteiro.

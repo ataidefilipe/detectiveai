@@ -147,3 +147,20 @@ def test_build_render_context_preserves_continuous_stance(base_analysis, base_tr
         current_stance="pressured"
     )
     assert ctx.npc_stance == "pressured"
+
+
+def test_build_render_context_must_say_cap_overflow_to_may_say(base_analysis, base_transition):
+    # Tests that when more than 2 facts are provided for must_say, the cap of 2 is enforced
+    # and excess items are moved to may_say to prevent overwhelming monologues.
+    ctx = build_render_context(
+        transition=base_transition,
+        analysis=base_analysis,
+        revealed_facts=["Secret 1"],
+        new_knowledge_this_turn=["Fact Alpha", "Fact Beta", "Fact Gamma"]
+    )
+    assert len(ctx.must_say) == 2
+    assert ctx.must_say == ["Secret 1", "Fact Alpha"]
+    # The overflowed items ("Fact Beta", "Fact Gamma") must be in may_say
+    assert "Fact Beta" in ctx.may_say
+    assert "Fact Gamma" in ctx.may_say
+

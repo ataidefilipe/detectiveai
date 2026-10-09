@@ -3,6 +3,8 @@ from app.api.schemas.render_context import NpcResponseRenderContext, ResponseMod
 from typing import Optional, List
 from app.infra.db_models import SuspectModel
 
+MAX_MUST_SAY_PER_TURN: int = 2
+
 def build_render_context(
     transition: StateTransitionResult,
     analysis: MessageAnalysisResult,
@@ -108,6 +110,14 @@ def build_render_context(
         for k in allowed_knowledge:
             if k and k not in must_say and k not in may_say:
                 may_say.append(k)
+
+    # 4. Teto de must_say por turno para evitar monólogos descarregando múltiplos fatos de uma só vez
+    if len(must_say) > MAX_MUST_SAY_PER_TURN:
+        overflow = must_say[MAX_MUST_SAY_PER_TURN:]
+        must_say = must_say[:MAX_MUST_SAY_PER_TURN]
+        for item in reversed(overflow):
+            if item not in may_say:
+                may_say.insert(0, item)
 
     must_not_say = ["alibi_contradiction"] if transition.npc_shift == NpcShift.more_defensive else []
 

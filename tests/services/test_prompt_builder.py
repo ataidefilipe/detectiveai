@@ -80,3 +80,62 @@ def test_build_npc_prompt_injects_claim_pressure():
     assert "O detetive esta confrontando diretamente estas afirmacoes suas:" in sys_prompt
     assert "Eu não vi ninguém" in sys_prompt
     assert "Eu estava no trabalho" in sys_prompt
+
+def test_build_npc_prompt_injects_active_claims():
+    npc_context = {
+        "suspect": {"name": "Marina Souza", "personality": "nervoso"},
+        "active_claims": [
+            "Eu estava sozinha no meu quarto a noite toda. Nem saí para jantar.",
+            "Eu vi as inconsistências no relatório, mas não sei quem fez isso."
+        ]
+    }
+    render_context = NpcResponseRenderContext(
+        npc_stance="defensive",
+        response_mode=ResponseMode.neutral_answer,
+    )
+    
+    messages = build_npc_prompt(npc_context, [], render_context)
+    sys_prompt = messages[0]["content"]
+    
+    assert "== SUA VERSAO OFICIAL DOS FATOS (SUAS DECLARACOES / ALIBI) ==" in sys_prompt
+    assert "Eu estava sozinha no meu quarto a noite toda. Nem saí para jantar." in sys_prompt
+    assert "Eu vi as inconsistências no relatório, mas não sei quem fez isso." in sys_prompt
+    assert "NUNCA invente fatos fora de SUA VERSAO OFICIAL e da secao O QUE VOCE SABE." in sys_prompt
+
+def test_build_npc_prompt_injects_presented_evidence():
+    npc_context = {
+        "suspect": {"name": "Marina Souza", "personality": "nervoso"},
+        "presented_evidence": {
+            "id": 2,
+            "name": "Cartão de Acesso de Marina",
+            "description": "Registro eletrônico mostra que o cartão de Marina abriu a porta às 22h14."
+        }
+    }
+    render_context = NpcResponseRenderContext(
+        npc_stance="defensive",
+        response_mode=ResponseMode.neutral_answer,
+    )
+    
+    messages = build_npc_prompt(npc_context, [], render_context)
+    sys_prompt = messages[0]["content"]
+    
+    assert "=== EVIDENCIA APRESENTADA PELO DETETIVE NESTE TURNO ===" in sys_prompt
+    assert "Cartão de Acesso de Marina" in sys_prompt
+    assert "Registro eletrônico mostra que o cartão de Marina abriu a porta às 22h14." in sys_prompt
+
+def test_build_npc_prompt_no_presented_evidence_omits_block():
+    npc_context = {
+        "suspect": {"name": "Marina Souza", "personality": "nervoso"},
+        "presented_evidence": None
+    }
+    render_context = NpcResponseRenderContext(
+        npc_stance="neutral",
+        response_mode=ResponseMode.neutral_answer,
+    )
+    
+    messages = build_npc_prompt(npc_context, [], render_context)
+    sys_prompt = messages[0]["content"]
+    
+    assert "=== EVIDENCIA APRESENTADA PELO DETETIVE NESTE TURNO ===" not in sys_prompt
+
+

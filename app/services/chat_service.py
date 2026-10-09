@@ -217,19 +217,29 @@ def _build_suspect_state_for_ai(
                     revealed_knowledge.append(layers[i])
 
     broken_claims = []
+    active_claims = []
     broken_claim_states = db.query(SessionClaimStateModel).filter(
         SessionClaimStateModel.session_id == state.session_id,
         SessionClaimStateModel.suspect_id == suspect_id,
         SessionClaimStateModel.status == "broken"
     ).all()
     
-    if broken_claim_states and suspect and suspect.claims:
+    broken_claim_ids = {cs.claim_id for cs in broken_claim_states} if broken_claim_states else set()
+
+    if suspect and suspect.claims:
         claim_dict_map = {claim["claim_id"]: claim for claim in suspect.claims}
-        for cs in broken_claim_states:
-            if cs.claim_id in claim_dict_map:
-                claim_item = claim_dict_map[cs.claim_id]
-                claim_text = claim_item.get("text") or claim_item.get("statement") or "Uma de minhas afirmações"
-                broken_claims.append(claim_text)
+        if broken_claim_states:
+            for cs in broken_claim_states:
+                if cs.claim_id in claim_dict_map:
+                    claim_item = claim_dict_map[cs.claim_id]
+                    claim_text = claim_item.get("text") or claim_item.get("statement") or "Uma de minhas afirmações"
+                    broken_claims.append(claim_text)
+        for claim in suspect.claims:
+            cid = claim.get("claim_id")
+            if cid and cid not in broken_claim_ids:
+                claim_text = claim.get("text") or claim.get("statement")
+                if claim_text:
+                    active_claims.append(claim_text)
 
     suspect_state = {
         "suspect_id": suspect_id,
@@ -244,7 +254,8 @@ def _build_suspect_state_for_ai(
             if suspect and suspect.final_phrase
             else "Já falei tudo que sabia."
         ),
-        "broken_claims": broken_claims
+        "broken_claims": broken_claims,
+        "active_claims": active_claims
     }
     
     return suspect_state, revealed_secrets
@@ -338,6 +349,18 @@ def add_npc_reply(
             if msg.get("evidence_id") is not None
         ]
 
+        # Resolve presented evidence if player message contains one
+        presented_evidence = None
+        ev_id = player_message_dict.get("evidence_id")
+        if ev_id is not None:
+            ev_row = db.query(EvidenceModel).filter(EvidenceModel.id == ev_id).first()
+            if ev_row:
+                presented_evidence = {
+                    "id": ev_row.id,
+                    "name": ev_row.name,
+                    "description": ev_row.description,
+                }
+
         # Call AI adapter
         npc_context = build_npc_context(
             scenario=scenario,
@@ -345,6 +368,7 @@ def add_npc_reply(
             suspect_state=suspect_state,
             revealed_secrets=revealed_secrets,
             pressure_points=pressure_points,
+            presented_evidence=presented_evidence,
         )
 
         # Memória Narrativa da Sessão (Relacional e Flavor)

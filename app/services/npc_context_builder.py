@@ -10,6 +10,9 @@ Regra central:
 """
 
 
+from typing import Optional, Dict, Any, List
+
+
 def _public_persona(suspect) -> str:
     """
     Extrai a descricao publica do personagem.
@@ -31,6 +34,7 @@ def build_npc_context(
     suspect_state: dict,
     revealed_secrets: list,
     pressure_points: list,
+    presented_evidence: Optional[Dict[str, Any]] = None,
 ) -> dict:
     """
     Monta o contexto enviado para a LLM.
@@ -70,7 +74,9 @@ def build_npc_context(
         "revealed_secrets": revealed_secrets,
         "revealed_knowledge": suspect_state.get("revealed_knowledge", []),
         "broken_claims": suspect_state.get("broken_claims", []),
+        "active_claims": suspect_state.get("active_claims", []),
         "pressure_points": pressure_points,
+        "presented_evidence": presented_evidence,
         "rules": {
             "can_only_use_revealed_secrets": True,
             "never_invent_facts": True,

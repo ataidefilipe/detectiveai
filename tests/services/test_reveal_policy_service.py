@@ -93,3 +93,40 @@ def test_evaluate_reveal_layer_observed_boost():
     
     # Normally allowed_layer is 1. Since observed + high rel + pressure > 40, it bumps to 2
     assert evaluate_reveal_layer(knowledge_item, suspect_state, topic_state) == 2
+
+
+def test_get_allowed_knowledge_facts_uses_provided_suspect_state():
+    from unittest.mock import MagicMock
+    from app.services.reveal_policy_service import get_allowed_knowledge_facts
+    from app.infra.db_models import SuspectModel
+
+    mock_db = MagicMock()
+    mock_suspect = MagicMock(spec=SuspectModel)
+    mock_suspect.knowledge_items = [
+        {
+            "id": "k1",
+            "topic_id": "topic_alpha",
+            "content_layers": ["layer 1 fact"]
+        }
+    ]
+    mock_db.query.return_value.filter.return_value.first.side_effect = [
+        mock_suspect, # suspect query
+        None # k_state query
+    ]
+
+    # If suspect_state is passed with patience=36 (even if post-turn would be 22), layer 1 is unlocked
+    eval_state = {"patience": 36.0, "pressure": 10.0, "rapport": 0.0}
+
+    # Mock get_topic_state
+    from unittest.mock import patch
+    with patch("app.services.reveal_policy_service.get_topic_state", return_value={"status": "touched", "times_touched": 1}):
+        result = get_allowed_knowledge_facts(
+            session_id="sess_1",
+            suspect_id="susp_1",
+            detected_topics=["topic_alpha"],
+            db=mock_db,
+            suspect_state=eval_state
+        )
+
+    assert "layer 1 fact" in result["new_knowledge_this_turn"]
+

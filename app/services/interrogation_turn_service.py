@@ -282,11 +282,30 @@ def run_interrogation_turn(
         db.flush()
 
     # 2.5 Extract Allowed Knowledge Layers based on Topics Touched
+    # Use pre-turn patience baseline so this turn's sensitive topic penalty does not retroactively
+    # block the introductory knowledge layer of the topic being asked.
+    post_turn_suspect_state = get_suspect_state(
+        session_id=session_id,
+        suspect_id=suspect_id,
+        db=db
+    )
+    eval_state = {
+        **post_turn_suspect_state,
+        "patience": max(
+            initial_suspect_state.get("patience", 50.0),
+            post_turn_suspect_state.get("patience", 50.0)
+        ),
+        "pressure": max(
+            initial_suspect_state.get("pressure", 0.0),
+            post_turn_suspect_state.get("pressure", 0.0)
+        ),
+    }
     knowledge_facts = get_allowed_knowledge_facts(
         session_id=session_id,
         suspect_id=suspect_id,
         detected_topics=msg_analysis.detected_topic_ids,
-        db=db
+        db=db,
+        suspect_state=eval_state
     )
     allowed_knowledge = knowledge_facts.get("known_knowledge", [])
     new_knowledge = knowledge_facts.get("new_knowledge_this_turn", [])

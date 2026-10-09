@@ -69,7 +69,8 @@ def get_allowed_knowledge_facts(
     session_id: int, 
     suspect_id: int, 
     detected_topics: List[str], 
-    db: Optional[Session] = None
+    db: Optional[Session] = None,
+    suspect_state: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, List[str]]:
     """
     Iterates through all knowledge items of the suspect matching detected topics,
@@ -90,7 +91,8 @@ def get_allowed_knowledge_facts(
         if not suspect or not suspect.knowledge_items:
             return result
 
-        suspect_state = get_suspect_state(session_id, suspect_id, db)
+        if suspect_state is None:
+            suspect_state = get_suspect_state(session_id, suspect_id, db)
         
         for k_item in suspect.knowledge_items:
             # We only evaluate facts for topics the player is currently asking about
