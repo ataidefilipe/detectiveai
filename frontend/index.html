@@ -639,10 +639,28 @@
     async function resumeSession(sessionId) {
       try {
         state.sessionId = sessionId;
-        const overview = await api(`/sessions/${sessionId}`);
+        state.activeSuspectId = null;
+        state.selectedEvidenceId = null;
+        state.effectiveEvidenceIds = new Set();
+        state.evidenceCache = {};
+        document.getElementById('chat-messages').innerHTML = '';
+
+        const [overview, caseFileData] = await Promise.all([
+          api(`/sessions/${sessionId}`),
+          api(`/sessions/${sessionId}/case-file`).catch(() => null)
+        ]);
         state.scenarioId = overview.scenario.id;
         state.motives = overview.scenario.motive_options || [];
         document.getElementById('inv-case-name').textContent = '📁 ' + overview.scenario.title;
+
+        // Restaurar apenas as evidências efetivas desta sessão específica
+        if (caseFileData && Array.isArray(caseFileData.suspects)) {
+          caseFileData.suspects.forEach(s => {
+            (s.effective_evidences || []).forEach(ev => {
+              if (ev && ev.id) state.effectiveEvidenceIds.add(ev.id);
+            });
+          });
+        }
 
         await loadInvestigation();
         showScreen('screen-investigation');
@@ -689,6 +707,13 @@
         });
         state.sessionId = session.session_id;
         state.scenarioId = scenarioId;
+        // Limpar isolamento de evidências e chat da sessão anterior
+        state.activeSuspectId = null;
+        state.selectedEvidenceId = null;
+        state.effectiveEvidenceIds = new Set();
+        state.evidenceCache = {};
+        document.getElementById('chat-messages').innerHTML = '';
+
         await loadBriefing();
         showScreen('screen-briefing');
       } catch (e) {
