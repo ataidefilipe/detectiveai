@@ -335,15 +335,19 @@ def run_interrogation_turn(
             reward_map = {}
             for r in claim_rewards:
                 if isinstance(r, dict):
-                    reward_map[str(r.get("id"))] = r.get("depth")
+                    depth_val = r.get("depth")
+                    reward_map[str(r.get("id"))] = depth_val if depth_val is not None else 1
                 else:
-                    reward_map[str(r)] = None # None means reveal all layers
+                    # String simples no reveal_on_break: segurança por padrão, libera apenas a camada inicial (1),
+                    # evitando vazamento das camadas finais/conclusivas sem confrontos dedicados.
+                    reward_map[str(r)] = 1
 
             for k_item in suspect.knowledge_items:
                 kid = str(k_item.get("id"))
                 if kid in reward_map:
                     max_depth_target = reward_map[kid]
                     layers = k_item.get("content_layers", [])
+                    target_depth = 1 if max_depth_target is None else max_depth_target
                     
                     k_state = db.query(SessionSuspectKnowledgeStateModel).filter(
                         SessionSuspectKnowledgeStateModel.session_id == session_id,
@@ -353,10 +357,7 @@ def run_interrogation_turn(
                     
                     if k_state:
                         current_depth = k_state.max_revealed_depth
-                        if max_depth_target is None:
-                            new_depth = len(layers)
-                        else:
-                            new_depth = max(current_depth, min(max_depth_target, len(layers)))
+                        new_depth = max(current_depth, min(target_depth, len(layers)))
                         
                         if new_depth > current_depth:
                             # Adicionar as novas camadas reveladas ao new_knowledge para o prompt
@@ -367,7 +368,7 @@ def run_interrogation_turn(
                         db.flush()
                     else:
                         # Se não existe estado, cria um com a profundidade alvo
-                        new_depth = len(layers) if max_depth_target is None else min(max_depth_target, len(layers))
+                        new_depth = min(target_depth, len(layers))
                         k_state = SessionSuspectKnowledgeStateModel(
                             session_id=session_id,
                             suspect_id=suspect_id,

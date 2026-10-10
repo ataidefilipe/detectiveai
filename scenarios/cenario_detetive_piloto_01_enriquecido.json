@@ -374,8 +374,7 @@
           ],
           "breakable_by_claim_ids": [],
           "reveal_on_break": [
-            "know_relatorio_02",
-            "know_conflito_02"
+            "know_presenca_01"
           ]
         },
         {
@@ -462,7 +461,7 @@
           "content_layers": [
             "Heitor ameaçou me demitir e entregar meus registros à auditoria se eu não continuasse obedecendo.",
             "Naquela noite ele mandou uma mensagem dizendo que, na manhã seguinte, apresentaria os documentos e que as alterações estavam no meu usuário.",
-            "Fui ao escritório para fazê-lo recuar. A discussão saiu do controle. Não fui para lá com um plano de matar, mas isso não muda o que aconteceu."
+            "Fui ao escritório para tentar fazê-lo recuar e tivemos uma discussão áspera sobre as planilhas, mas não fui com intenção de agressão e saí de lá abalada."
           ]
         },
         {
@@ -1131,7 +1130,7 @@
     {
       "suspect": "marina_souza",
       "evidence": "cartao_acesso",
-      "content": "O cartão de Marina foi usado às 22h14 para entrar na área de acesso do 9º andar. O registro, combinado com Clara, estabelece sua presença durante a janela relevante, embora não prove sozinho o homicídio.",
+      "content": "O cartão de Marina foi usado às 22h14 para entrar na área de acesso do 9º andar. O registro isoladamente comprova o uso do crachá naquele horário, mas não prova quem estava com ele nem que houve homicídio.",
       "is_core": true
     },
     {
