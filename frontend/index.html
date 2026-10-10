@@ -60,6 +60,13 @@
     .btn-delete-session { background: none; border: 1px solid rgba(220,38,38,0.3); color: var(--red); padding: 8px 12px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.85rem; transition: all .2s; }
     .btn-delete-session:hover { background: rgba(220,38,38,0.15); border-color: var(--red); }
 
+    /* ─── Auth Gate Screen ───────────────────────────────────── */
+    .auth-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px; min-height: 100vh; background: radial-gradient(circle at 50% 35%, #182030 0%, #0d0f14 75%); }
+    .auth-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 44px 32px; max-width: 440px; width: 100%; text-align: center; box-shadow: 0 20px 45px rgba(0,0,0,0.6); }
+    .auth-badge { display: inline-block; font-size: 0.72rem; letter-spacing: 1.5px; font-weight: 700; color: var(--accent); background: rgba(232,182,76,0.12); padding: 5px 14px; border-radius: 20px; border: 1px solid rgba(232,182,76,0.3); margin-bottom: 18px; }
+    .auth-title { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: #fff; margin-bottom: 8px; letter-spacing: 0.5px; }
+    .auth-subtitle { color: var(--text-muted); font-size: 0.88rem; line-height: 1.55; margin-bottom: 28px; }
+
     /* ─── Buttons ────────────────────────────────────────────── */
     .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all .2s; border: none; font-family: inherit; }
     .btn-primary { background: var(--accent); color: #000; }
@@ -289,6 +296,35 @@
 <body>
   <div id="toast-container"></div>
 
+  <!-- ════ SCREEN: Autenticação Obrigatória ═══════════════════ -->
+  <section id="screen-auth" class="screen">
+    <div class="auth-wrapper">
+      <div class="auth-card">
+        <div class="auth-badge">🕵️ ACESSO RESTRITO</div>
+        <h1 class="auth-title">Detective AI</h1>
+        <p class="auth-subtitle">
+          Sistema de Interrogatório Criminal por IA.<br>
+          Identifique-se com sua conta Google para acessar os casos e conduzir as investigações.
+        </p>
+
+        <div id="google-login-box" style="display:flex; justify-content:center; margin-bottom:16px; min-height:44px;">
+          <div id="google-btn-container"></div>
+        </div>
+
+        <div id="google-fallback-note" style="display:none; color:var(--text-muted); font-size:0.82rem; margin-bottom:16px; background:rgba(232,182,76,0.06); border:1px dashed rgba(232,182,76,0.3); padding:10px 14px; border-radius:var(--radius-sm); text-align:left;">
+          <div style="font-weight:600; color:var(--accent); margin-bottom:4px;">ℹ️ Google Client ID não detectado</div>
+          <span>Para ativar o botão oficial do Google, configure a variável <code>GOOGLE_CLIENT_ID</code> nas variáveis do Railway.</span>
+        </div>
+
+        <div id="mock-login-section" style="margin-top:6px;">
+          <button class="btn btn-secondary" onclick="loginMock()" style="width:100%; justify-content:center; padding:11px 18px; font-weight:600;">
+            🕵️ Entrar como Detetive Convidado (Modo Dev)
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ════ SCREEN 0: Sessions List ════════════════════════════ -->
   <section id="screen-sessions" class="screen">
     <header class="app-header">
@@ -485,33 +521,6 @@
     </div>
   </div>
 
-  <!-- ════ MODAL: Autenticação Google / Login ══════════════════ -->
-  <div class="modal-overlay" id="modal-login">
-    <div class="modal" style="max-width: 440px; text-align: center;">
-      <div style="font-size: 2.5rem; margin-bottom: 8px;">🕵️</div>
-      <h2 style="font-family:'Playfair Display',serif; color:var(--accent); margin-bottom:6px;">Identificação do Detetive</h2>
-      <p style="color:var(--text-muted); font-size:0.88rem; margin-bottom:20px;">
-        Entre com sua conta Google para gerenciar suas investigações e salvar suas sessões.
-      </p>
-
-      <div id="google-login-box" style="display:flex; justify-content:center; margin-bottom:16px; min-height:44px;">
-        <div id="google-btn-container"></div>
-      </div>
-
-      <div id="google-fallback-note" style="display:none; color:var(--text-muted); font-size:0.8rem; margin-bottom:14px; background:rgba(255,255,255,0.03); padding:8px 12px; border-radius:var(--radius-sm); border:1px dashed var(--border);">
-        <span>ℹ️ Google Client ID não configurado no .env.</span><br>
-        <span>Você pode entrar no Modo Convidado / Mock abaixo:</span>
-      </div>
-
-      <button class="btn btn-secondary" onclick="loginMock()" style="width:100%; justify-content:center; padding:10px 16px; margin-bottom:8px;">
-        🕵️ Entrar como Detetive Convidado (Mock Dev)
-      </button>
-
-      <button class="btn" onclick="closeLoginModal()" style="background:none; color:var(--text-muted); font-size:0.82rem; width:100%; justify-content:center; margin-top:4px;">
-        Continuar como anônimo
-      </button>
-    </div>
-  </div>
 
   <!-- ════════════════════════════════════════════════════════
        JAVASCRIPT
@@ -558,7 +567,6 @@
       });
       if (res.status === 401 && path !== '/auth/google' && path !== '/auth/config') {
         logoutUser();
-        openLoginModal();
         throw new Error('Sessão expirada. Faça login novamente.');
       }
       if (!res.ok) {
@@ -573,14 +581,9 @@
     }
 
     // ── Auth & User Management ──────────────────────────────
-    function openLoginModal() {
-      const modal = document.getElementById('modal-login');
-      if (modal) modal.classList.add('open');
-    }
-
-    function closeLoginModal() {
-      const modal = document.getElementById('modal-login');
-      if (modal) modal.classList.remove('open');
+    function showAuthScreen() {
+      showScreen('screen-auth');
+      initGoogleAuth();
     }
 
     function setAuth(token, user) {
@@ -598,7 +601,7 @@
       localStorage.removeItem('detective_user');
       renderUserHeader();
       toast('Desconectado', 'Sua sessão foi encerrada.', 'hint');
-      loadSessionsList();
+      showAuthScreen();
     }
 
     function renderUserHeader() {
@@ -615,9 +618,7 @@
             <button class="btn-back" onclick="logoutUser()" title="Encerrar sessão" style="padding:4px 10px; font-size:0.78rem;">Sair</button>
           `;
         } else {
-          w.innerHTML = `
-            <button class="btn btn-secondary" onclick="openLoginModal()" style="padding:5px 12px; font-size:0.82rem;">🔑 Entrar</button>
-          `;
+          w.innerHTML = '';
         }
       });
     }
@@ -655,8 +656,7 @@
         });
         setAuth(data.access_token, data.user);
         toast('Bem-vindo', `Identificado como ${data.user.name}`, 'ok');
-        closeLoginModal();
-        loadSessionsList();
+        showScenariosScreen();
       } catch (err) {
         toast('Erro no Login', err.message, 'warn');
       }
@@ -674,8 +674,7 @@
         });
         setAuth(data.access_token, data.user);
         toast('Conectado', `Identificado como ${data.user.name} (Modo Mock)`, 'ok');
-        closeLoginModal();
-        loadSessionsList();
+        showScenariosScreen();
       } catch (err) {
         toast('Erro de Conexão', err.message, 'warn');
       }
@@ -686,12 +685,15 @@
         try {
           const user = await api('/auth/me');
           setAuth(authState.token, user);
+          showScenariosScreen();
+          return;
         } catch (e) {
           logoutUser();
+          return;
         }
-      } else {
-        renderUserHeader();
       }
+      renderUserHeader();
+      showAuthScreen();
     }
 
     // ── Screen navigation ──────────────────────────────────
@@ -702,11 +704,17 @@
     }
 
     function showScenariosScreen() {
+      if (!authState.token || !authState.user) {
+        return showAuthScreen();
+      }
       showScreen('screen-scenarios');
       loadScenarios();
     }
 
     function showSessionsScreen() {
+      if (!authState.token || !authState.user) {
+        return showAuthScreen();
+      }
       showScreen('screen-sessions');
       loadSessionsList();
     }
@@ -771,17 +779,7 @@
           return;
         }
 
-        const guestBanner = !authState.token ? `
-          <div class="card" style="margin-bottom:14px;background:rgba(232,182,76,0.07);border:1px solid rgba(232,182,76,0.25);display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-radius:var(--radius-sm);flex-wrap:wrap;gap:10px;">
-            <div>
-              <span style="font-weight:600;color:var(--accent);">Modo Visitante</span>
-              <p style="font-size:0.82rem;color:var(--text-muted);margin:2px 0 0;">Faça login com sua conta Google para salvar investigações no seu perfil.</p>
-            </div>
-            <button class="btn btn-primary" onclick="openLoginModal()" style="font-size:0.82rem;padding:6px 14px;">🔑 Fazer Login</button>
-          </div>
-        ` : '';
-
-        list.innerHTML = guestBanner + sessions.map(s => {
+        list.innerHTML = sessions.map(s => {
           const dateStr = s.created_at ? new Date(s.created_at).toLocaleString('pt-BR') : 'Data desconhecida';
           const isInProgress = s.status === 'in_progress';
           let statusBadge = '';
@@ -1443,8 +1441,6 @@
     //  Init
     // ─────────────────────────────────────────────────────────
     verifyExistingAuth();
-    initGoogleAuth();
-    showScenariosScreen();
   </script>
 </body>
 </html>

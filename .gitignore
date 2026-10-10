@@ -2,6 +2,7 @@
 arquivounico.py
 saida.md
 .env
+client_secret*.json
 /backlogs
 *.txt
 gpt.py
