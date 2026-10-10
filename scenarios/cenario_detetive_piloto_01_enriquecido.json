@@ -1,0 +1,1274 @@
+{
+  "scenario_code": "piloto-02",
+  "title": "O Caso do Escritório Trancado 01",
+  "description": "Às 23h40 de uma sexta-feira, Heitor Mancini, diretor financeiro da Solarium Corp, é encontrado morto em seu escritório no 9º andar. A porta está fechada e o sistema eletrônico indica que ela foi trancada automaticamente; não há sinais de arrombamento. A primeira hipótese é de uma sala trancada por dentro, mas ninguém confirmou que o ferrolho interno estivesse acionado. Quatro pessoas circularam pelo prédio durante a janela provável da morte, e as câmeras do 9º andar ficaram fora do ar por 42 minutos. O caso mistura fraude financeira, medo de perder o emprego, omissões e uma testemunha que sabe mais do que admite.",
+  "case_summary": "Heitor Mancini, diretor financeiro da Solarium Corp, foi encontrado morto às 23h40 de sexta-feira em seu escritório no 9º andar. O exame preliminar aponta morte por asfixia compatível com compressão manual, mas a estimativa médico-legal ainda é ampla: aproximadamente entre 22h20 e 22h50. A porta parecia trancada, o que alimentou a hipótese de uma sala impossível de abandonar; na realidade, a fechadura eletrônica se rearma quando a porta fecha e permite a saída pelo puxador interno. Marina Souza, assistente financeira, participava com Heitor de um esquema de pagamentos a fornecedores sem entrega comprovada. Ela alterou registros sob orientação dele e assinou versões que agora permitem rastrear sua participação. Quando Heitor enviou uma mensagem indicando que entregaria documentos à auditoria e deixaria as alterações atribuídas a ela, Marina saiu do hotel onde estava hospedada e foi confrontá-lo. A discussão começou como uma tentativa de negociação, mas escalou; durante a luta, uma caneca caiu e o café atravessou a fresta inferior da porta. Marina matou Heitor por compressão manual, saiu pela escada de serviço e fechou a porta, que se trancou automaticamente. Rogério Lima, segurança, havia cochilado e derrubado por acidente o sistema de câmeras ao se apoiar no painel; ao acordar, demorou a reiniciá-lo porque tentou esconder a própria negligência. Clara Martins, estagiária de TI, viu Marina no corredor e omitiu isso por medo de perder o estágio. Eduardo Farias ouviu uma discussão e viu o café no chão; limpou parte do líquido sem entrar no escritório e foi embora, temendo ser envolvido por ter ignorado os sinais. Cada suspeito esconde algo, mas apenas Marina matou Heitor.",
+  "culprit": "marina_souza",
+  "true_motive_key": "financial_gain",
+  "required_broken_claim_ids": [
+    "claim_marina_alibi_01"
+  ],
+  "topics": [
+    {
+      "id": "alibi",
+      "label": "Álibi",
+      "aliases": [
+        "onde estava",
+        "quarto",
+        "sozinha",
+        "estava lá",
+        "sua localização",
+        "noite do crime",
+        "onde você estava",
+        "o que fazia",
+        "o que fazia naquela noite",
+        "onde foi",
+        "quando chegou",
+        "o que voce fazia la",
+        "o que você fazia lá",
+        "o que fazia lá",
+        "o que fazia la",
+        "horário de saída",
+        "registro de entrada",
+        "cartão da Marina",
+        "álibi do hotel",
+        "escada de serviço",
+        "trajeto"
+      ],
+      "is_sensitive": false,
+      "priority": 2
+    },
+    {
+      "id": "relatorio_contabil",
+      "label": "Relatório Contábil",
+      "aliases": [
+        "relatório",
+        "relatórios",
+        "relatorio",
+        "relatorios",
+        "contábil",
+        "contábeis",
+        "contabil",
+        "contabeis",
+        "relatórios contábeis",
+        "relatorios contabeis",
+        "documento",
+        "documentos",
+        "números",
+        "adulterado",
+        "irregularidades",
+        "desvio",
+        "contabilidade",
+        "planilha",
+        "arquivo",
+        "financeiro",
+        "contas",
+        "auditoria",
+        "inconsistência",
+        "inconsistências",
+        "inconsistencia",
+        "inconsistencias",
+        "inconsitencia",
+        "inconsitencias",
+        "fornecedor fantasma",
+        "nota fiscal",
+        "pagamento duplicado",
+        "versão do arquivo",
+        "trilha de auditoria",
+        "assinatura digital",
+        "auditoria interna",
+        "compliance"
+      ],
+      "is_sensitive": true,
+      "priority": 3
+    },
+    {
+      "id": "presenca_local",
+      "label": "Presença no Local",
+      "aliases": [
+        "cartão de acesso",
+        "cartão",
+        "acesso",
+        "porta",
+        "entrou",
+        "estava lá",
+        "presença",
+        "registro",
+        "câmeras",
+        "gravação",
+        "andar",
+        "nono andar",
+        "câmera",
+        "sistema",
+        "catraca",
+        "escada de emergência",
+        "puxador interno",
+        "fechadura eletrônica",
+        "porta automática",
+        "log de entrada",
+        "registro de acesso"
+      ],
+      "is_sensitive": false,
+      "priority": 2
+    },
+    {
+      "id": "conflito_vitima",
+      "label": "Conflito com a Vítima",
+      "aliases": [
+        "discussão",
+        "briga",
+        "conflito",
+        "desentendimento",
+        "problema",
+        "vítima",
+        "chefe",
+        "relação",
+        "trabalho com",
+        "como era",
+        "tensão",
+        "heitor",
+        "mancini",
+        "diretor",
+        "ameaça",
+        "ameaçou",
+        "mensagem",
+        "celular",
+        "chantagem",
+        "denúncia",
+        "auditoria",
+        "ameaça de denúncia",
+        "última conversa"
+      ],
+      "is_sensitive": true,
+      "priority": 3
+    },
+    {
+      "id": "outros_suspeitos",
+      "label": "Outros Suspeitos",
+      "aliases": [
+        "rogério",
+        "clara",
+        "eduardo",
+        "estagiária",
+        "segurança",
+        "gerente",
+        "outro",
+        "mais alguém",
+        "quem mais",
+        "outras pessoas",
+        "quem estava",
+        "testemunha",
+        "contradição",
+        "motivo de mentir",
+        "omissão",
+        "quem mentiu",
+        "quem tinha motivo"
+      ],
+      "is_sensitive": false,
+      "priority": 1
+    },
+    {
+      "id": "cameras_falha",
+      "label": "Falha nas Câmeras",
+      "aliases": [
+        "câmeras apagaram",
+        "câmera desligou",
+        "gravação sumiu",
+        "sistema de câmeras",
+        "falha técnica",
+        "câmeras pararam",
+        "servidor",
+        "reiniciou",
+        "gravação perdida",
+        "DVR",
+        "terminal da guarita",
+        "queda de vídeo",
+        "janela sem gravação",
+        "log do sistema",
+        "painel de segurança"
+      ],
+      "is_sensitive": false,
+      "priority": 1
+    },
+    {
+      "id": "rotina_trabalho",
+      "label": "Rotina e Trabalho",
+      "aliases": [
+        "trabalho",
+        "trabalha",
+        "trabalham",
+        "função",
+        "funcao",
+        "funções",
+        "funcoes",
+        "cargo",
+        "rotina",
+        "o que faz",
+        "o que você faz",
+        "o que voce faz",
+        "dia a dia",
+        "responsabilidades",
+        "tarefas",
+        "departamento",
+        "setor",
+        "tempo de empresa",
+        "há quanto tempo",
+        "ha quanto tempo",
+        "suas funções",
+        "suas responsabilidades",
+        "o que você fez",
+        "o que voce fez",
+        "o que fez",
+        "o que fez hoje",
+        "seu dia",
+        "ao longo do dia",
+        "durante o dia",
+        "passou o dia"
+      ],
+      "is_sensitive": false,
+      "priority": 1
+    },
+    {
+      "id": "mecanica_fechadura",
+      "label": "Mecanismo da Fechadura",
+      "aliases": [
+        "sala trancada",
+        "trancado por dentro",
+        "porta trancada",
+        "fechadura",
+        "ferrolho",
+        "puxador",
+        "fechadura eletrônica",
+        "como saiu",
+        "sala impossível"
+      ],
+      "is_sensitive": false,
+      "priority": 2
+    },
+    {
+      "id": "laudo_medico",
+      "label": "Laudo Médico-Legal",
+      "aliases": [
+        "autópsia",
+        "laudo",
+        "causa da morte",
+        "asfixia",
+        "estrangulamento",
+        "hora da morte",
+        "lesões",
+        "ferimentos",
+        "marcas no pescoço"
+      ],
+      "is_sensitive": true,
+      "priority": 2
+    }
+  ],
+  "motives": [
+    {
+      "key": "financial_gain",
+      "label": "Ganho Financeiro",
+      "description": "Motivo verdadeiro. Marina queria impedir que a auditoria revelasse sua participação no esquema e preservava o dinheiro que recebeu indiretamente dos pagamentos fraudulentos. O gatilho imediato foi a decisão de Heitor de entregar uma versão seletiva dos documentos, atribuindo a ela a responsabilidade principal. O ganho financeiro e a autopreservação estão ligados: a exposição significaria perda do dinheiro, demissão e possível processo."
+    },
+    {
+      "key": "revenge",
+      "label": "Vingança",
+      "description": "Hipótese plausível, mas secundária e insuficiente para explicar o crime. Heitor humilhava Marina e usava ameaças para mantê-la obediente. Há ressentimento real, porém as evidências mais fortes apontam para o medo de ser exposta pela fraude, não para uma vingança planejada."
+    },
+    {
+      "key": "protection",
+      "label": "Proteção de Terceiros",
+      "description": "Hipótese alternativa sem sustentação suficiente. A fraude envolvia mais de uma pessoa e Marina pode alegar que tentou proteger colegas, mas nenhum elemento confiável indica que tenha matado Heitor para proteger um terceiro."
+    }
+  ],
+  "suspects": [
+    {
+      "id": "marina_souza",
+      "name": "Marina Souza",
+      "backstory": "Assistente financeira da Solarium Corp há cinco anos. Entrou na empresa como profissional organizada e confiável, conhecia os processos de conciliação e aprendeu rapidamente onde pequenas inconsistências podiam passar despercebidas. Há cerca de 18 meses, Heitor começou a pedir que ela reclassificasse despesas e regularizasse pagamentos de consultorias sem documentação completa. No início, Marina acreditou que eram ajustes temporários autorizados pela diretoria; depois percebeu que parte dos fornecedores não tinha entrega comprovada e continuou porque dependia do salário e passou a receber vantagens indiretas. Heitor guardou versões assinadas e trilhas de auditoria, tornando-a vulnerável. Nas últimas semanas, ele passou a tratá-la como bode expiatório: queria entregar à auditoria somente as alterações feitas com o usuário dela. Marina está ansiosa, mede as palavras e tenta parecer cooperativa. Sua culpa não elimina o fato de ter sido manipulada durante parte do esquema; essa ambiguidade é importante para que o interrogatório não reduza o caso a uma vilã caricata.",
+      "personality": "nervoso",
+      "internal_note": "Verdade central: Marina matou Heitor durante uma discussão não planejada, desencadeada pela ameaça de ele transferir a responsabilidade da fraude para ela. Ela participou do esquema e obteve benefício financeiro, mas Heitor era o principal organizador. O álibi é deliberadamente falso: chegou ao hotel às 19h45, saiu às 21h55, entrou no 9º andar às 22h14, confrontou Heitor, matou-o aproximadamente às 22h31 e saiu pela escada de serviço por volta das 22h35. A porta se trancou automaticamente atrás dela. Não planejou o assassinato antes de chegar; a decisão surgiu no confronto. Sob pressão, tende a justificar as alterações como ordens de Heitor antes de admitir que continuou por interesse próprio.",
+      "initial_statement": "Eu já expliquei onde estava. Fiquei no hotel e não voltei à empresa. Sobre os relatórios, eu apenas executava ajustes que vinham da diretoria. Não entendo por que estão tratando uma divergência contábil como se fosse um homicídio.",
+      "profile": {
+        "pressure_tolerance": 0.3,
+        "empathy_receptivity": 0.7,
+        "repetition_irritability": 0.7,
+        "contradiction_fragility": 0.25,
+        "speech": {
+          "base_verbosity": 0.5,
+          "stress_verbosity_delta": 0.5
+        }
+      },
+      "flavor_slots": [
+        {
+          "key": "preferred_food",
+          "description": "Preferência pessoal de comida",
+          "trigger_keywords": [
+            "comida",
+            "comer",
+            "almoço",
+            "almoçar",
+            "jantar",
+            "refeição",
+            "prato"
+          ],
+          "options": [
+            {
+              "id": "simple_pasta",
+              "text": "Prefiro massas simples."
+            },
+            {
+              "id": "vegetable_soup",
+              "text": "Prefiro sopa de legumes."
+            }
+          ]
+        },
+        {
+          "key": "work_habit",
+          "description": "Hábito para manter foco no trabalho",
+          "trigger_keywords": [
+            "concentração",
+            "concentrar",
+            "hábito de trabalho",
+            "rotina de trabalho",
+            "foco",
+            "método de trabalho"
+          ],
+          "options": [
+            {
+              "id": "earplugs",
+              "text": "Costumo usar protetores auriculares para manter a concentração nos relatórios."
+            },
+            {
+              "id": "checklists",
+              "text": "Organizo tudo em listas rigorosas e meticulosas de papel."
+            }
+          ]
+        }
+      ],
+      "true_timeline": [
+        "19h45 — Chega ao hotel próximo à empresa depois do expediente. Está inquieta e consulta várias vezes o celular.",
+        "20h55 — Lê mensagens de Heitor sobre uma versão final dos relatórios; não responde de imediato.",
+        "21h18 — Recebe mensagem explícita de Heitor dizendo que entregará os documentos à auditoria na manhã seguinte e que as alterações ficarão vinculadas ao usuário dela.",
+        "21h55 — Sai do hotel. Não informa à recepção para onde vai.",
+        "22h14 — O cartão de Marina registra entrada na área de acesso do 9º andar.",
+        "22h16 — Clara a vê no corredor principal. Marina evita contato visual e segue para o escritório de Heitor.",
+        "22h18 — Entra no escritório. A porta fecha e o sistema eletrônico passa a indicar estado travado.",
+        "22h20–22h28 — Discute com Heitor sobre os relatórios, o dinheiro e a ameaça de denúncia. A conversa passa de negociação para acusações.",
+        "22h24 — Durante o confronto, uma caneca cai e se quebra; parte do café alcança a fresta inferior da porta.",
+        "22h29–22h32 — A discussão vira luta física. Marina comprime o pescoço de Heitor até ele perder a consciência e morrer.",
+        "22h26 — Eduardo passa pelo corredor durante parte da discussão, ouve vozes e vê café saindo sob a porta; ele não vê o interior do escritório.",
+        "22h32–22h35 — Marina percebe o que fez, tenta recuperar a compostura e sai pela porta normal. Ao fechá-la, a fechadura se rearma automaticamente.",
+        "22h35 — Desce pela escada de serviço, fora da cobertura das câmeras durante a falha do sistema.",
+        "23h10 — Retorna ao hotel e tenta estabelecer a aparência de que passou a noite no quarto."
+      ],
+      "claims": [
+        {
+          "claim_id": "claim_marina_alibi_01",
+          "topic_id": "alibi",
+          "text": "Passei a noite inteira no meu quarto de hotel. Saí do hotel depois do expediente, mas voltei cedo e não estive na empresa à noite.",
+          "claim_type": "alibi",
+          "importance": "critical",
+          "breakable_by_evidence_ids": [
+            "cartao_acesso",
+            "testemunho_estagiaria"
+          ],
+          "breakable_by_claim_ids": [],
+          "reveal_on_break": [
+            "know_relatorio_02",
+            "know_conflito_02"
+          ]
+        },
+        {
+          "claim_id": "claim_marina_relatorio_01",
+          "topic_id": "relatorio_contabil",
+          "text": "Eu vi inconsistências no relatório e fiz correções operacionais, mas não sei quem organizou os pagamentos nem por que os documentos foram alterados.",
+          "claim_type": "denial",
+          "importance": "high",
+          "breakable_by_evidence_ids": [
+            "relatorio_contabil",
+            "auditoria_versoes"
+          ],
+          "breakable_by_claim_ids": [],
+          "reveal_on_break": [
+            "know_relatorio_02",
+            "know_relatorio_03"
+          ]
+        },
+        {
+          "claim_id": "claim_marina_mensagem_01",
+          "topic_id": "conflito_vitima",
+          "text": "Heitor só me mandou uma mensagem rotineira sobre fechamento financeiro. Não houve ameaça nem motivo para eu ir falar com ele.",
+          "claim_type": "denial",
+          "importance": "high",
+          "breakable_by_evidence_ids": [
+            "mensagem_heitor"
+          ],
+          "breakable_by_claim_ids": [],
+          "reveal_on_break": [
+            "know_conflito_02"
+          ]
+        }
+      ],
+      "knowledge": [
+        {
+          "id": "know_relatorio_01",
+          "topic_id": "relatorio_contabil",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "O relatório contábil estava em revisão naquela semana. Conferir conciliações, notas fiscais e centros de custo fazia parte da minha rotina.",
+            "Encontrei pagamentos recorrentes a três consultorias com descrições genéricas. Algumas notas não tinham comprovante de entrega associado.",
+            "Heitor pediu que eu tratasse as diferenças como ajustes de competência e não comentasse as linhas com o restante da equipe."
+          ]
+        },
+        {
+          "id": "know_relatorio_02",
+          "topic_id": "relatorio_contabil",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "Heitor me pressionava havia meses para alterar a classificação de despesas que eu não conseguia justificar documentalmente.",
+            "Fiz alterações porque ele aprovava as solicitações e dizia que a documentação chegaria depois. Em algumas ocasiões, eu sabia que não chegaria.",
+            "Eu precisava do emprego, mas não fui apenas uma pessoa enganada: continuei depois de perceber que havia algo errado."
+          ]
+        },
+        {
+          "id": "know_relatorio_03",
+          "topic_id": "relatorio_contabil",
+          "kind": "inferred",
+          "reliability": "high",
+          "content_layers": [
+            "Não fui só eu. Heitor desenhou o procedimento, escolheu os fornecedores e autorizou os pagamentos. Eu era quem fazia parte dos lançamentos aparecerem regulares.",
+            "Ele guardou versões dos arquivos com minhas assinaturas e alterações do meu usuário. Disse que, se houvesse auditoria, a culpa ficaria comigo.",
+            "Eu também me beneficiei. Tinha medo de perder tudo e queria impedir que ele me entregasse como única responsável."
+          ]
+        },
+        {
+          "id": "know_conflito_01",
+          "topic_id": "conflito_vitima",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "Minha relação com Heitor se deteriorou nos últimos meses. Na frente dos outros ele chamava isso de cobrança por desempenho.",
+            "Na semana do crime, discutimos sobre uma versão do relatório que ele queria fechar sem anexar as notas comprobatórias.",
+            "Eu tinha motivos para temê-lo, mas não quero que isso pareça uma confissão de que fui procurá-lo naquela noite."
+          ]
+        },
+        {
+          "id": "know_conflito_02",
+          "topic_id": "conflito_vitima",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "Heitor ameaçou me demitir e entregar meus registros à auditoria se eu não continuasse obedecendo.",
+            "Naquela noite ele mandou uma mensagem dizendo que, na manhã seguinte, apresentaria os documentos e que as alterações estavam no meu usuário.",
+            "Fui ao escritório para fazê-lo recuar. A discussão saiu do controle. Não fui para lá com um plano de matar, mas isso não muda o que aconteceu."
+          ]
+        },
+        {
+          "id": "know_presenca_01",
+          "topic_id": "presenca_local",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "Eu tinha autorização para acessar o 9º andar porque trabalhava diretamente com a diretoria financeira.",
+            "Não usei meu cartão naquela noite. Fiquei no hotel e não vi Heitor depois do expediente."
+          ]
+        },
+        {
+          "id": "know_outros_01",
+          "topic_id": "outros_suspeitos",
+          "kind": "heard",
+          "reliability": "medium",
+          "content_layers": [
+            "Eduardo esteve no prédio naquela noite em outras ocasiões; ele e Heitor tinham atritos por metas comerciais.",
+            "Clara costuma ficar até tarde na sala técnica. É discreta e tem medo de contrariar funcionários mais antigos."
+          ]
+        },
+        {
+          "id": "know_marina_rotina_01",
+          "topic_id": "rotina_trabalho",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "Trabalho na Solarium Corp há cinco anos como assistente financeira, cuidando de conciliação bancária, lançamento de notas fiscais e relatórios operacionais.",
+            "Dou suporte à diretoria financeira e preparo balancetes periódicos de despesas internas. Tenho acesso aos arquivos de trabalho, mas não aprovo pagamentos sozinha.",
+            "Na sexta-feira passei a tarde conferindo notas e versões de planilhas com Heitor. Saí para o hotel no início da noite."
+          ]
+        }
+      ],
+      "final_phrase": "Eu já disse tudo que tinha para dizer. Preciso falar com meu advogado."
+    },
+    {
+      "id": "rogerio_lima",
+      "name": "Rogério Lima",
+      "backstory": "Segurança patrimonial do prédio há 12 anos. Conhece os acessos, os horários de limpeza e a rotina das equipes, mas não tem autoridade para consultar o conteúdo dos computadores da empresa. É cuidadoso quando supervisionado e relaxa em turnos longos. Na noite do crime, cochilou durante parte do plantão e apoiou o braço no painel de operação, acionando a reinicialização do gravador de vídeo. Quando percebeu que as imagens haviam parado, tentou restaurar o serviço sem registrar uma ocorrência formal. Sua mentira protege o emprego e evita uma advertência; não é parte de uma conspiração. Ele não viu Marina entrar porque o monitor estava fora do ar e ele próprio não estava atento.",
+      "personality": "neutro",
+      "initial_statement": "Fiz as rondas previstas e não registrei nenhuma ocorrência. As câmeras caíram por uma falha antiga do sistema; eu não desliguei nada. Não vi quem entrou ou saiu do nono andar durante esse período.",
+      "profile": {
+        "pressure_tolerance": 0.6,
+        "empathy_receptivity": 0.5,
+        "repetition_irritability": 0.5,
+        "contradiction_fragility": 0.5,
+        "speech": {
+          "base_verbosity": 0.4,
+          "stress_verbosity_delta": -0.2
+        }
+      },
+      "flavor_slots": [
+        {
+          "key": "preferred_drink",
+          "description": "Bebida preferida no expediente",
+          "trigger_keywords": [
+            "beber",
+            "bebida",
+            "café",
+            "chá",
+            "garrafa",
+            "bebedouro",
+            "tomar"
+          ],
+          "options": [
+            {
+              "id": "thermos_coffee",
+              "text": "Trago café bem quente de casa na minha garrafa térmica de metal."
+            },
+            {
+              "id": "cold_water",
+              "text": "Só bebo água gelada do bebedouro do corredor para me manter desperto."
+            }
+          ]
+        },
+        {
+          "key": "night_shift_habit",
+          "description": "Passatempo na guarita durante o plantão",
+          "trigger_keywords": [
+            "madrugada",
+            "passatempo",
+            "distrair",
+            "tédio",
+            "plantão",
+            "rádio",
+            "revista"
+          ],
+          "options": [
+            {
+              "id": "pocket_radio",
+              "text": "Gosto de deixar um radinho de pilha chiando baixinho na bancada."
+            },
+            {
+              "id": "crossword_puzzles",
+              "text": "Costumo preencher palavras cruzadas de revista velha para o tempo passar."
+            }
+          ]
+        }
+      ],
+      "true_timeline": [
+        "21h00 — Assume o turno noturno e confere o painel de câmeras.",
+        "21h45 — Começa a cochilar sentado na guarita.",
+        "22h00 — Ao se reclinar, pressiona acidentalmente um comando do painel; o gravador reinicia e interrompe as imagens do 8º e 9º andares.",
+        "22h00–22h38 — As câmeras ficam sem gravação contínua. Os registros de acesso por cartão continuam funcionando independentemente.",
+        "22h38 — Acorda, percebe a tela sem imagem e tenta diagnosticar o problema.",
+        "22h42 — Reinicia manualmente o gravador. As câmeras voltam a transmitir, mas o intervalo anterior não é recuperado.",
+        "23h15 — Faz a ronda e passa pelo corredor do 9º andar. A porta do escritório de Heitor está fechada; ele não verifica o interior.",
+        "Depois da descoberta do corpo — Minimiza o tempo em que dormiu e chama o evento de falha técnica para evitar responsabilização."
+      ],
+      "claims": [
+        {
+          "claim_id": "claim_rogerio_cameras_01",
+          "topic_id": "cameras_falha",
+          "text": "A queda das câmeras foi uma falha técnica. Não toquei no painel e não sei por que o sistema reiniciou.",
+          "claim_type": "denial",
+          "importance": "medium",
+          "breakable_by_evidence_ids": [
+            "falha_cameras"
+          ],
+          "breakable_by_claim_ids": [],
+          "reveal_on_break": [
+            "know_rogerio_cameras_02"
+          ]
+        },
+        {
+          "claim_id": "claim_rogerio_turno_01",
+          "topic_id": "alibi",
+          "text": "Fiquei acordado e atento durante todo o período em que as câmeras ficaram fora do ar.",
+          "claim_type": "alibi",
+          "importance": "medium",
+          "breakable_by_evidence_ids": [
+            "falha_cameras"
+          ],
+          "breakable_by_claim_ids": [],
+          "reveal_on_break": [
+            "know_rogerio_cameras_02"
+          ]
+        }
+      ],
+      "knowledge": [
+        {
+          "id": "know_rogerio_ronda_01",
+          "topic_id": "presenca_local",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "Fiz uma ronda às 21h e planejava outra perto das 23h. Na primeira, o andar parecia normal.",
+            "Entre aproximadamente 22h e 22h40 fiquei na guarita. Não consigo afirmar que observei todas as pessoas que passaram.",
+            "A entrada por cartão gera registros separados do vídeo. Se alguém acessou o andar, o log pode continuar existindo mesmo sem as imagens."
+          ]
+        },
+        {
+          "id": "know_rogerio_cameras_01",
+          "topic_id": "cameras_falha",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "O sistema de câmeras é antigo e já apresentou instabilidade, especialmente durante reinicializações.",
+            "Não abri chamado técnico porque achei que o serviço tinha voltado ao normal. Eu não queria criar uma ocorrência desnecessária.",
+            "Não desliguei as câmeras de propósito."
+          ]
+        },
+        {
+          "id": "know_rogerio_cameras_02",
+          "topic_id": "cameras_falha",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "Está bem. Eu estava cochilando e me apoiei no painel sem querer. Foi um acionamento acidental.",
+            "Quando acordei, tentei reiniciar o gravador. Não comuniquei a falha porque isso revelaria que eu estava dormindo.",
+            "Não recebi dinheiro, não combinei nada com ninguém e não vi Marina entrar. A falha foi minha, mas o motivo foi medo de perder o emprego."
+          ]
+        },
+        {
+          "id": "know_rogerio_marina_01",
+          "topic_id": "alibi",
+          "kind": "observed",
+          "reliability": "medium",
+          "content_layers": [
+            "Não me lembro de ter visto Marina naquela noite. Eu não estava atento durante todo o turno.",
+            "Os registros de cartão são mais confiáveis do que minha memória para dizer se alguém passou pelo acesso.",
+            "A ausência de vídeo não significa que a pessoa não entrou; o controle de acesso usa outro sistema."
+          ]
+        },
+        {
+          "id": "know_rogerio_rotina_01",
+          "topic_id": "rotina_trabalho",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "Trabalho como segurança patrimonial na Solarium há 12 anos. Minha função é controlar o acesso na portaria e fazer rondas preventivas.",
+            "No turno noturno fico na guarita, observo as câmeras e verifico se portas e salas de áreas comuns estão fechadas.",
+            "Não tenho acesso ao conteúdo dos relatórios financeiros e não conhecia detalhes do trabalho de Heitor."
+          ]
+        }
+      ],
+      "final_phrase": "Já falei tudo o que sei. Se as câmeras falharam, foi um acidente."
+    },
+    {
+      "id": "clara_martins",
+      "name": "Clara Martins",
+      "backstory": "Estagiária de TI, 22 anos, há seis meses na empresa. É competente em tarefas técnicas, mas insegura em conversas com gestores. Costuma permanecer no nono andar para verificar backups e rotinas de manutenção; a sala de servidores de TI não é a guarita onde fica o gravador de câmeras. Na noite do crime saiu para buscar água e viu Marina atravessar o corredor com pressa. Não viu a entrada no escritório nem o ataque. O silêncio inicial surgiu porque Marina era funcionária efetiva e próxima da diretoria, enquanto Clara temia que uma declaração criasse problemas para sua renovação de estágio. Ela exagera a própria certeza quando pressionada e depois se corrige; o jogador deve distinguir nervosismo de evidência de culpa.",
+      "personality": "nervoso",
+      "initial_statement": "Eu estava na sala de servidores cuidando dos backups. Saí só por um instante para buscar água, mas não prestei atenção em quem estava no corredor. Eu não tenho nada a ver com o que aconteceu.",
+      "profile": {
+        "pressure_tolerance": 0.3,
+        "empathy_receptivity": 0.8,
+        "repetition_irritability": 0.6,
+        "contradiction_fragility": 0.2,
+        "speech": {
+          "base_verbosity": 0.4,
+          "stress_verbosity_delta": 0.3
+        }
+      },
+      "flavor_slots": [
+        {
+          "key": "study_routine",
+          "description": "Forma de estudar e se organizar no estágio",
+          "trigger_keywords": [
+            "estudo",
+            "estudar",
+            "anotação",
+            "anotar",
+            "resumo",
+            "caderno",
+            "organizar"
+          ],
+          "options": [
+            {
+              "id": "yellow_highlighter",
+              "text": "Costumo grifar tudo com marca-texto amarelo e colar post-its na mesa."
+            },
+            {
+              "id": "digital_notes",
+              "text": "Mantenho todos os meus apontamentos e prazos salvos em um app no tablet."
+            }
+          ]
+        },
+        {
+          "key": "break_habit",
+          "description": "O que faz nas pausas rápidas",
+          "trigger_keywords": [
+            "pausa",
+            "intervalo",
+            "descanso",
+            "esfriar a cabeça",
+            "lanche",
+            "maçã",
+            "chá"
+          ],
+          "options": [
+            {
+              "id": "chamomile_tea",
+              "text": "Gosto de tomar um chá de camomila morno quando sinto que a sala está barulhenta."
+            },
+            {
+              "id": "cut_apple",
+              "text": "Sempre trago uma maçã cortada em um potinho plástico para o lanche da tarde."
+            }
+          ]
+        }
+      ],
+      "true_timeline": [
+        "20h30 — Chega à sala de servidores do 9º andar para acompanhar backups programados.",
+        "22h05 — Sai por alguns minutos para buscar água.",
+        "22h16 — Vê Marina no corredor principal, caminhando depressa em direção ao escritório da diretoria financeira.",
+        "22h18 — Volta à sala técnica. Não acompanha o que acontece depois e não vê o interior do escritório.",
+        "22h30 — Ouve um ruído abafado, mas pensa que veio de alguma porta ou equipamento; não consegue identificar sua origem.",
+        "23h00 — Escuta passos no corredor e o elevador. Permanece na sala para terminar a rotina de manutenção.",
+        "23h30 — Vai embora sem relatar o que viu.",
+        "Durante o primeiro interrogatório — Nega ter visto alguém no corredor por medo de perder o estágio; admite o fato quando confrontada com as inconsistências."
+      ],
+      "claims": [
+        {
+          "claim_id": "claim_clara_nao_viu_01",
+          "topic_id": "presenca_local",
+          "text": "Fiquei na sala técnica praticamente o tempo todo. Não vi ninguém passar pelo corredor e não posso identificar quem esteve no andar.",
+          "claim_type": "alibi",
+          "importance": "high",
+          "breakable_by_evidence_ids": [
+            "testemunho_estagiaria"
+          ],
+          "breakable_by_claim_ids": [],
+          "reveal_on_break": [
+            "know_clara_viu_marina_02"
+          ]
+        },
+        {
+          "claim_id": "claim_clara_presenca_02",
+          "topic_id": "presenca_local",
+          "text": "Não saí da sala técnica durante a janela importante e não vi Marina no andar.",
+          "claim_type": "denial",
+          "importance": "high",
+          "breakable_by_evidence_ids": [
+            "testemunho_estagiaria"
+          ],
+          "breakable_by_claim_ids": [],
+          "reveal_on_break": [
+            "know_clara_viu_marina_02"
+          ]
+        }
+      ],
+      "knowledge": [
+        {
+          "id": "know_clara_servidores_01",
+          "topic_id": "cameras_falha",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "Os servidores de TI registraram uma interrupção nas imagens naquela noite. Eu vi os logs depois.",
+            "A máquina em que trabalho não é o terminal da guarita que controla o gravador de câmeras; são sistemas diferentes.",
+            "Não fui eu quem provocou a falha. Eu estava na sala técnica quando percebi o problema nos registros."
+          ]
+        },
+        {
+          "id": "know_clara_viu_marina_01",
+          "topic_id": "presenca_local",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "Saí da sala por um momento para buscar água. O corredor estava quase vazio.",
+            "Acho que vi alguém de longe, mas fiquei insegura sobre o horário e não queria acusar uma colega sem ter certeza.",
+            "A pessoa caminhava na direção do escritório de Heitor. Só depois percebi que essa informação podia ser importante."
+          ]
+        },
+        {
+          "id": "know_clara_viu_marina_02",
+          "topic_id": "alibi",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "Vi Marina entrando pelo corredor principal por volta das 22h16. Ela parecia apressada e evitou olhar para mim.",
+            "Não vi Marina matar Heitor nem entrar no escritório; vi apenas sua presença no corredor.",
+            "Não contei isso porque preciso muito do estágio e achei que me envolver com a diretoria poderia acabar com minha oportunidade. Eu menti por medo, não para proteger a assassina."
+          ]
+        },
+        {
+          "id": "know_clara_marina_01",
+          "topic_id": "outros_suspeitos",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "Marina parecia mais tensa que o normal nos últimos dias.",
+            "Ouvi Marina discutir ao telefone, mas não entendi as palavras nem sei com quem ela falava.",
+            "Isso é uma observação vaga; não prova que ela pretendia matar Heitor."
+          ]
+        },
+        {
+          "id": "know_clara_rotina_01",
+          "topic_id": "rotina_trabalho",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "Sou estagiária de TI há seis meses. Dou suporte aos funcionários, organizo cabeamento e verifico rotinas de servidor.",
+            "Costumo ficar até mais tarde rodando manutenção e backups na sala técnica do 9º andar.",
+            "A sala fica perto do corredor, mas não tem visão direta para dentro do escritório de Heitor."
+          ]
+        }
+      ],
+      "final_phrase": "Eu não vi o que aconteceu dentro da sala. Eu vi a Marina no corredor e fiquei com medo de contar."
+    },
+    {
+      "id": "eduardo_farias",
+      "name": "Eduardo Farias",
+      "backstory": "Gerente comercial, 41 anos. É articulado, competitivo e cuidadoso ao responder; não gosta de parecer descuidado ou covarde. Tinha conflitos profissionais com Heitor, que pressionava o comercial por previsões de receita agressivas, e pediu transferência dois meses antes. Na noite do crime, voltou ao prédio para buscar uma pasta. Ao passar pelo corredor, ouviu uma discussão e viu café saindo por baixo da porta de Heitor. Não viu quem estava dentro. Temendo que sua presença o transformasse em suspeito ou revelasse que ignorou um possível pedido de ajuda, tentou limpar o café que alcançava o corredor usando luvas descartáveis da área de limpeza. Descartou as luvas no banheiro e omitiu essa ação no primeiro depoimento. Sua omissão é grave, mas não foi ele quem matou Heitor.",
+      "personality": "arrogante",
+      "initial_statement": "Voltei apenas para buscar documentos pessoais. Passei pelo nono andar por pouco tempo e não vi nada que justificasse uma ocorrência. Não entrei no escritório de Heitor e não tive contato com ele naquela noite.",
+      "profile": {
+        "pressure_tolerance": 0.75,
+        "empathy_receptivity": 0.3,
+        "repetition_irritability": 0.4,
+        "contradiction_fragility": 0.6,
+        "speech": {
+          "base_verbosity": 0.3,
+          "stress_verbosity_delta": -0.5
+        }
+      },
+      "flavor_slots": [
+        {
+          "key": "reading_habit",
+          "description": "Como acompanha notícias e finanças",
+          "trigger_keywords": [
+            "leitura",
+            "ler",
+            "jornal",
+            "notícia",
+            "mercado",
+            "informar"
+          ],
+          "options": [
+            {
+              "id": "printed_newspaper",
+              "text": "Ainda tenho o hábito de ler o caderno econômico do jornal impresso pela manhã."
+            },
+            {
+              "id": "financial_apps",
+              "text": "Fico acompanhando as cotações e alertas em tempo real direto pelos apps do celular."
+            }
+          ]
+        },
+        {
+          "key": "commute_method",
+          "description": "Como se desloca para a empresa",
+          "trigger_keywords": [
+            "transporte",
+            "deslocamento",
+            "chegar",
+            "metrô",
+            "ônibus",
+            "carro",
+            "caminhada",
+            "vir"
+          ],
+          "options": [
+            {
+              "id": "subway_commute",
+              "text": "Venho sempre de metrô, mesmo no horário de pico, porque detesto trânsito."
+            },
+            {
+              "id": "walking_commute",
+              "text": "Prefiro vir caminhando a passos rápidos quando o tempo está firme."
+            }
+          ]
+        }
+      ],
+      "true_timeline": [
+        "21h30 — Retorna ao prédio para buscar uma pasta esquecida no escritório comercial do 7º andar.",
+        "22h26 — Passa pelo corredor do 9º andar a caminho do elevador. Ouve duas vozes abafadas, uma delas aparentemente feminina, e vê café atravessando a fresta inferior da porta de Heitor.",
+        "22h28 — Não bate à porta nem chama a segurança. Vai até o armário de limpeza e usa luvas descartáveis para recolher o café que alcançou o corredor, sem entrar no escritório.",
+        "22h31 — Descarta as luvas no banheiro do andar. Omite esse detalhe porque teme ser acusado de ter interferido no local ou de ter ignorado uma emergência.",
+        "22h40 — Deixa o prédio. Não viu o corpo nem sabe quando Heitor morreu.",
+        "No interrogatório — Admite o conflito profissional, mas inicialmente reduz sua passagem pelo corredor a poucos segundos e omite ter limpado o café."
+      ],
+      "claims": [
+        {
+          "claim_id": "claim_eduardo_presenca_01",
+          "topic_id": "presenca_local",
+          "text": "Passei pelo nono andar por menos de um minuto. Ouvi algo indistinto, mas não vi nada que me parecesse relevante e não toquei em nada.",
+          "claim_type": "timeline",
+          "importance": "medium",
+          "breakable_by_evidence_ids": [
+            "cafe_derramado",
+            "luvas_borracha"
+          ],
+          "breakable_by_claim_ids": [],
+          "reveal_on_break": [
+            "know_eduardo_corredor_02",
+            "know_eduardo_luvas_01"
+          ]
+        },
+        {
+          "claim_id": "claim_eduardo_luvas_01",
+          "topic_id": "outros_suspeitos",
+          "text": "Não recolhi nada nem limpei qualquer coisa no corredor. As luvas da lixeira não têm relação comigo.",
+          "claim_type": "denial",
+          "importance": "medium",
+          "breakable_by_evidence_ids": [
+            "luvas_borracha",
+            "cafe_derramado"
+          ],
+          "breakable_by_claim_ids": [],
+          "reveal_on_break": [
+            "know_eduardo_luvas_01"
+          ]
+        }
+      ],
+      "knowledge": [
+        {
+          "id": "know_eduardo_heitor_01",
+          "topic_id": "conflito_vitima",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "Heitor era difícil de trabalhar: metas agressivas, cobranças públicas e pouca disposição para negociar.",
+            "Tínhamos atritos sobre projeções comerciais. Pedi transferência dois meses antes, mas isso foi um conflito profissional, não uma ameaça física.",
+            "Eu sabia que havia tensão entre a diretoria financeira e outros setores, mas não conhecia o esquema em detalhes."
+          ]
+        },
+        {
+          "id": "know_eduardo_corredor_01",
+          "topic_id": "presenca_local",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "Passei pelo corredor do 9º andar porque estava indo embora depois de buscar documentos.",
+            "O andar não estava tão silencioso quanto eu disse. Ouvi vozes abafadas, mas não consegui identificar as palavras.",
+            "Vi um líquido escuro saindo por baixo da porta, mas preferi não me envolver."
+          ]
+        },
+        {
+          "id": "know_eduardo_corredor_02",
+          "topic_id": "conflito_vitima",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "Ouvi uma discussão séria no escritório de Heitor. Uma voz parecia feminina; a outra era provavelmente a dele.",
+            "Vi café atravessando a fresta da porta. Não vi o que ocorreu dentro e não posso identificar quem estava com Heitor.",
+            "Eu não bati porque achei que era uma discussão interna. Isso foi uma decisão covarde, mas não significa que eu tenha participado do homicídio."
+          ]
+        },
+        {
+          "id": "know_eduardo_luvas_01",
+          "topic_id": "outros_suspeitos",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "Usei luvas descartáveis da área de limpeza para recolher o café que alcançou o corredor e depois as joguei no banheiro.",
+            "Eu não entrei no escritório nem tentei limpar a cena do crime. Limpei apenas o líquido do lado de fora, mas escondi isso porque sabia que pareceria suspeito.",
+            "As luvas podem conter resíduo de café por causa dessa ação. A presença delas no lixo não prova que eu toquei em Heitor."
+          ]
+        },
+        {
+          "id": "know_eduardo_marina_01",
+          "topic_id": "relatorio_contabil",
+          "kind": "heard",
+          "reliability": "medium",
+          "content_layers": [
+            "Ouvi rumores de que o setor financeiro estava com problemas de documentação, mas não tinha acesso aos relatórios.",
+            "Vi Marina e Heitor discutindo no corredor semanas antes. Não ouvi o conteúdo da conversa.",
+            "A discussão da noite do crime pode ter sido com Marina, mas minha percepção da voz é insuficiente para afirmá-lo como certeza."
+          ]
+        },
+        {
+          "id": "know_eduardo_rotina_01",
+          "topic_id": "rotina_trabalho",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "Sou gerente comercial. Cuido de grandes contas, contratos corporativos e da equipe de vendas.",
+            "Meu departamento fica no 7º andar, mas circulo pelos outros andares para reuniões com a diretoria.",
+            "Voltei para buscar uma pasta pessoal; não tinha uma reunião marcada com Heitor naquela noite."
+          ]
+        }
+      ],
+      "final_phrase": "Ouvi uma discussão e vi café no corredor. Foi só isso. Não entrei no escritório."
+    }
+  ],
+  "evidences": [
+    {
+      "id": "relatorio_contabil",
+      "name": "Relatório Contábil com Versões Divergentes",
+      "description": "Pasta impressa encontrada na mesa de Heitor. Contém pagamentos recorrentes a consultorias com descrições genéricas, notas sem comprovante de entrega e duas versões do mesmo quadro: uma com alterações atribuídas ao usuário de Marina e outra aprovada por Heitor. O documento prova irregularidades e acesso de ambos, mas sozinho não prova quem matou a vítima.",
+      "internal_note": "Evidência central para revelar a participação de Marina no esquema e o papel de Heitor como coorganizador. Quebra claim_marina_relatorio_01 quando discutida no tópico relatorio_contabil.",
+      "related_topic_id": "relatorio_contabil",
+      "is_mandatory": true
+    },
+    {
+      "id": "cartao_acesso",
+      "name": "Registro de Acesso de Marina",
+      "description": "O log independente do controle de acesso registra o cartão de Marina na entrada do 9º andar às 22h14. O sistema de crachás continuou funcionando durante a falha das câmeras. O registro prova que o cartão foi usado, não que o leitor identificou biometricamente a pessoa que o portava.",
+      "internal_note": "Contradiz diretamente o álibi de Marina. Em conjunto com o testemunho de Clara e a sequência de eventos, torna improvável a hipótese de uso casual ou empréstimo do cartão. Quebra claim_marina_alibi_01.",
+      "related_topic_id": "presenca_local",
+      "is_mandatory": true
+    },
+    {
+      "id": "cafe_derramado",
+      "name": "Caneca Quebrada e Rastro de Café",
+      "description": "Uma caneca de cerâmica quebrada está no interior do escritório, perto da mesa lateral. Café alcançou a fresta inferior da porta e parte do corredor. A disposição dos fragmentos e a marca de arrasto sugerem que a caneca caiu durante um movimento brusco; não permitem concluir, por si sós, quem provocou a queda.",
+      "internal_note": "Corrobora que houve uma perturbação física no escritório e explica o que Eduardo viu. É uma pista contextual, não uma prova de identidade. Pode revelar que Eduardo minimizou sua passagem pelo corredor.",
+      "related_topic_id": "conflito_vitima",
+      "is_mandatory": false
+    },
+    {
+      "id": "falha_cameras",
+      "name": "Log de Reinicialização do Gravador de Câmeras",
+      "description": "O registro técnico mostra que a gravação dos andares 8 e 9 foi interrompida às 22h00 após um comando local no terminal da guarita e voltou às 22h42. A interrupção não apagou o histórico do controle de acesso por cartão, que é um sistema separado. Não há imagens recuperáveis para o intervalo.",
+      "internal_note": "Desmente a explicação de falha espontânea de Rogério e cria uma janela sem vídeo. A evidência não demonstra participação dele no homicídio; a explicação verdadeira é negligência e encobrimento do cochilo.",
+      "related_topic_id": "cameras_falha",
+      "is_mandatory": false
+    },
+    {
+      "id": "testemunho_estagiaria",
+      "name": "Declaração de Clara Martins",
+      "description": "Após ser confrontada com as contradições de seu depoimento, Clara admite ter visto Marina no corredor principal do 9º andar por volta das 22h16, caminhando em direção ao escritório de Heitor. Ela não viu Marina entrar no escritório nem presenciou a morte; seu relato estabelece presença, não autoria.",
+      "internal_note": "Corrobora o registro do cartão e derruba o álibi de Marina. Também demonstra que Clara omitiu informação por medo, sem torná-la cúmplice do homicídio.",
+      "related_topic_id": "alibi",
+      "is_mandatory": true
+    },
+    {
+      "id": "luvas_borracha",
+      "name": "Luvas Descartáveis com Resíduo de Café",
+      "description": "Par de luvas descartáveis encontrado no lixo do banheiro do 9º andar. Há resíduo de café e fibras de papel de limpeza, mas não foi identificado sangue ou material biológico conclusivo. Eduardo admite que as usou para recolher o líquido do lado de fora da porta. A evidência explica sua omissão, mas não o coloca dentro do escritório.",
+      "internal_note": "Pista ambígua que inicialmente pode incriminar Eduardo. Quando confrontado com o rastro de café e com a localização do resíduo, ele admite que limpou parte do corredor e escondeu isso por medo de ser responsabilizado por não ter pedido ajuda.",
+      "related_topic_id": "conflito_vitima",
+      "is_mandatory": false
+    },
+    {
+      "id": "auditoria_versoes",
+      "name": "Trilha de Auditoria das Planilhas",
+      "description": "Metadados recuperados do repositório financeiro mostram que Marina alterou classificações de despesas e anexou versões incompletas, enquanto o usuário de Heitor aprovou os lotes de pagamento. Alguns comentários internos de Heitor pedem que os comprovantes sejam adicionados depois. A trilha comprova participação compartilhada na fraude, mas não identifica o autor do homicídio.",
+      "internal_note": "Quebra a alegação de Marina de que só corrigia erros sem conhecer o contexto. Deve levar de know_relatorio_01 a know_relatorio_02 e, com confronto adicional, a know_relatorio_03.",
+      "related_topic_id": "relatorio_contabil",
+      "is_mandatory": true
+    },
+    {
+      "id": "mensagem_heitor",
+      "name": "Mensagem de Heitor para Marina",
+      "description": "No celular de Heitor há uma mensagem enviada às 21h18: “Amanhã cedo entrego a auditoria. O histórico mostra quais ajustes foram feitos pelo seu usuário. Se você quiser discutir isso, venha hoje; não vou assumir essa parte sozinho.” O texto demonstra ameaça de exposição e oferece uma razão para Marina procurá-lo, mas não prova que ela aceitou o convite nem que matou a vítima.",
+      "internal_note": "Contradiz a versão de Marina de que não havia ameaça nem razão para procurar Heitor. Quebra claim_marina_mensagem_01 e aprofunda o conflito no tópico conflito_vitima.",
+      "related_topic_id": "conflito_vitima",
+      "is_mandatory": false
+    },
+    {
+      "id": "fechadura_eletronica",
+      "name": "Relatório Técnico da Fechadura",
+      "description": "A porta do escritório usa fechadura eletrônica com fechamento automático. Pelo corredor, o acesso exige crachá; pelo interior, o puxador permite sair sem cartão. Quando a porta fecha, o trinco se rearma sozinho. O log não registra o uso do puxador interno, portanto a porta fechada não significa que alguém tenha ficado preso nem que o ferrolho estivesse acionado por dentro.",
+      "internal_note": "Resolve a falsa impressão de sala impossível. A solução não exige chave secreta nem passagem oculta: Marina pôde sair pela porta e ela se trancou automaticamente ao fechar.",
+      "related_topic_id": "mecanica_fechadura",
+      "is_mandatory": false
+    },
+    {
+      "id": "laudo_preliminar",
+      "name": "Laudo Médico-Legal Preliminar",
+      "description": "O exame inicial aponta asfixia por compressão cervical, com pequenas lesões compatíveis com luta corporal e sem sinal de arma. A estimativa inicial de morte fica entre 22h20 e 22h50, intervalo que ainda precisa ser refinado. O laudo não identifica o agressor e não sustenta um minuto exato da morte.",
+      "internal_note": "Corrobora a ocorrência de confronto físico e a natureza do homicídio. Deve ser usado para testar se a cronologia dos suspeitos é compatível, não como prova isolada contra Marina.",
+      "related_topic_id": "laudo_medico",
+      "is_mandatory": false
+    },
+    {
+      "id": "registro_hotel",
+      "name": "Registro de Entrada e Saída do Hotel",
+      "description": "O hotel confirma que Marina chegou às 19h45 e que o cartão do quarto foi usado novamente às 23h10. O hotel não possui registro de cada saída individual e fica a alguns minutos de carro da Solarium. O registro confirma que ela esteve hospedada, mas não confirma que permaneceu no quarto durante toda a noite.",
+      "internal_note": "É uma evidência de álibi parcial, não uma confirmação do álibi integral. Sozinha, não quebra claim_marina_alibi_01; deve ser comparada com o cartão de acesso e com Clara.",
+      "related_topic_id": "alibi",
+      "is_mandatory": false
+    }
+  ],
+  "secrets": [
+    {
+      "suspect": "rogerio_lima",
+      "evidence": "falha_cameras",
+      "content": "Rogério cochilou, acionou acidentalmente o reinício e depois escondeu a negligência. Ele não coordenou a falha para encobrir o homicídio; os logs de crachá continuaram disponíveis.",
+      "is_core": false
+    },
+    {
+      "suspect": "clara_martins",
+      "evidence": "testemunho_estagiaria",
+      "content": "Clara viu Marina no corredor, mas não presenciou o crime. O silêncio inicial decorreu do medo de perder o estágio. Sua informação ajuda a fixar a presença, não a autoria.",
+      "is_core": false
+    },
+    {
+      "suspect": "eduardo_farias",
+      "evidence": "luvas_borracha",
+      "content": "Eduardo usou as luvas para limpar café do lado externo da porta e as descartou. Escondeu a ação porque temia parecer envolvido depois de ignorar a discussão. Não entrou na sala e não matou Heitor.",
+      "is_core": false
+    },
+    {
+      "suspect": "eduardo_farias",
+      "evidence": "cafe_derramado",
+      "content": "Eduardo viu o café atravessar a fresta e ouviu uma discussão. Sua percepção não permite reconhecer com certeza a voz feminina nem saber o que ocorreu no interior do escritório.",
+      "is_core": false
+    },
+    {
+      "suspect": "marina_souza",
+      "evidence": "relatorio_contabil",
+      "content": "Marina participou da fraude contábil, mas Heitor também aprovava os pagamentos e guardou registros que provam participação conjunta. O motivo imediato do homicídio foi impedir que ele entregasse uma versão seletiva à auditoria, preservando dinheiro e evitando ser responsabilizada sozinha.",
+      "is_core": true
+    },
+    {
+      "suspect": "marina_souza",
+      "evidence": "auditoria_versoes",
+      "content": "A trilha de auditoria associa alterações ao usuário de Marina e aprovações ao usuário de Heitor. Isso contradiz a tentativa de Marina de se apresentar como mera executora sem conhecimento do contexto.",
+      "is_core": true
+    },
+    {
+      "suspect": "marina_souza",
+      "evidence": "cartao_acesso",
+      "content": "O cartão de Marina foi usado às 22h14 para entrar na área de acesso do 9º andar. O registro, combinado com Clara, estabelece sua presença durante a janela relevante, embora não prove sozinho o homicídio.",
+      "is_core": true
+    },
+    {
+      "suspect": "marina_souza",
+      "evidence": "testemunho_estagiaria",
+      "content": "Clara viu Marina no corredor às 22h16. A testemunha não viu a morte, mas destrói a versão de que Marina permaneceu no hotel.",
+      "is_core": true
+    },
+    {
+      "suspect": "marina_souza",
+      "evidence": "mensagem_heitor",
+      "content": "Heitor ameaçou entregar os documentos à auditoria e vincular os ajustes ao usuário de Marina. A mensagem é o gatilho provável para o confronto, não uma confissão de homicídio.",
+      "is_core": true
+    },
+    {
+      "suspect": "marina_souza",
+      "evidence": "fechadura_eletronica",
+      "content": "Marina saiu pela porta normal e ela se trancou automaticamente depois que fechou. A noção de que a porta estava necessariamente trancada por dentro era uma inferência incorreta dos primeiros respondentes.",
+      "is_core": true
+    },
+    {
+      "suspect": "marina_souza",
+      "evidence": "laudo_preliminar",
+      "content": "O laudo preliminar é compatível com compressão cervical durante uma luta. Ele confirma o método provável, mas não identifica a pessoa que aplicou a força.",
+      "is_core": true
+    },
+    {
+      "suspect": "marina_souza",
+      "evidence": "registro_hotel",
+      "content": "O registro do hotel confirma hospedagem e reentrada às 23h10, mas não prova permanência contínua no quarto. É compatível tanto com um álibi parcial quanto com uma saída no intervalo.",
+      "is_core": false
+    }
+  ],
+  "chronology": [
+    {
+      "time": "19h45",
+      "description": "Marina chega ao hotel próximo à empresa depois do expediente. O registro confirma a entrada, não permanência contínua no quarto."
+    },
+    {
+      "time": "20h55",
+      "description": "Heitor salva uma versão revisada dos relatórios financeiros no repositório corporativo."
+    },
+    {
+      "time": "21h00",
+      "description": "Rogério assume o turno noturno e inicia o monitoramento de rotina."
+    },
+    {
+      "time": "21h18",
+      "description": "Heitor envia a Marina uma mensagem sobre entregar documentos à auditoria e atribuir as alterações ao usuário dela."
+    },
+    {
+      "time": "21h30",
+      "description": "Eduardo retorna ao prédio para buscar uma pasta esquecida no escritório comercial do 7º andar."
+    },
+    {
+      "time": "21h45",
+      "description": "Rogério cochila na guarita durante o turno."
+    },
+    {
+      "time": "21h55",
+      "description": "Marina sai do hotel. Ela não informa à recepção que está indo à Solarium."
+    },
+    {
+      "time": "22h00",
+      "description": "Rogério se apoia no painel e aciona sem querer a reinicialização do gravador de câmeras dos andares 8 e 9."
+    },
+    {
+      "time": "22h05",
+      "description": "Clara sai brevemente da sala técnica para buscar água."
+    },
+    {
+      "time": "22h14",
+      "description": "O cartão de Marina registra acesso à área do 9º andar. O sistema de crachás continua operando apesar da falta de vídeo."
+    },
+    {
+      "time": "22h16",
+      "description": "Clara vê Marina no corredor principal caminhando em direção ao escritório de Heitor."
+    },
+    {
+      "time": "22h18",
+      "description": "Marina entra no escritório. A porta fecha e a fechadura eletrônica se rearma automaticamente."
+    },
+    {
+      "time": "22h20–22h28",
+      "description": "Marina e Heitor discutem sobre a fraude, a auditoria e a ameaça de que ela seja responsabilizada sozinha."
+    },
+    {
+      "time": "22h24",
+      "description": "Durante o confronto, a caneca cai e quebra; parte do café chega à fresta inferior da porta."
+    },
+    {
+      "time": "22h26",
+      "description": "Eduardo passa pelo corredor, ouve vozes abafadas e vê o café no chão. Não consegue ver o interior do escritório."
+    },
+    {
+      "time": "22h28–22h31",
+      "description": "Eduardo usa luvas descartáveis para recolher parte do café do lado de fora da porta, mas não chama a segurança nem entra na sala."
+    },
+    {
+      "time": "22h31",
+      "description": "A discussão vira luta física. Heitor sofre compressão cervical e morre dentro da janela estimada pelo laudo preliminar."
+    },
+    {
+      "time": "22h31",
+      "description": "Eduardo descarta as luvas no banheiro do 9º andar e retorna ao 7º andar, sem entrar no escritório."
+    },
+    {
+      "time": "22h32–22h35",
+      "description": "Marina sai pela porta normal e a fecha; a fechadura se rearma automaticamente. Ela segue pela escada de serviço."
+    },
+    {
+      "time": "22h38",
+      "description": "Rogério acorda e percebe que o gravador de câmeras está sem imagem."
+    },
+    {
+      "time": "22h40",
+      "description": "Eduardo deixa o prédio. Como voltou ao 7º andar após descartar as luvas, não presencia a saída de Marina pela escada de serviço."
+    },
+    {
+      "time": "22h42",
+      "description": "Rogério reinicia o gravador. As câmeras voltam, mas o intervalo perdido não é recuperado."
+    },
+    {
+      "time": "23h00",
+      "description": "Clara escuta passos e o elevador no corredor, mas continua na sala técnica; não consegue identificar quem passou."
+    },
+    {
+      "time": "23h10",
+      "description": "Marina retorna ao hotel. O cartão do quarto registra o uso nesse horário."
+    },
+    {
+      "time": "23h15",
+      "description": "Rogério faz a ronda, vê a porta fechada e não verifica o escritório."
+    },
+    {
+      "time": "23h40",
+      "description": "Um funcionário da limpeza encontra o corpo de Heitor e chama a segurança do prédio."
+    }
+  ]
+}
