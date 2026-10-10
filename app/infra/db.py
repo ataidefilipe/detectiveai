@@ -20,3 +20,14 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def init_db():
     Base.metadata.create_all(bind=engine)
+    with engine.connect() as conn:
+        try:
+            from sqlalchemy import inspect, text
+            inspector = inspect(engine)
+            if "sessions" in inspector.get_table_names():
+                columns = [c["name"] for c in inspector.get_columns("sessions")]
+                if "user_id" not in columns:
+                    conn.execute(text("ALTER TABLE sessions ADD COLUMN user_id INTEGER REFERENCES users(id)"))
+                    conn.commit()
+        except Exception:
+            pass

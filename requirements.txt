@@ -10,3 +10,5 @@ openai
 alembic
 psycopg2-binary
 psycopg[binary]
+PyJWT
+google-auth

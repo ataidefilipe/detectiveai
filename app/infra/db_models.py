@@ -93,10 +93,26 @@ class SecretModel(Base):
     suspect = relationship("SuspectModel", back_populates="secrets")
     evidence = relationship("EvidenceModel", back_populates="secrets")
 
+class UserModel(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    google_sub = Column(String, unique=True, index=True, nullable=True)
+    email = Column(String, unique=True, index=True, nullable=False)
+    name = Column(String, nullable=False)
+    picture = Column(String, nullable=True)
+    is_active = Column(Boolean, default=True)
+    role = Column(String, default="player")
+    created_at = Column(DateTime, default=datetime.now)
+
+    sessions = relationship("SessionModel", back_populates="user")
+
+
 class SessionModel(Base):
     __tablename__ = "sessions"
     id = Column(Integer, primary_key=True, index=True)
     scenario_id = Column(Integer, ForeignKey("scenarios.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     status = Column(String, default="in_progress")
     created_at = Column(DateTime, default=datetime.now)
     chosen_suspect_id = Column(Integer, nullable=True)
@@ -106,6 +122,7 @@ class SessionModel(Base):
     )
     result_type = Column(String, nullable=True)
 
+    user = relationship("UserModel", back_populates="sessions")
     scenario = relationship("ScenarioModel", back_populates="sessions")
     session_states = relationship("SessionSuspectStateModel", back_populates="session")
     chat_messages = relationship("NpcChatMessageModel", back_populates="session")

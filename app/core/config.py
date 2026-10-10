@@ -56,4 +56,10 @@ class Settings(BaseSettings):
     # --- Verdict Rules (T6.2) ---
     REQUIRE_DISCOVERED_MOTIVE: bool = True
 
+    # --- Auth & User Settings ---
+    GOOGLE_CLIENT_ID: str = ""
+    JWT_SECRET_KEY: str = "detective-ai-jwt-secret-key-super-secure"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
+
 settings = Settings()

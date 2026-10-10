@@ -11,6 +11,7 @@ import app.services.secret_service as secret_service
 import app.services.session_service as session_service
 import app.services.session_finalize_service as session_finalize_service
 import app.services.verdict_service as verdict_service
+import app.services.auth_service as auth_service
 
 engine = create_engine(
     "sqlite://",
@@ -28,6 +29,7 @@ secret_service.SessionLocal = TestingSessionLocal
 session_service.SessionLocal = TestingSessionLocal
 session_finalize_service.SessionLocal = TestingSessionLocal
 verdict_service.SessionLocal = TestingSessionLocal
+auth_service.SessionLocal = TestingSessionLocal
 
 @pytest.fixture(autouse=True)
 def truncate_tables():

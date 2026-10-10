@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional
 
@@ -11,16 +11,17 @@ from app.api.schemas.log import SessionTurnsLogResponse, TurnLogItemSchema, Verd
 from app.services.interrogation_turn_service import run_interrogation_turn
 from app.services.session_finalize_service import finalize_session
 from app.services.session_service import (
-    create_session, get_session_overview, get_suspect_state, list_sessions
+    create_session, get_session_overview, get_suspect_state, list_sessions, delete_session
 )
 from app.services.case_file_service import get_session_case_file
 from app.api.schemas.case_file import CaseFileResponse
+from app.services.auth_service import get_current_user_optional
 
 from app.infra.db import SessionLocal
 from app.infra.db_models import (
     NpcChatMessageModel, SessionModel, SessionSuspectStateModel,
     SessionSuspectTopicStateModel, SessionClaimStateModel, SuspectModel,
-    ScenarioModel, EvidenceModel, TurnLogModel, VerdictLogModel
+    ScenarioModel, EvidenceModel, TurnLogModel, VerdictLogModel, UserModel
 )
 
 
@@ -38,6 +39,7 @@ class CreateSessionResponse(BaseModel):
     session_id: int
     scenario_id: int
     status: str
+    user_id: Optional[int] = None
 
 
 class SessionSummaryResponse(BaseModel):
@@ -48,28 +50,55 @@ class SessionSummaryResponse(BaseModel):
     result_type: Optional[str] = None
     created_at: Optional[str] = None
     messages_count: int = 0
+    user_id: Optional[int] = None
 
 
 # -----------------------------
 # GET /sessions
 # -----------------------------
 @router.get("/sessions", response_model=List[SessionSummaryResponse])
-def api_list_sessions():
-    return list_sessions()
+def api_list_sessions(current_user: Optional[UserModel] = Depends(get_current_user_optional)):
+    user_id = current_user.id if current_user else None
+    return list_sessions(user_id=user_id)
 
 
 # -----------------------------
 # POST /sessions
 # -----------------------------
 @router.post("/sessions", response_model=CreateSessionResponse)
-def api_create_session(payload: CreateSessionRequest):
-    session_data = create_session(payload.scenario_id)
+def api_create_session(
+    payload: CreateSessionRequest,
+    current_user: Optional[UserModel] = Depends(get_current_user_optional)
+):
+    user_id = current_user.id if current_user else None
+    session_data = create_session(payload.scenario_id, user_id=user_id)
 
     return CreateSessionResponse(
         session_id=session_data["id"],
         scenario_id=session_data["scenario_id"],
-        status=session_data["status"]
+        status=session_data["status"],
+        user_id=session_data.get("user_id")
     )
+
+
+# -----------------------------
+# DELETE /sessions/{session_id}
+# -----------------------------
+@router.delete("/sessions/{session_id}")
+def api_delete_session(
+    session_id: int,
+    current_user: Optional[UserModel] = Depends(get_current_user_optional)
+):
+    try:
+        user_id = current_user.id if current_user else None
+        delete_session(session_id=session_id, user_id=user_id)
+        return {"success": True, "message": f"Sessão {session_id} apagada com sucesso."}
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        if "not found" in str(e).lower():
+            raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Erro ao apagar sessão: {str(e)}")
 
 @router.post(
     "/sessions/{session_id}/suspects/{suspect_id}/messages",

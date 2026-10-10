@@ -9,22 +9,28 @@ from app.infra.db_models import (
     SessionSuspectTopicStateModel,
     SessionClaimStateModel,
     SuspectModel,
-    SecretModel
+    SecretModel,
+    NpcChatMessageModel,
+    SessionEvidenceUsageModel,
+    SessionSuspectKnowledgeStateModel,
+    TurnLogModel,
+    VerdictLogModel
 )
 from app.core.exceptions import NotFoundError
 
 
-def create_session(scenario_id: int, db: Optional[Session] = None) -> SessionModel:
+def create_session(scenario_id: int, user_id: Optional[int] = None, db: Optional[Session] = None) -> Dict[str, Any]:
     """
     Creates a new game session for a given scenario.
     Initializes SessionModel + SessionSuspectState entries for each suspect.
 
     Args:
         scenario_id (int): ID of the scenario.
+        user_id (int, optional): ID of the authenticated user.
         db (Session, optional): Existing SQLAlchemy session.
 
     Returns:
-        SessionModel: The newly created session with suspect states.
+        dict: The newly created session details.
     """
     close_session = False
 
@@ -46,6 +52,7 @@ def create_session(scenario_id: int, db: Optional[Session] = None) -> SessionMod
         # -------------------------
         session = SessionModel(
             scenario_id=scenario_id,
+            user_id=user_id,
             status="in_progress"
         )
 
@@ -124,6 +131,7 @@ def create_session(scenario_id: int, db: Optional[Session] = None) -> SessionMod
         result = {
             "id": session.id,
             "scenario_id": session.scenario_id,
+            "user_id": session.user_id,
             "status": session.status,
             "created_at": session.created_at.isoformat()
         }
@@ -366,9 +374,10 @@ def update_suspect_state_from_deltas(
     }
 
 
-def list_sessions(db: Optional[Session] = None) -> list[Dict[str, Any]]:
+def list_sessions(user_id: Optional[int] = None, db: Optional[Session] = None) -> list[Dict[str, Any]]:
     """
-    Returns a list of all game sessions ordered by creation date descending.
+    Returns a list of game sessions ordered by creation date descending.
+    If user_id is provided, filters only sessions belonging to that user.
     """
     close_session = False
     if db is None:
@@ -376,9 +385,12 @@ def list_sessions(db: Optional[Session] = None) -> list[Dict[str, Any]]:
         close_session = True
 
     try:
+        query = db.query(SessionModel)
+        if user_id is not None:
+            query = query.filter(SessionModel.user_id == user_id)
+
         sessions = (
-            db.query(SessionModel)
-            .order_by(SessionModel.created_at.desc(), SessionModel.id.desc())
+            query.order_by(SessionModel.created_at.desc(), SessionModel.id.desc())
             .all()
         )
 
@@ -391,9 +403,46 @@ def list_sessions(db: Optional[Session] = None) -> list[Dict[str, Any]]:
                 "status": s.status,
                 "result_type": s.result_type,
                 "created_at": s.created_at.isoformat() if s.created_at else None,
-                "messages_count": len(s.chat_messages) if s.chat_messages is not None else 0
+                "messages_count": len(s.chat_messages) if s.chat_messages is not None else 0,
+                "user_id": s.user_id
             })
         return results
+    finally:
+        if close_session:
+            db.close()
+
+
+def delete_session(session_id: int, user_id: Optional[int] = None, db: Optional[Session] = None) -> bool:
+    """
+    Deletes a session and its associated data.
+    If user_id is provided, ensures the session belongs to that user (or user is authorized).
+    """
+    close_session = False
+    if db is None:
+        db = SessionLocal()
+        close_session = True
+
+    try:
+        session = db.query(SessionModel).filter(SessionModel.id == session_id).first()
+        if not session:
+            raise NotFoundError(f"Session with id {session_id} not found.")
+
+        if user_id is not None and session.user_id is not None and session.user_id != user_id:
+            raise PermissionError("Você não tem permissão para apagar esta sessão.")
+
+        # Deletar explicitamente os registros dependentes
+        db.query(TurnLogModel).filter(TurnLogModel.session_id == session_id).delete(synchronize_session=False)
+        db.query(VerdictLogModel).filter(VerdictLogModel.session_id == session_id).delete(synchronize_session=False)
+        db.query(NpcChatMessageModel).filter(NpcChatMessageModel.session_id == session_id).delete(synchronize_session=False)
+        db.query(SessionEvidenceUsageModel).filter(SessionEvidenceUsageModel.session_id == session_id).delete(synchronize_session=False)
+        db.query(SessionClaimStateModel).filter(SessionClaimStateModel.session_id == session_id).delete(synchronize_session=False)
+        db.query(SessionSuspectKnowledgeStateModel).filter(SessionSuspectKnowledgeStateModel.session_id == session_id).delete(synchronize_session=False)
+        db.query(SessionSuspectTopicStateModel).filter(SessionSuspectTopicStateModel.session_id == session_id).delete(synchronize_session=False)
+        db.query(SessionSuspectStateModel).filter(SessionSuspectStateModel.session_id == session_id).delete(synchronize_session=False)
+
+        db.delete(session)
+        db.commit()
+        return True
     finally:
         if close_session:
             db.close()

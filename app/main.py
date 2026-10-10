@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.sessions import router as sessions_router
 from app.api.scenarios import router as scenarios_router
+from app.api.auth import router as auth_router
 from app.services.bootstrap_service import bootstrap_game
 from app.core.exception_handlers import register_exception_handlers
 
@@ -33,6 +34,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 # Register routes
+app.include_router(auth_router)
 app.include_router(sessions_router)
 app.include_router(scenarios_router)
 
