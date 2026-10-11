@@ -85,9 +85,32 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
                     target.knowledge_items = [k.model_dump() for k in s.knowledge] if s.knowledge else []
                     target.profile = s.profile.model_dump() if s.profile else None
                     target.flavor_slots = [slot.model_dump() for slot in s.flavor_slots] if s.flavor_slots else []
+                else:
+                    new_suspect = SuspectModel(
+                        scenario_id=existing.id,
+                        suspect_code=s.id,
+                        name=s.name,
+                        backstory=s.backstory,
+                        personality=s.personality,
+                        internal_note=s.internal_note,
+                        initial_statement=s.initial_statement,
+                        final_phrase=s.final_phrase,
+                        true_timeline=s.true_timeline,
+                        claims=[
+                            {**c.model_dump(), "breakable_by_evidence_ids": c.breakable_by_evidence_codes}
+                            for c in s.claims
+                        ] if s.claims else [],
+                        knowledge_items=[k.model_dump() for k in s.knowledge] if s.knowledge else [],
+                        profile=s.profile.model_dump() if s.profile else None,
+                        flavor_slots=[slot.model_dump() for slot in s.flavor_slots] if s.flavor_slots else [],
+                    )
+                    db.add(new_suspect)
+                    db.flush()
+                    suspect_map[s.id] = new_suspect
 
             db_evidences = db.query(EvidenceModel).filter(EvidenceModel.scenario_id == existing.id).all()
             evidence_map = {e.evidence_code: e for e in db_evidences}
+            mandatory_evidence_ids = []
             for e in config.evidences:
                 if e.id in evidence_map:
                     target_e = evidence_map[e.id]
@@ -95,6 +118,47 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
                     target_e.description = e.description
                     target_e.internal_note = e.internal_note
                     target_e.related_topic_id = e.related_topic_id
+                else:
+                    target_e = EvidenceModel(
+                        scenario_id=existing.id,
+                        evidence_code=e.id,
+                        name=e.name,
+                        description=e.description,
+                        internal_note=e.internal_note,
+                        related_topic_id=e.related_topic_id
+                    )
+                    db.add(target_e)
+                    db.flush()
+                    evidence_map[e.id] = target_e
+                if e.is_mandatory:
+                    mandatory_evidence_ids.append(target_e.id)
+
+            existing.required_evidence_ids = mandatory_evidence_ids
+
+            if config.culprit in suspect_map:
+                existing.culprit_id = suspect_map[config.culprit].id
+
+            # Sincroniza Segredos
+            if config.secrets:
+                for sec in config.secrets:
+                    if sec.suspect in suspect_map and sec.evidence in evidence_map:
+                        s_id = suspect_map[sec.suspect].id
+                        ev_id = evidence_map[sec.evidence].id
+                        secret = db.query(SecretModel).filter(
+                            SecretModel.suspect_id == s_id,
+                            SecretModel.evidence_id == ev_id
+                        ).first()
+                        if secret:
+                            secret.content = sec.content
+                            secret.is_core = sec.is_core
+                        else:
+                            new_sec = SecretModel(
+                                suspect_id=s_id,
+                                evidence_id=ev_id,
+                                content=sec.content,
+                                is_core=sec.is_core
+                            )
+                            db.add(new_sec)
 
             db.commit()
             print(f"[loader] Cenário '{config.scenario_code}' sincronizado com sucesso a partir do JSON.")
