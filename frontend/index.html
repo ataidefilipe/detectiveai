@@ -302,26 +302,26 @@
   <!-- ════ SCREEN: Autenticação Obrigatória ═══════════════════ -->
   <section id="screen-auth" class="screen">
     <div class="auth-wrapper">
-      <div class="auth-card">
-        <div class="auth-badge">🕵️ ACESSO RESTRITO</div>
-        <h1 class="auth-title">Detective AI</h1>
-        <p class="auth-subtitle">
-          Sistema de Interrogatório Criminal por IA.<br>
-          Identifique-se com sua conta Google para acessar os casos e conduzir as investigações.
+      <div class="auth-card auth-card-noir">
+        <div class="auth-badge-noir">🕵️ DEPARTAMENTO DE INVESTIGAÇÕES FORENSES</div>
+        <h1 class="auth-title-noir">Detective AI</h1>
+        <p class="auth-subtitle-noir">
+          DIVISÃO DE HOMICÍDIOS & CASOS ESPECIAIS<br>
+          Apresente suas credenciais para acessar os inquéritos criminais.
         </p>
 
         <div id="google-login-box" style="display:flex; justify-content:center; margin-bottom:16px; min-height:44px;">
           <div id="google-btn-container"></div>
         </div>
 
-        <div id="google-fallback-note" style="display:none; color:var(--text-muted); font-size:0.82rem; margin-bottom:16px; background:rgba(232,182,76,0.06); border:1px dashed rgba(232,182,76,0.3); padding:10px 14px; border-radius:var(--radius-sm); text-align:left;">
-          <div style="font-weight:600; color:var(--accent); margin-bottom:4px;">ℹ️ Google Client ID não detectado</div>
+        <div id="google-fallback-note" style="display:none; color:var(--noir-text-muted); font-size:0.82rem; margin-bottom:16px; background:rgba(212,163,89,0.06); border:1px dashed var(--noir-border-gold); padding:10px 14px; border-radius:var(--noir-radius-sm); text-align:left;">
+          <div style="font-weight:600; color:var(--noir-amber); margin-bottom:4px;">ℹ️ Google Client ID não detectado</div>
           <span>Para ativar o botão oficial do Google, configure a variável <code>GOOGLE_CLIENT_ID</code> nas variáveis do Railway.</span>
         </div>
 
         <div id="mock-login-section" style="margin-top:6px;">
-          <button class="btn btn-secondary" onclick="loginMock()" style="width:100%; justify-content:center; padding:11px 18px; font-weight:600;">
-            🕵️ Entrar como Detetive Convidado (Modo Dev)
+          <button class="btn btn-secondary" onclick="loginMock()" style="width:100%; justify-content:center; padding:11px 18px; font-weight:600; border-color:var(--noir-border-gold); color:var(--noir-amber);">
+            🕵️ Entrar como Detetive Convidado (Credencial de Plantão)
           </button>
         </div>
       </div>
@@ -339,13 +339,13 @@
       <div class="jazz-player-slot" style="margin-left:auto;"></div>
       <div class="user-auth-widget" style="margin-left:12px;"></div>
     </header>
-    <div class="container">
-      <div class="hero" style="padding: 40px 0 20px; text-align: center;">
-        <h1 style="font-family:'Playfair Display',serif;font-size:2.4rem;color:var(--accent);margin-bottom:8px;">Sessões de Investigação</h1>
-        <p style="color:var(--text-muted);font-size:1rem;margin-bottom:20px;">Retome investigações em andamento ou confira o resultado de casos encerrados.</p>
+    <div class="container" style="max-width: 940px;">
+      <div class="hero" style="padding: 38px 0 20px; text-align: center;">
+        <h1 style="font-family:var(--font-display);font-size:2.3rem;color:var(--noir-amber);margin-bottom:8px;">Arquivo Central de Inquéritos</h1>
+        <p style="color:var(--noir-text-muted);font-size:0.95rem;margin-bottom:20px;">Retome investigações em andamento ou confira o resultado de casos encerrados.</p>
       </div>
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-        <span id="sessions-total-label" style="font-size:0.85rem; color:var(--text-muted);">Carregando sessões...</span>
+        <span id="sessions-total-label" style="font-family:var(--font-mono);font-size:0.82rem; color:var(--noir-text-muted);">Carregando sessões...</span>
         <div style="display:flex;gap:8px;">
           <button class="btn btn-secondary" onclick="loadSessionsList()" style="padding:6px 14px; font-size:0.82rem;">🔄 Atualizar</button>
           <button class="btn btn-primary" onclick="showScenariosScreen()" style="padding:6px 14px; font-size:0.82rem;">➕ Novo Caso</button>
@@ -368,13 +368,13 @@
       <div class="jazz-player-slot" style="margin-left:auto;"></div>
       <div class="user-auth-widget" style="margin-left:12px;"></div>
     </header>
-    <div class="container">
-      <div class="hero">
-        <h1>Escolha o Caso</h1>
-        <p>Selecione um cenário para iniciar sua investigação. Use lógica, pressão e evidências para descobrir o culpado.</p>
+    <div class="container" style="max-width: 960px;">
+      <div class="hero" style="padding: 38px 0 24px; text-align: center;">
+        <h1 style="font-family:var(--font-display);font-size:2.3rem;color:var(--noir-amber);margin-bottom:8px;">Pastas de Inquérito Disponíveis</h1>
+        <p style="color:var(--noir-text-muted);font-size:0.95rem;max-width:540px;margin:0 auto;">Selecione um caso para assumir a investigação. Use lógica forense, pressão psicológica e evidências para descobrir o culpado.</p>
       </div>
-      <div id="scenario-list">
-        <div class="loading"><div class="spinner"></div> Carregando cenários…</div>
+      <div id="scenario-list" class="case-folders-grid">
+        <div class="loading"><div class="spinner"></div> Carregando arquivos…</div>
       </div>
     </div>
   </section>
@@ -388,16 +388,33 @@
       <button class="btn-back" style="margin-left:12px;" onclick="showSessionsScreen()">📜 Minhas Sessões</button>
       <div class="user-auth-widget" style="margin-left:8px;"></div>
     </header>
-    <div class="container">
-      <div class="briefing-body">
-        <p class="case-label">📁 BRIEFING DO CASO</p>
-        <h1 class="case-title" id="briefing-title">—</h1>
-        <p class="briefing-desc" id="briefing-desc">—</p>
-        <h3 style="font-size:.78rem;text-transform:uppercase;letter-spacing:.7px;color:var(--text-muted);margin-bottom:12px;">Suspeitos Identificados</h3>
-        <div class="suspects-grid" id="briefing-suspects"></div>
-        <button class="btn btn-primary" onclick="goToInvestigation()" style="margin-top:8px;">
-          🚪 Iniciar Investigação →
-        </button>
+    <div class="container" style="max-width: 980px;">
+      <div style="padding: 28px 0 10px;">
+        <div class="briefing-dossier-paper">
+          <div class="briefing-paper-header">
+            <div>
+              <div class="briefing-case-code">POLÍCIA CIVIL // DIVISÃO DE HOMICÍDIOS</div>
+              <h1 class="briefing-paper-title" id="briefing-title">—</h1>
+            </div>
+            <span class="rubber-stamp confidential" style="font-size:0.85rem;padding:6px 14px;border-width:2px;transform:rotate(-4deg);">CONFIDENCIAL</span>
+          </div>
+          
+          <div style="font-family:var(--font-mono);font-size:0.75rem;color:var(--noir-paper-ink-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;font-weight:700;">
+            CIRCUNSTÂNCIAS DO CRIME (RELATÓRIO PRELIMINAR):
+          </div>
+          <div class="briefing-facts-box" id="briefing-desc">—</div>
+
+          <div style="font-family:var(--font-mono);font-size:0.75rem;color:var(--noir-paper-ink-muted);margin-bottom:14px;text-transform:uppercase;letter-spacing:1px;font-weight:700;">
+            PESSOAS DE INTERESSE (SUSPEITOS IDENTIFICADOS):
+          </div>
+          <div class="briefing-suspects-grid" id="briefing-suspects"></div>
+
+          <div style="border-top:1px dashed rgba(26,24,21,0.25);padding-top:20px;display:flex;justify-content:flex-end;">
+            <button class="btn btn-primary" onclick="goToInvestigation()" style="padding:12px 28px;font-size:0.95rem;font-weight:700;">
+              🚪 Assumir o Caso & Iniciar Investigação →
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -414,16 +431,47 @@
       <div class="jazz-player-slot" style="margin-left:auto;"></div>
       <div class="user-auth-widget" style="margin-left:12px;"></div>
     </div>
-    <div class="container">
-      <div class="inv-cols">
-        <div class="inv-section">
-          <h2>🧑‍💼 Suspeitos</h2>
-          <div id="inv-suspects"></div>
+    <div class="container" style="max-width: 1080px;">
+      <div class="hub-wrapper">
+
+        <!-- 1. Carrossel de Suspeitos -->
+        <div class="hub-section-header">
+          <div class="hub-section-title">
+            <span>🧑‍💼 Suspeitos Sob Investigação</span>
+            <span id="hub-suspects-count" class="rubber-stamp" style="font-size:0.6rem;padding:2px 7px;border-width:1px;">0 SUSPEITOS</span>
+          </div>
+          <div class="carousel-controls">
+            <button class="carousel-arrow-btn" onclick="scrollSuspectsCarousel(-1)" title="Anterior">‹</button>
+            <button class="carousel-arrow-btn" onclick="scrollSuspectsCarousel(1)" title="Próximo">›</button>
+          </div>
         </div>
-        <div class="inv-section">
-          <h2>🔎 Evidências</h2>
-          <div id="inv-evidences"></div>
+
+        <div class="suspects-carousel-track" id="suspects-carousel-track">
+          <div class="loading"><div class="spinner"></div> Carregando suspeitos…</div>
         </div>
+
+        <!-- 2. Armário Compacto de Evidências -->
+        <div class="hub-evidences-box">
+          <div class="hub-evidences-header-row">
+            <div>
+              <div class="hub-section-title">
+                <span>🔎 Evidências Apreendidas no Inquérito</span>
+                <span id="hub-evidences-count" class="rubber-stamp cleared" style="font-size:0.6rem;padding:2px 7px;border-width:1px;">0 PROVAS</span>
+              </div>
+              <p style="font-size:0.8rem;color:var(--noir-text-muted);margin-top:3px;">
+                Role pelo armário para inspecionar os laudos periciais ou acerte conexões no Mural de Detetive.
+              </p>
+            </div>
+            <button class="btn btn-secondary" onclick="openEvidenceLocker()" style="font-size:0.8rem;padding:6px 14px;white-space:nowrap;">
+              🔎 Sala de Provas Completa →
+            </button>
+          </div>
+
+          <div class="hub-evidences-scroll" id="inv-evidences">
+            <div class="loading"><div class="spinner"></div> Carregando evidências…</div>
+          </div>
+        </div>
+
       </div>
     </div>
   </section>
@@ -864,13 +912,13 @@
           let statusBadge = '';
 
           if (isInProgress) {
-            statusBadge = `<span class="tag" style="background:rgba(202,138,4,.2);color:#fbbf24;">🟡 Em Andamento</span>`;
+            statusBadge = `<span class="rubber-stamp contradiction" style="font-size:0.65rem;padding:2px 7px;">🟡 EM ANDAMENTO</span>`;
           } else if (s.result_type === 'correct') {
-            statusBadge = `<span class="tag ok">🟢 Concluído (Correto)</span>`;
+            statusBadge = `<span class="rubber-stamp cleared" style="font-size:0.65rem;padding:2px 7px;">🟢 RESOLVIDO</span>`;
           } else if (s.result_type === 'wrong') {
-            statusBadge = `<span class="tag fail">🔴 Concluído (Errado)</span>`;
+            statusBadge = `<span class="rubber-stamp" style="font-size:0.65rem;padding:2px 7px;border-color:var(--noir-crimson);color:var(--noir-crimson);">🔴 ARQUIVADO</span>`;
           } else {
-            statusBadge = `<span class="tag" style="background:rgba(59,130,246,.2);color:#93c5fd;">🔵 Finalizado</span>`;
+            statusBadge = `<span class="rubber-stamp" style="font-size:0.65rem;padding:2px 7px;">🔵 FINALIZADO</span>`;
           }
 
           const actionBtn = isInProgress
@@ -970,9 +1018,14 @@
           return;
         }
         list.innerHTML = scenarios.map(s => `
-          <div class="card clickable" onclick="selectScenario(${s.id})">
-            <div style="font-weight:600;font-size:1.05rem;margin-bottom:6px;">📁 ${s.title}</div>
-            <div style="color:var(--text-muted);font-size:.87rem;">${s.description || ''}</div>
+          <div class="case-folder-card" onclick="selectScenario(${s.id})">
+            <div class="case-folder-tab">PASTA #${s.id} // INQUÉRITO</div>
+            <h2 class="case-folder-title">${s.title}</h2>
+            <p class="case-folder-desc">${s.description || 'Nenhum detalhe preliminar fornecido.'}</p>
+            <div class="case-folder-footer">
+              <span class="rubber-stamp cleared" style="font-size:0.65rem;padding:3px 8px;">CASO ABERTO</span>
+              <span style="font-size:0.82rem;color:var(--noir-amber);font-weight:600;">Iniciar Investigação →</span>
+            </div>
           </div>
         `).join('');
       } catch (e) {
@@ -1016,14 +1069,20 @@
         state.motives = overview.scenario.motive_options || [];
         document.getElementById('inv-case-name').textContent = '📁 ' + overview.scenario.title;
 
-        // Suspects preview — full backstory shown
+        // Suspects preview — mini-polaroids
         const suspectsEl = document.getElementById('briefing-suspects');
-        suspectsEl.innerHTML = (overview.suspects || []).map(s => `
-          <div class="suspect-mini">
-            <div class="suspect-name">🧑 ${s.name || ''}</div>
-            ${s.backstory ? `<div class="suspect-bs">${s.backstory}</div>` : ''}
-          </div>
-        `).join('');
+        suspectsEl.innerHTML = (overview.suspects || []).map(s => {
+          const imgSrc = s.image_url || '/static/assets/templates/suspect-template.svg';
+          return `
+            <div class="briefing-polaroid-mini">
+              <div class="briefing-polaroid-thumb">
+                <img src="${imgSrc}" alt="${s.name}" onerror="this.src='/static/assets/templates/suspect-template.svg'" />
+              </div>
+              <div class="briefing-polaroid-name">${s.name}</div>
+              <div class="briefing-polaroid-role">${s.role_title || 'Suspeito(a)'}</div>
+            </div>
+          `;
+        }).join('');
       } catch (e) {
         toast('Erro', e.message, 'lie');
       }
@@ -1048,29 +1107,74 @@
         state.evidences = evidencesData;
         evidencesData.forEach(e => { state.evidenceCache[e.id] = e.name; });
 
-        // B2: Suspect cards with expandable backstory
-        document.getElementById('inv-suspects').innerHTML = suspectsData.map(s => `
-          <div class="card clickable suspect-card" onclick="openInterrogation(${s.suspect_id})">
-            <div class="sname">🧑 ${s.name}</div>
-            ${s.backstory ? `
-              <div class="sbs-short" id="bs-short-${s.suspect_id}">${s.backstory.substring(0, 80)}…</div>
-              <div class="sbs-full"  id="bs-full-${s.suspect_id}">${s.backstory}</div>
-              <button class="btn-expand" onclick="event.stopPropagation(); toggleBackstory(${s.suspect_id})">ver mais</button>
-            ` : ''}
-          </div>
-        `).join('');
+        // Contadores do Hub
+        const sCountEl = document.getElementById('hub-suspects-count');
+        if (sCountEl) sCountEl.textContent = `${suspectsData.length} SUSPEITO${suspectsData.length > 1 ? 'S' : ''}`;
+        const eCountEl = document.getElementById('hub-evidences-count');
+        if (eCountEl) eCountEl.textContent = `${evidencesData.length} PROVA${evidencesData.length > 1 ? 'S' : ''}`;
 
-        // Evidences list
-        document.getElementById('inv-evidences').innerHTML = evidencesData.map(e => `
-          <div class="evidence-item">
-            <div class="ename">🔎 ${e.name}</div>
-            ${e.description ? `<div class="edesc">${e.description}</div>` : ''}
-          </div>
-        `).join('');
+        // 1. Carrossel de Suspeitos em Polaroids
+        const carousel = document.getElementById('suspects-carousel-track');
+        if (carousel) {
+          carousel.innerHTML = suspectsData.map(s => {
+            const imgSrc = s.image_url || '/static/assets/templates/suspect-template.svg';
+            const role = s.role_title || 'Suspeito(a)';
+            const usedCount = s.used_evidences ? s.used_evidences.length : 0;
+            return `
+              <div class="hub-suspect-card" onclick="openInterrogation(${s.suspect_id})">
+                <div class="hub-suspect-pin"></div>
+                <div class="hub-suspect-img-box">
+                  <img src="${imgSrc}" alt="${s.name}" onerror="this.src='/static/assets/templates/suspect-template.svg'" />
+                </div>
+                <div class="hub-suspect-name">${s.name}</div>
+                <div class="hub-suspect-role">${role}</div>
+                <div style="display:flex;justify-content:center;margin-bottom:8px;">
+                  ${usedCount > 0 
+                    ? `<span class="rubber-stamp contradiction" style="font-size:0.58rem;padding:2px 6px;border-width:1px;">${usedCount} PROVA${usedCount > 1 ? 'S' : ''} APRESENTADA${usedCount > 1 ? 'S' : ''}</span>`
+                    : `<span class="rubber-stamp" style="font-size:0.58rem;padding:2px 6px;border-width:1px;color:var(--noir-text-dim);">AINDA NÃO CONFRONTADO</span>`
+                  }
+                </div>
+                <button class="hub-btn-interrogate" onclick="event.stopPropagation(); openInterrogation(${s.suspect_id})">
+                  💬 Interrogar
+                </button>
+              </div>
+            `;
+          }).join('');
+        }
+
+        // 2. Grid Compacto de Evidências com Scroll Interno
+        const evContainer = document.getElementById('inv-evidences');
+        if (evContainer) {
+          evContainer.innerHTML = evidencesData.map(e => {
+            const code = e.evidence_code || `EVD-${String(e.id).padStart(3, '0')}`;
+            const isUsed = Boolean(e.is_used);
+            const statusBadge = isUsed
+              ? `<span class="rubber-stamp contradiction" style="font-size:0.55rem;padding:1px 5px;border-width:1px;">🔍 USADA</span>`
+              : `<span class="rubber-stamp cleared" style="font-size:0.55rem;padding:1px 5px;border-width:1px;">🟢 INTACTA</span>`;
+
+            return `
+              <div class="hub-evidence-mini-card" onclick="openEvidenceLocker()" style="cursor:pointer;" title="Clique para abrir na Sala de Provas">
+                <div class="ev-top">
+                  <span class="ev-code">${code}</span>
+                  ${statusBadge}
+                </div>
+                <div class="ev-name">🔎 ${e.name}</div>
+                <div class="ev-desc">${e.description || 'Laudo pericial em análise.'}</div>
+              </div>
+            `;
+          }).join('');
+        }
 
         renderEvidenceChips();
       } catch (e) {
         toast('Erro', e.message, 'lie');
+      }
+    }
+
+    function scrollSuspectsCarousel(direction) {
+      const track = document.getElementById('suspects-carousel-track');
+      if (track) {
+        track.scrollBy({ left: direction * 250, behavior: 'smooth' });
       }
     }
 

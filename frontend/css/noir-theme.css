@@ -641,3 +641,493 @@ body {
   margin-right: 6px;
   margin-bottom: 4px;
 }
+
+/* ═════════════════════════════════════════════════════════════════════
+   NOIR THEME: TELAS INICIAIS & INVESTIGATION HUB REDESIGN
+   ═════════════════════════════════════════════════════════════════════ */
+
+/* ─── 1. Login Noir: Credencial de Detetive ─────────────────── */
+.screen#screen-auth {
+  background-color: var(--noir-bg-darkest);
+  background-image: 
+    radial-gradient(ellipse at 50% 30%, rgba(212, 163, 89, 0.08) 0%, rgba(10, 12, 15, 0.96) 70%, #060709 100%),
+    radial-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 100% 100%, 32px 32px;
+}
+
+.auth-card-noir {
+  background: #141720;
+  border: 1px solid var(--noir-border-gold);
+  border-radius: var(--noir-radius-md);
+  padding: 44px 34px 38px;
+  max-width: 460px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85), 0 0 24px rgba(212, 163, 89, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-card-noir::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, transparent, var(--noir-amber), transparent);
+}
+
+.auth-badge-noir {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 2px;
+  font-weight: 700;
+  color: var(--noir-amber);
+  background: rgba(212, 163, 89, 0.08);
+  padding: 6px 16px;
+  border-radius: var(--noir-radius-pill);
+  border: 1px solid var(--noir-border-gold);
+  margin-bottom: 20px;
+  text-transform: uppercase;
+}
+
+.auth-title-noir {
+  font-family: var(--font-display);
+  font-size: 2.3rem;
+  color: var(--noir-text-primary);
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.auth-subtitle-noir {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--noir-text-muted);
+  line-height: 1.6;
+  margin-bottom: 28px;
+}
+
+/* ─── 2. Escolha de Casos: Pastas Manila ────────────────────── */
+.case-folders-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  padding-bottom: 40px;
+}
+
+.case-folder-card {
+  background: var(--noir-surface-card);
+  border: 1px solid var(--noir-border-medium);
+  border-radius: var(--noir-radius-md);
+  padding: 24px 22px;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: var(--noir-shadow-md);
+  display: flex;
+  flex-direction: column;
+}
+
+.case-folder-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--noir-amber);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.75), 0 0 16px var(--noir-amber-glow);
+}
+
+.case-folder-tab {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 1.5px;
+  color: var(--noir-amber);
+  background: rgba(212, 163, 89, 0.1);
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--noir-border-gold);
+  margin-bottom: 14px;
+  text-transform: uppercase;
+  font-weight: 700;
+  align-self: flex-start;
+}
+
+.case-folder-title {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  color: var(--noir-text-primary);
+  margin-bottom: 10px;
+  line-height: 1.3;
+}
+
+.case-folder-desc {
+  font-size: 0.86rem;
+  color: var(--noir-text-muted);
+  line-height: 1.6;
+  flex: 1;
+  margin-bottom: 20px;
+}
+
+.case-folder-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--noir-border-subtle);
+  padding-top: 14px;
+}
+
+/* ─── 3. Briefing do Caso: Ficha de Inquérito Oficial ────────── */
+.briefing-dossier-paper {
+  background: var(--noir-paper-bg);
+  color: var(--noir-paper-ink);
+  padding: 38px 44px;
+  border-radius: 4px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 1px rgba(0, 0, 0, 0.5);
+  position: relative;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  margin-bottom: 30px;
+}
+
+.briefing-dossier-paper::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 10px;
+  background: var(--noir-paper-bg-dark);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.briefing-paper-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  border-bottom: 2px solid rgba(26, 24, 21, 0.2);
+  padding-bottom: 16px;
+}
+
+.briefing-case-code {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--noir-paper-ink-muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.briefing-paper-title {
+  font-family: var(--font-display);
+  font-size: 2.1rem;
+  font-weight: 700;
+  color: var(--noir-paper-ink);
+  line-height: 1.25;
+  margin: 6px 0 12px;
+}
+
+.briefing-facts-box {
+  font-family: var(--font-body);
+  font-size: 0.94rem;
+  line-height: 1.75;
+  color: var(--noir-paper-ink);
+  margin-bottom: 32px;
+  text-align: justify;
+}
+
+.briefing-suspects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+.briefing-polaroid-mini {
+  background: #fbf9f4;
+  padding: 10px 10px 14px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  text-align: center;
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+.briefing-polaroid-mini:hover {
+  transform: translateY(-3px) rotate(0.5deg);
+}
+
+.briefing-polaroid-thumb {
+  width: 100%;
+  height: 140px;
+  background: #11141a;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.briefing-polaroid-thumb img,
+.briefing-polaroid-thumb svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: sepia(0.25) contrast(1.05);
+}
+
+.briefing-polaroid-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--noir-paper-ink);
+}
+
+.briefing-polaroid-role {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: #70675a;
+  margin-top: 2px;
+}
+
+/* ─── 4. Hub de Investigação: Carrossel & Grid de Evidências ──── */
+.hub-wrapper {
+  padding-top: 24px;
+  padding-bottom: 48px;
+}
+
+/* Carrossel de Suspeitos */
+.hub-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.hub-section-title {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--noir-amber);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.carousel-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.carousel-arrow-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--noir-surface-card);
+  border: 1px solid var(--noir-border-medium);
+  color: var(--noir-text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.carousel-arrow-btn:hover {
+  background: var(--noir-amber);
+  color: #000;
+  border-color: var(--noir-amber);
+  box-shadow: 0 0 10px var(--noir-amber-glow);
+}
+
+.suspects-carousel-track {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  padding: 10px 4px 18px 4px;
+  margin-bottom: 28px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--noir-border-strong) transparent;
+}
+
+.suspects-carousel-track::-webkit-scrollbar {
+  height: 6px;
+}
+
+.suspects-carousel-track::-webkit-scrollbar-thumb {
+  background: var(--noir-border-strong);
+  border-radius: 3px;
+}
+
+/* Card Polaroid do Suspeito no Hub */
+.hub-suspect-card {
+  flex: 0 0 230px;
+  scroll-snap-align: start;
+  background: #f0ece3;
+  padding: 12px 10px 14px 10px;
+  border-radius: 2px;
+  box-shadow: var(--noir-shadow-polaroid);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  user-select: none;
+}
+
+.hub-suspect-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.7);
+}
+
+.hub-suspect-pin {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ff4d4d, #b31212 70%, #520505);
+  box-shadow: 0 3px 6px rgba(0,0,0,0.6);
+  z-index: 5;
+}
+
+.hub-suspect-img-box {
+  width: 100%;
+  height: 165px;
+  background: #11141a;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.hub-suspect-img-box img,
+.hub-suspect-img-box svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: sepia(0.2) contrast(1.05);
+}
+
+.hub-suspect-name {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1a1614;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.hub-suspect-role {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: #6e6459;
+  text-align: center;
+  margin-top: 3px;
+  margin-bottom: 12px;
+}
+
+.hub-btn-interrogate {
+  width: 100%;
+  background: var(--noir-amber);
+  color: #0b0d10;
+  border: none;
+  border-radius: var(--noir-radius-xs);
+  padding: 8px 12px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  margin-top: auto;
+}
+
+.hub-btn-interrogate:hover {
+  background: var(--noir-amber-hover);
+  box-shadow: 0 0 10px var(--noir-amber-glow);
+}
+
+/* Armário de Evidências no Hub (Compacto & Scroll Interno) */
+.hub-evidences-box {
+  background: var(--noir-surface-card);
+  border: 1px solid var(--noir-border-medium);
+  border-radius: var(--noir-radius-md);
+  padding: 18px 20px;
+  box-shadow: var(--noir-shadow-md);
+}
+
+.hub-evidences-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--noir-border-subtle);
+}
+
+.hub-evidences-scroll {
+  max-height: 380px;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  padding-right: 6px;
+}
+
+.hub-evidences-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.hub-evidences-scroll::-webkit-scrollbar-thumb {
+  background: var(--noir-border-strong);
+  border-radius: 3px;
+}
+
+.hub-evidence-mini-card {
+  background: var(--noir-surface-elevated);
+  border: 1px solid var(--noir-border-subtle);
+  border-radius: var(--noir-radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.hub-evidence-mini-card:hover {
+  border-color: var(--noir-amber);
+  background: var(--noir-surface-hover);
+}
+
+.hub-evidence-mini-card .ev-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.hub-evidence-mini-card .ev-code {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--noir-amber);
+  letter-spacing: 0.8px;
+}
+
+.hub-evidence-mini-card .ev-name {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--noir-text-primary);
+  margin-bottom: 4px;
+}
+
+.hub-evidence-mini-card .ev-desc {
+  font-size: 0.76rem;
+  color: var(--noir-text-muted);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
