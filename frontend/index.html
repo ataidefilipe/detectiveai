@@ -6,7 +6,10 @@
   <title>Detective AI — Interrogatório</title>
   <meta name="description" content="Jogo de interrogatório com IA. Descubra o culpado interrogando suspeitos com evidências." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/tokens.css" />
+  <link rel="stylesheet" href="/static/css/noir-theme.css" />
+  <link rel="stylesheet" href="/static/css/board.css" />
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <style>
@@ -333,7 +336,8 @@
         <button class="nav-tab" onclick="showScenariosScreen()">📁 Novo Caso</button>
         <button class="nav-tab active" onclick="showSessionsScreen()">📜 Minhas Sessões</button>
       </div>
-      <div class="user-auth-widget"></div>
+      <div class="jazz-player-slot" style="margin-left:auto;"></div>
+      <div class="user-auth-widget" style="margin-left:12px;"></div>
     </header>
     <div class="container">
       <div class="hero" style="padding: 40px 0 20px; text-align: center;">
@@ -361,7 +365,8 @@
         <button class="nav-tab active" onclick="showScenariosScreen()">📁 Novo Caso</button>
         <button class="nav-tab" onclick="showSessionsScreen()">📜 Minhas Sessões</button>
       </div>
-      <div class="user-auth-widget"></div>
+      <div class="jazz-player-slot" style="margin-left:auto;"></div>
+      <div class="user-auth-widget" style="margin-left:12px;"></div>
     </header>
     <div class="container">
       <div class="hero">
@@ -379,7 +384,8 @@
     <header class="app-header">
       <button class="btn-back" onclick="showScenariosScreen()">← Voltar</button>
       <span class="logo">🔍 Detective AI</span>
-      <button class="btn-back" style="margin-left:auto;" onclick="showSessionsScreen()">📜 Minhas Sessões</button>
+      <div class="jazz-player-slot" style="margin-left:auto;"></div>
+      <button class="btn-back" style="margin-left:12px;" onclick="showSessionsScreen()">📜 Minhas Sessões</button>
       <div class="user-auth-widget" style="margin-left:8px;"></div>
     </header>
     <div class="container">
@@ -402,8 +408,11 @@
       <button class="btn-back" onclick="showSessionsScreen()">← Sessões</button>
       <span class="case-name" id="inv-case-name">—</span>
       <button class="btn btn-secondary" onclick="openDossier()">📋 Dossiê</button>
+      <button class="btn btn-secondary" onclick="openEvidenceLocker()">🔎 Provas</button>
+      <button class="btn btn-secondary" onclick="DetectiveBoard.openBoard()">📌 Mural</button>
       <button class="btn btn-danger" onclick="openAccusation()">⚖️ Acusar</button>
-      <div class="user-auth-widget" style="margin-left:auto;"></div>
+      <div class="jazz-player-slot" style="margin-left:auto;"></div>
+      <div class="user-auth-widget" style="margin-left:12px;"></div>
     </div>
     <div class="container">
       <div class="inv-cols">
@@ -429,6 +438,10 @@
         <!-- B3: state badge -->
         <div class="suspect-state-badge" id="suspect-state-badge">😐 &nbsp;Aguardando…</div>
       </div>
+      <div class="jazz-player-slot" style="margin-left:auto;"></div>
+      <button class="btn btn-secondary" onclick="openDossier(state.activeSuspectId)" style="padding:4px 10px;font-size:0.78rem;margin-left:8px;">📋 Ficha</button>
+      <button class="btn btn-secondary" onclick="openEvidenceLocker()" style="padding:4px 10px;font-size:0.78rem;margin-left:6px;">🔎 Provas</button>
+      <button class="btn btn-secondary" onclick="DetectiveBoard.openBoard()" style="padding:4px 10px;font-size:0.78rem;margin-left:6px;">📌 Mural</button>
     </div>
     <div class="chat-messages" id="chat-messages">
       <div class="loading"><div class="spinner"></div> Carregando conversa…</div>
@@ -454,17 +467,83 @@
     <header class="app-header">
       <button class="btn-back" onclick="showScreen('screen-investigation')">← Voltar</button>
       <span class="logo">📋 Dossiê</span>
+      <button class="btn btn-secondary" onclick="openEvidenceLocker()" style="padding:4px 10px;font-size:0.78rem;margin-left:14px;">🔎 Provas</button>
+      <button class="btn btn-secondary" onclick="DetectiveBoard.openBoard()" style="padding:4px 10px;font-size:0.78rem;margin-left:6px;">📌 Mural</button>
+      <div class="jazz-player-slot" style="margin-left:auto;"></div>
     </header>
-    <div class="container">
+    <div class="container" style="max-width: 1060px;">
       <div class="dossier-body">
-        <h1 class="dossier-title">Suas Descobertas</h1>
-        <p class="dossier-subtitle">Tudo que você revelou até agora durante a investigação.</p>
+        <h1 class="dossier-title">Dossiê e Fichas dos Suspeitos</h1>
+        <p class="dossier-subtitle">Inspecione perfis criminais, depoimentos oficiais e o histórico de evidências confrontadas com cada suspeito.</p>
         <div id="dossier-content">
           <div class="loading"><div class="spinner"></div> Carregando dossiê…</div>
         </div>
-        <button class="btn btn-primary" onclick="showScreen('screen-investigation')" style="margin-top:16px;">
-          ← Voltar à Investigação
+        <div style="margin-top:24px;">
+          <button class="btn btn-secondary" onclick="showScreen('screen-investigation')">
+            ← Voltar à Investigação
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ SCREEN: Evidence Locker (Sala de Provas) ════════════ -->
+  <section id="screen-evidence-locker" class="screen">
+    <header class="app-header">
+      <button class="btn-back" onclick="showScreen('screen-investigation')">← Voltar</button>
+      <span class="logo">🔎 Sala de Provas</span>
+      <button class="btn btn-secondary" onclick="openDossier()" style="padding:4px 10px;font-size:0.78rem;margin-left:14px;">📋 Dossiê</button>
+      <button class="btn btn-secondary" onclick="DetectiveBoard.openBoard()" style="padding:4px 10px;font-size:0.78rem;margin-left:6px;">📌 Mural</button>
+      <div class="jazz-player-slot" style="margin-left:auto;"></div>
+      <div class="user-auth-widget" style="margin-left:12px;"></div>
+    </header>
+    <div class="container" style="max-width: 1060px;">
+      <div style="padding: 28px 0 10px;">
+        <h1 style="font-family:var(--font-display);font-size:1.8rem;color:var(--noir-amber);margin-bottom:6px;">Armário de Custódia Forense</h1>
+        <p style="color:var(--text-muted);font-size:0.92rem;margin-bottom:20px;">
+          Examine todos os laudos periciais e acompanhe o histórico de confronto de cada prova com os suspeitos.
+        </p>
+
+        <!-- Filtros Rápidos -->
+        <div class="evidence-filter-bar">
+          <button class="evidence-filter-btn active" id="ev-filter-all" onclick="setEvidenceFilter('all')">Todas as Evidências</button>
+          <button class="evidence-filter-btn" id="ev-filter-unused" onclick="setEvidenceFilter('unused')">🟢 Não Apresentadas</button>
+          <button class="evidence-filter-btn" id="ev-filter-used" onclick="setEvidenceFilter('used')">🔍 Já Apresentadas</button>
+        </div>
+
+        <div id="evidence-locker-list" class="evidence-locker-grid">
+          <div class="loading"><div class="spinner"></div> Carregando evidências…</div>
+        </div>
+
+        <div style="margin-top:20px;padding-bottom:40px;">
+          <button class="btn btn-secondary" onclick="showScreen('screen-investigation')">
+            ← Voltar à Investigação
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ SCREEN: Investigation Whiteboard (Mural do Caso) ════ -->
+  <section id="screen-board" class="screen">
+    <header class="board-header">
+      <button class="btn-back" onclick="showScreen('screen-investigation')">← Voltar</button>
+      <span class="board-title">📌 Mural do Caso</span>
+      <div class="board-header-actions">
+        <button class="btn btn-secondary" onclick="DetectiveBoard.addStickyNote('yellow')" style="padding:5px 12px;font-size:0.8rem;">
+          ➕ Nova Nota
         </button>
+        <button class="btn btn-secondary" onclick="DetectiveBoard.clearConnections()" style="padding:5px 12px;font-size:0.8rem;">
+          ✂️ Limpar Fios
+        </button>
+        <div id="board-save-status" class="board-save-status">🟢 Salvo</div>
+      </div>
+      <div class="jazz-player-slot" style="margin-left:auto;"></div>
+      <div class="user-auth-widget" style="margin-left:12px;"></div>
+    </header>
+    <div class="board-viewport" id="board-viewport">
+      <div class="board-canvas" id="board-canvas">
+        <svg id="board-svg-layer" class="board-svg-layer"></svg>
       </div>
     </div>
   </section>
@@ -1248,64 +1327,331 @@
     // ─────────────────────────────────────────────────────────
     //  SCREEN 5: Dossier
     // ─────────────────────────────────────────────────────────
-    async function openDossier() {
+    // ─────────────────────────────────────────────────────────
+    //  SCREEN 5: Dossier de Suspeitos
+    // ─────────────────────────────────────────────────────────
+    async function openDossier(preselectedSuspectId = null) {
       showScreen('screen-dossier');
       const content = document.getElementById('dossier-content');
-      content.innerHTML = '<div class="loading"><div class="spinner"></div> Carregando…</div>';
+      content.innerHTML = '<div class="loading"><div class="spinner"></div> Carregando dossiê policial…</div>';
       try {
-        const caseFile = await api(`/sessions/${state.sessionId}/case-file`);
-        renderDossier(caseFile);
+        const [suspectsList, caseFile] = await Promise.all([
+          api(`/sessions/${state.sessionId}/suspects`),
+          api(`/sessions/${state.sessionId}/case-file`)
+        ]);
+
+        state.dossierSuspects = suspectsList;
+        state.caseFile = caseFile;
+
+        if (preselectedSuspectId) {
+          state.activeDossierSuspectId = preselectedSuspectId;
+        } else if (state.activeSuspectId) {
+          state.activeDossierSuspectId = state.activeSuspectId;
+        } else if (suspectsList.length > 0) {
+          state.activeDossierSuspectId = suspectsList[0].suspect_id;
+        }
+
+        renderDossierView();
       } catch (e) {
-        content.innerHTML = `<p style="color:var(--red)">${e.message}</p>`;
+        content.innerHTML = `<p style="color:var(--red);padding:20px;">Erro ao carregar dossiê: ${e.message}</p>`;
       }
     }
 
-    function renderDossier(caseFile) {
-      const content = document.getElementById('dossier-content');
-      if (!caseFile.suspects?.length) {
-        content.innerHTML = '<p class="empty-state">Nenhuma descoberta ainda. Continue investigando.</p>';
+    function selectDossierSuspect(suspectId) {
+      state.activeDossierSuspectId = suspectId;
+      renderDossierView();
+    }
+
+    function renderDossierView() {
+      const container = document.getElementById('dossier-content');
+      const suspects = state.dossierSuspects || [];
+      const caseFile = state.caseFile || {};
+
+      if (!suspects.length) {
+        container.innerHTML = '<p class="empty-state">Nenhum suspeito identificado neste caso.</p>';
         return;
       }
 
-      content.innerHTML = caseFile.suspects.map(s => {
-        const hasData = s.revealed_secrets.length || s.broken_claims.length
-          || s.discovered_knowledge.length || s.effective_evidences.length;
+      // 1. Barra de seleção horizontal
+      const tabsHtml = `
+        <div class="dossier-suspects-bar">
+          ${suspects.map(s => {
+            const isActive = s.suspect_id === state.activeDossierSuspectId;
+            const imgSrc = s.image_url || '/static/assets/templates/suspect-template.svg';
+            const usedCount = s.used_evidences ? s.used_evidences.length : 0;
+            return `
+              <div class="dossier-suspect-tab ${isActive ? 'active' : ''}" onclick="selectDossierSuspect(${s.suspect_id})">
+                <div class="dossier-tab-avatar">
+                  <img src="${imgSrc}" alt="${s.name}" onerror="this.src='/static/assets/templates/suspect-template.svg'" />
+                </div>
+                <div class="dossier-tab-info">
+                  <span class="dossier-tab-name">${s.name}</span>
+                  <span class="dossier-tab-role">${s.role_title || 'Suspeito'}</span>
+                </div>
+                ${usedCount > 0 ? `<span class="rubber-stamp" style="font-size:0.6rem;padding:2px 6px;border-width:1px;margin-left:auto;">${usedCount} PROVA${usedCount > 1 ? 'S' : ''}</span>` : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
 
-        const bodyHtml = hasData ? `
-          ${s.revealed_secrets.length ? `
-            <div class="ds-category">
-              <h4>🔑 Segredos Revelados</h4>
-              ${s.revealed_secrets.map(r => `
-                <div class="ds-item secret ${r.is_core ? 'core-badge' : ''}">${r.content}</div>
-              `).join('')}
-            </div>` : ''}
-          ${s.broken_claims.length ? `
-            <div class="ds-category">
-              <h4>💥 Contradições Quebradas</h4>
-              ${s.broken_claims.map(c => `
-                <div class="ds-item lie">"${c.statement || c.text}"</div>
-              `).join('')}
-            </div>` : ''}
-          ${s.discovered_knowledge.length ? `
-            <div class="ds-category">
-              <h4>📘 Conhecimentos Descobertos</h4>
-              ${s.discovered_knowledge.map(k => `
-                <div class="ds-item knowledge">${k.revealed_text || k}</div>
-              `).join('')}
-            </div>` : ''}
-          ${s.effective_evidences.length ? `
-            <div class="ds-category">
-              <h4>✅ Evidências Efetivas</h4>
-              ${s.effective_evidences.map(e => `
-                <div class="ds-item evidence">${e.name}</div>
-              `).join('')}
-            </div>` : ''}
-        ` : '<p class="empty-state">Nenhuma descoberta para este suspeito.</p>';
+      // 2. Suspeito ativo
+      const current = suspects.find(s => s.suspect_id === state.activeDossierSuspectId) || suspects[0];
+      const caseSuspect = (caseFile.suspects || []).find(cs => cs.name === current.name) || {};
+
+      // Badges e estado
+      const stateObj = current.state || {};
+      const stance = stateObj.stance || 'neutral';
+      const patience = Math.round(stateObj.patience ?? 50);
+      const pressure = Math.round(stateObj.pressure ?? 0);
+      const imgSrc = current.image_url || '/static/assets/templates/suspect-template.svg';
+
+      // Evidências confrontadas
+      const usedEvidences = current.used_evidences || [];
+      const usedEvHtml = usedEvidences.length ? `
+        <div class="dossier-confronted-list">
+          ${usedEvidences.map(ev => {
+            let effectBadge = '<span class="rubber-stamp" style="color:var(--text-muted);border-color:var(--border);">⚪ Sem Efeito</span>';
+            if (ev.effect_type === 'broke_claim') {
+              effectBadge = '<span class="rubber-stamp contradiction">💥 Mentira Quebrada</span>';
+            } else if (ev.effect_type === 'revealed_secret') {
+              effectBadge = '<span class="rubber-stamp confidential">🔑 Segredo Exposto</span>';
+            } else if (ev.was_effective) {
+              effectBadge = '<span class="rubber-stamp cleared">⚡ Reação Útil</span>';
+            }
+            return `
+              <div class="dossier-evidence-item">
+                <div style="flex:1;">
+                  <div class="dossier-ev-title">🔎 ${ev.name}</div>
+                  ${ev.description ? `<div class="dossier-ev-desc">${ev.description}</div>` : ''}
+                  <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">
+                    Apresentada ${ev.times_presented} vez${ev.times_presented > 1 ? 'es' : ''} no interrogatório
+                  </div>
+                </div>
+                <div>${effectBadge}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      ` : `
+        <div style="padding:16px;background:var(--surface2);border-radius:var(--radius-sm);border:1px dashed var(--border);color:var(--text-muted);font-size:0.85rem;">
+          Nenhuma evidência apresentada a este suspeito até o momento. Confronte-o durante o interrogatório para registrar suas reações.
+        </div>
+      `;
+
+      // Segredos revelados
+      const secrets = caseSuspect.revealed_secrets || [];
+      const claims = caseSuspect.broken_claims || [];
+
+      const discoveriesHtml = (secrets.length || claims.length) ? `
+        <div style="margin-top:24px;">
+          <h3 style="font-size:0.8rem;text-transform:uppercase;letter-spacing:1px;color:var(--noir-amber);margin-bottom:12px;font-weight:700;">
+            Descobertas Confirmadas na Investigação
+          </h3>
+          ${secrets.map(sec => `
+            <div class="ds-item secret ${sec.is_core ? 'core-badge' : ''}" style="margin-bottom:8px;">
+              🔑 <strong>Segredo:</strong> ${sec.content}
+            </div>
+          `).join('')}
+          ${claims.map(c => `
+            <div class="ds-item lie" style="margin-bottom:8px;">
+              💥 <strong>Contradição exposta:</strong> "${c.statement || c.text}"
+            </div>
+          `).join('')}
+        </div>
+      ` : '';
+
+      // Grid completo do Dossiê
+      const fileHtml = `
+        <div class="dossier-grid">
+          <!-- Coluna Esquerda: Ficha & Retrato -->
+          <div class="dossier-sidebar">
+            <div class="polaroid-frame">
+              <div class="polaroid-pin"></div>
+              <div class="polaroid-img-box">
+                <img src="${imgSrc}" alt="${current.name}" onerror="this.src='/static/assets/templates/suspect-template.svg'" />
+              </div>
+              <div class="polaroid-caption">${current.name}</div>
+              <div class="polaroid-subcaption">${current.role_title || 'Suspeito(a)'}</div>
+            </div>
+
+            <!-- Estado Psicológico -->
+            <div class="dossier-state-box">
+              <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--noir-amber);margin-bottom:12px;font-weight:700;">
+                Perfil Comportamental
+              </div>
+              <div class="dossier-state-row">
+                <span class="dossier-state-label">Postura:</span>
+                <span class="dossier-state-val" style="text-transform:capitalize;">${stance}</span>
+              </div>
+              <div class="dossier-state-row">
+                <span class="dossier-state-label">Paciência:</span>
+                <span class="dossier-state-val">${patience}%</span>
+              </div>
+              <div class="dossier-state-row">
+                <span class="dossier-state-label">Pressão:</span>
+                <span class="dossier-state-val">${pressure}%</span>
+              </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="openInterrogation(${current.suspect_id})" style="width:100%;justify-content:center;">
+              💬 Interrogar ${current.name.split(' ')[0]}
+            </button>
+          </div>
+
+          <!-- Coluna Direita: Pasta do Caso -->
+          <div class="dossier-paper">
+            <div class="dossier-paper-title">FICHA DE INQUÉRITO: ${current.name.toUpperCase()}</div>
+            <div style="margin-bottom:18px;">
+              <span class="rubber-stamp confidential" style="margin-right:8px;">CONFIDENCIAL</span>
+              <span style="font-family:var(--font-mono);font-size:0.8rem;color:var(--noir-paper-ink-muted);">
+                CARGO: <strong>${(current.role_title || 'Pessoa de Interesse').toUpperCase()}</strong>
+              </span>
+            </div>
+
+            ${current.backstory ? `
+              <div style="margin-bottom:20px;line-height:1.65;font-size:0.92rem;color:var(--noir-paper-ink);">
+                <strong>Histórico Investigativo:</strong><br />
+                ${current.backstory}
+              </div>
+            ` : ''}
+
+            ${current.initial_statement ? `
+              <div style="margin-bottom:24px;padding:12px;background:rgba(0,0,0,0.05);border-left:3px solid var(--noir-amber);font-style:italic;font-size:0.88rem;color:var(--noir-paper-ink);">
+                "${current.initial_statement}"
+              </div>
+            ` : ''}
+
+            <!-- Seção de Evidências Usadas -->
+            <h3 style="font-size:0.82rem;text-transform:uppercase;letter-spacing:1px;color:var(--noir-paper-ink);margin-bottom:8px;border-bottom:1px solid rgba(0,0,0,0.15);padding-bottom:4px;">
+              Evidências Confrontadas (${usedEvidences.length})
+            </h3>
+            ${usedEvHtml}
+
+            <!-- Descobertas e Contradições -->
+            ${discoveriesHtml}
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = tabsHtml + fileHtml;
+    }
+
+    // ─────────────────────────────────────────────────────────
+    //  SCREEN: Evidence Locker (Sala de Provas)
+    // ─────────────────────────────────────────────────────────
+    async function openEvidenceLocker() {
+      showScreen('screen-evidence-locker');
+      const list = document.getElementById('evidence-locker-list');
+      list.innerHTML = '<div class="loading"><div class="spinner"></div> Carregando armário de custódia…</div>';
+      try {
+        const evidences = await api(`/sessions/${state.sessionId}/evidences`);
+        state.lockerEvidences = evidences;
+        if (!state.evidenceLockerFilter) state.evidenceLockerFilter = 'all';
+        renderEvidenceLocker();
+      } catch (e) {
+        list.innerHTML = `<p style="color:var(--red);padding:20px;">Erro ao carregar evidências: ${e.message}</p>`;
+      }
+    }
+
+    function setEvidenceFilter(filter) {
+      state.evidenceLockerFilter = filter;
+      document.querySelectorAll('.evidence-filter-btn').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.getElementById(`ev-filter-${filter}`);
+      if (activeBtn) activeBtn.classList.add('active');
+      renderEvidenceLocker();
+    }
+
+    function renderEvidenceLocker() {
+      const container = document.getElementById('evidence-locker-list');
+      const all = state.lockerEvidences || [];
+      const filter = state.evidenceLockerFilter || 'all';
+
+      let filtered = all;
+      if (filter === 'unused') {
+        filtered = all.filter(e => !e.is_used);
+      } else if (filter === 'used') {
+        filtered = all.filter(e => e.is_used);
+      }
+
+      if (!filtered.length) {
+        container.innerHTML = `
+          <div style="grid-column: 1 / -1; padding: 40px 20px; text-align: center; background: var(--noir-surface-card); border: 1px dashed var(--noir-border-medium); border-radius: var(--noir-radius-md);">
+            <div style="font-size: 2rem; margin-bottom: 8px;">📦</div>
+            <p style="color: var(--noir-text-muted); font-size: 0.95rem;">
+              ${filter === 'used' ? 'Nenhuma evidência apresentada aos suspeitos até o momento.' : (filter === 'unused' ? 'Todas as evidências já foram confrontadas pelo menos uma vez.' : 'Nenhuma evidência cadastrada.')}
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(ev => {
+        const code = ev.evidence_code || `EVD-${String(ev.id).padStart(3, '0')}`;
+        const imgSrc = ev.image_url || '/static/assets/templates/evidence-template.svg';
+        const isUsed = Boolean(ev.is_used);
+
+        const statusStamp = isUsed
+          ? `<span class="rubber-stamp contradiction">🔍 APRESENTADA</span>`
+          : `<span class="rubber-stamp cleared">🟢 NÃO APRESENTADA</span>`;
+
+        // Suspect usages
+        const usages = ev.usages || [];
+        let usagesHtml = '';
+        if (usages.length > 0) {
+          const pills = usages.map(u => {
+            let effectLabel = '⚪ Neutro';
+            let effectCls = '';
+            if (u.effect_type === 'broke_claim') {
+              effectLabel = '💥 Mentira Quebrada';
+              effectCls = 'contradiction';
+            } else if (u.effect_type === 'revealed_secret') {
+              effectLabel = '🔑 Segredo Revelado';
+              effectCls = 'confidential';
+            } else if (u.was_effective) {
+              effectLabel = '⚡ Reação Útil';
+              effectCls = 'cleared';
+            }
+            return `
+              <div class="evidence-suspect-pill">
+                <span><strong>${u.suspect_name}</strong> (${u.times_presented}x)</span>
+                <span class="rubber-stamp ${effectCls}" style="font-size:0.58rem;padding:1px 5px;border-width:1px;">${effectLabel}</span>
+              </div>
+            `;
+          }).join('');
+
+          usagesHtml = `
+            <div class="evidence-card-usage-box">
+              <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.8px;color:var(--noir-amber);font-weight:700;margin-bottom:8px;">
+                Confrontada com ${usages.length} suspeito(s):
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                ${pills}
+              </div>
+            </div>
+          `;
+        } else {
+          usagesHtml = `
+            <div class="evidence-card-usage-box" style="border-style:dashed;color:var(--noir-text-muted);font-style:italic;">
+              Intacta. Ainda não confrontada em nenhum interrogatório oficial.
+            </div>
+          `;
+        }
 
         return `
-          <div class="dossier-suspect">
-            <div class="ds-header">🧑 ${s.name}</div>
-            <div class="ds-body">${bodyHtml}</div>
+          <div class="evidence-card-noir">
+            <div class="evidence-card-img-box">
+              <img src="${imgSrc}" alt="${ev.name}" onerror="this.src='/static/assets/templates/evidence-template.svg'" />
+              <div class="evidence-card-badge-floating">
+                ${statusStamp}
+              </div>
+            </div>
+            <div class="evidence-card-content">
+              <div class="evidence-card-code">${code}</div>
+              <h3 class="evidence-card-title">${ev.name}</h3>
+              <p class="evidence-card-desc">${ev.description || 'Laudo pericial em análise.'}</p>
+              ${usagesHtml}
+            </div>
           </div>
         `;
       }).join('');
@@ -1438,9 +1784,49 @@
     }
 
     // ─────────────────────────────────────────────────────────
+    //  Atalhos de Teclado (Power Users)
+    // ─────────────────────────────────────────────────────────
+    window.addEventListener('keydown', (e) => {
+      const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+      if (tag === 'input' || tag === 'textarea' || document.activeElement.isContentEditable) {
+        return;
+      }
+
+      if (!state.sessionId) return;
+
+      const key = e.key.toLowerCase();
+      if (key === 'i') {
+        e.preventDefault();
+        if (state.activeSuspectId) {
+          showScreen('screen-interrogation');
+        } else {
+          showScreen('screen-investigation');
+        }
+      } else if (key === 'd') {
+        e.preventDefault();
+        openDossier(state.activeSuspectId);
+      } else if (key === 'e') {
+        e.preventDefault();
+        openEvidenceLocker();
+      } else if (key === 'm') {
+        e.preventDefault();
+        if (typeof DetectiveBoard !== 'undefined' && DetectiveBoard.openBoard) {
+          DetectiveBoard.openBoard();
+        }
+      } else if (key === 'escape') {
+        closeModal();
+        if (typeof DetectiveBoard !== 'undefined' && DetectiveBoard.clearPinSelection) {
+          DetectiveBoard.clearPinSelection();
+        }
+      }
+    });
+
+    // ─────────────────────────────────────────────────────────
     //  Init
     // ─────────────────────────────────────────────────────────
     verifyExistingAuth();
   </script>
+  <script src="/static/js/board.js"></script>
+  <script src="/static/js/audio-player.js"></script>
 </body>
 </html>

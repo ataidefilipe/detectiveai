@@ -68,6 +68,8 @@ class TopicAffinityProfile(BaseModel):
 class SuspectConfig(BaseModel):
     id: str = Field(..., description="Stable string identifier for the suspect")
     name: str
+    role_title: Optional[str] = Field(default=None, description="Cargo ou papel do suspeito na trama")
+    image_url: Optional[str] = Field(default=None, description="Caminho da foto do suspeito")
     backstory: Optional[str] = None
     personality: Optional[str] = None
     internal_note: Optional[str] = Field(
@@ -118,6 +120,7 @@ class EvidenceConfig(BaseModel):
     description: Optional[str] = Field(default=None, description="Public description")
     internal_note: Optional[str] = Field(default=None, description="Internal usage desc not exposed to players")
     related_topic_id: Optional[str] = Field(default=None, description="Topic slug it synergizes with to avoid out-of-context")
+    image_url: Optional[str] = Field(default=None, description="Caminho da foto da evidência")
     is_mandatory: bool = Field(default=False, description="Whether this evidence is required for correct verdict")
 
 class ChronologyEvent(BaseModel):

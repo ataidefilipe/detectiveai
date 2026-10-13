@@ -13,6 +13,23 @@ from app.infra.db_models import (
 from app.core.exceptions import DomainError
 
 
+def infer_suspect_role(code: Optional[str], backstory: Optional[str]) -> str:
+    c = (code or "").lower()
+    if "marina" in c:
+        return "Assistente Financeira"
+    elif "rogerio" in c or "rogério" in c:
+        return "Segurança Patrimonial"
+    elif "clara" in c:
+        return "Estagiária de TI"
+    elif "eduardo" in c:
+        return "Gerente Comercial"
+    if backstory:
+        first = backstory.split(".")[0].strip()
+        if len(first) <= 40:
+            return first
+    return "Pessoa de Interesse"
+
+
 def load_scenario_from_json(path: str, db: Optional[Session] = None) -> ScenarioModel:
     """
     Loads a scenario from a JSON file, validates it via Pydantic,
@@ -69,9 +86,13 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
             db_suspects = db.query(SuspectModel).filter(SuspectModel.scenario_id == existing.id).all()
             suspect_map = {s.suspect_code: s for s in db_suspects}
             for s in config.suspects:
+                computed_role = s.role_title or infer_suspect_role(s.id, s.backstory)
+                computed_img = s.image_url or "/static/assets/templates/suspect-template.svg"
                 if s.id in suspect_map:
                     target = suspect_map[s.id]
                     target.name = s.name
+                    target.role_title = computed_role
+                    target.image_url = computed_img
                     target.backstory = s.backstory
                     target.personality = s.personality
                     target.internal_note = s.internal_note
@@ -90,6 +111,8 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
                         scenario_id=existing.id,
                         suspect_code=s.id,
                         name=s.name,
+                        role_title=computed_role,
+                        image_url=computed_img,
                         backstory=s.backstory,
                         personality=s.personality,
                         internal_note=s.internal_note,
@@ -112,12 +135,14 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
             evidence_map = {e.evidence_code: e for e in db_evidences}
             mandatory_evidence_ids = []
             for e in config.evidences:
+                computed_ev_img = e.image_url or "/static/assets/templates/evidence-template.svg"
                 if e.id in evidence_map:
                     target_e = evidence_map[e.id]
                     target_e.name = e.name
                     target_e.description = e.description
                     target_e.internal_note = e.internal_note
                     target_e.related_topic_id = e.related_topic_id
+                    target_e.image_url = computed_ev_img
                 else:
                     target_e = EvidenceModel(
                         scenario_id=existing.id,
@@ -125,7 +150,8 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
                         name=e.name,
                         description=e.description,
                         internal_note=e.internal_note,
-                        related_topic_id=e.related_topic_id
+                        related_topic_id=e.related_topic_id,
+                        image_url=computed_ev_img
                     )
                     db.add(target_e)
                     db.flush()
@@ -290,10 +316,14 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
         evidence_name_map = {e.id: e.name for e in config.evidences}
 
         for s in config.suspects:
+            computed_role = s.role_title or infer_suspect_role(s.id, s.backstory)
+            computed_img = s.image_url or "/static/assets/templates/suspect-template.svg"
             suspect = SuspectModel(
                 scenario_id=scenario.id,
                 suspect_code=s.id,
                 name=s.name,
+                role_title=computed_role,
+                image_url=computed_img,
                 backstory=s.backstory,
                 personality=s.personality,
                 internal_note=s.internal_note,
@@ -320,13 +350,15 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
         mandatory_evidence_ids = []
 
         for e in config.evidences:
+            computed_ev_img = e.image_url or "/static/assets/templates/evidence-template.svg"
             evidence = EvidenceModel(
                 scenario_id=scenario.id,
                 evidence_code=e.id,
                 name=e.name,
                 description=e.description,
                 internal_note=e.internal_note,
-                related_topic_id=e.related_topic_id
+                related_topic_id=e.related_topic_id,
+                image_url=computed_ev_img
             )
             db.add(evidence)
             db.flush()

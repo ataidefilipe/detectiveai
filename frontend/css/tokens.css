@@ -1,0 +1,66 @@
+/* ─── DETECTIVE AI — DESIGN TOKENS (NOIR) ─────────────────── */
+
+:root {
+  /* ─── Paleta de Superfícies & Cenário ─── */
+  --noir-bg-darkest:       #0a0c0f; /* Fundo profundo da tela */
+  --noir-bg-desk:          #12151b; /* Mesa de trabalho / escrivaninha */
+  --noir-surface-card:     #171b24; /* Fichas e cartões principais */
+  --noir-surface-elevated: #1e2430; /* Elementos elevados, inputs e chips */
+  --noir-surface-hover:    #242c3a; /* Hover em cards */
+  --noir-corkboard:        #191512; /* Fundo texturizado do mural */
+
+  /* ─── Papéis & Texturas de Arquivo Policial ─── */
+  --noir-paper-bg:         #ebd9b8; /* Papel manila / arquivo físico */
+  --noir-paper-bg-dark:    #dfccaa; /* Sombra / verso de papel */
+  --noir-paper-ink:        #1a1815; /* Tinta datilografada antiga */
+  --noir-paper-ink-muted:  #5c5549; /* Tinta apagada */
+
+  /* ─── Cores de Acento & Alertas Temáticos ─── */
+  --noir-amber:            #d4a359; /* Iluminação de abajur âmbar / destaque */
+  --noir-amber-hover:      #b8863b;
+  --noir-amber-glow:       rgba(212, 163, 89, 0.22);
+  --noir-amber-subtle:     rgba(212, 163, 89, 0.08);
+
+  --noir-crimson:          #c92a2a; /* Linhas vermelhas, contradições e perigo */
+  --noir-crimson-hover:    #a61e1e;
+  --noir-crimson-glow:     rgba(201, 42, 42, 0.25);
+  --noir-crimson-subtle:   rgba(201, 42, 42, 0.1);
+
+  --noir-cyan-hint:        #3b82f6; /* Pistas complementares */
+  --noir-green-ok:         #16a34a; /* Evidência confirmada / veredito correto */
+  --noir-yellow-warn:      #ca8a04; /* Atenção / contradição parcial */
+
+  /* ─── Tipografia & Textos ─── */
+  --noir-text-primary:     #e8ecf2; /* Leitura principal de alto contraste */
+  --noir-text-muted:       #8a94a6; /* Metadados e legendas */
+  --noir-text-dim:         #545e70; /* Textos secundários apagados */
+
+  --font-display:          'Playfair Display', Georgia, serif;
+  --font-body:             'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono:             'Courier Prime', 'Special Elite', 'JetBrains Mono', monospace;
+
+  /* ─── Bordas & Contornos ─── */
+  --noir-border-subtle:    #232a36;
+  --noir-border-medium:    #2e3748;
+  --noir-border-strong:    #3e4b60;
+  --noir-border-gold:      rgba(212, 163, 89, 0.45);
+  --noir-border-crimson:   rgba(201, 42, 42, 0.45);
+
+  /* ─── Raios & Espaçamentos ─── */
+  --noir-radius-xs:        4px;
+  --noir-radius-sm:        8px;
+  --noir-radius-md:        12px;
+  --noir-radius-lg:        18px;
+  --noir-radius-pill:      9999px;
+
+  /* ─── Sombras Chiaroscuro ─── */
+  --noir-shadow-sm:        0 2px 8px rgba(0, 0, 0, 0.5);
+  --noir-shadow-md:        0 8px 24px rgba(0, 0, 0, 0.6);
+  --noir-shadow-dossier:   0 16px 40px rgba(0, 0, 0, 0.8), 0 0 1px rgba(255, 255, 255, 0.05);
+  --noir-shadow-polaroid:  0 6px 16px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.4);
+  --noir-shadow-stamp:     inset 0 0 4px rgba(201, 42, 42, 0.2);
+
+  /* ─── Transições ─── */
+  --noir-transition-fast:  all 0.18s ease;
+  --noir-transition-base:  all 0.25s ease;
+}

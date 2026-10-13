@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="100%" height="100%">
+  <defs>
+    <radialGradient id="noirSpotlight" cx="50%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#2a3342"/>
+      <stop offset="60%" stop-color="#141820"/>
+      <stop offset="100%" stop-color="#0a0c0f"/>
+    </radialGradient>
+    <linearGradient id="silhouetteGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0e1117"/>
+      <stop offset="100%" stop-color="#050608"/>
+    </linearGradient>
+    <filter id="noirGrain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" result="noise"/>
+      <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.12 0" in="noise" result="coloredNoise"/>
+      <feComposite operator="in" in2="SourceGraphic"/>
+    </filter>
+  </defs>
+
+  <!-- Fundo com iluminação dramática chiaroscuro -->
+  <rect width="300" height="300" fill="url(#noirSpotlight)"/>
+
+  <!-- Grade de altura de identificação criminal sutil de fundo -->
+  <line x1="20" y1="70" x2="280" y2="70" stroke="#252d3a" stroke-width="1" stroke-dasharray="4,4"/>
+  <line x1="20" y1="110" x2="280" y2="110" stroke="#252d3a" stroke-width="1" stroke-dasharray="4,4"/>
+  <line x1="20" y1="150" x2="280" y2="150" stroke="#252d3a" stroke-width="1" stroke-dasharray="4,4"/>
+  <line x1="20" y1="190" x2="280" y2="190" stroke="#252d3a" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <!-- Silhueta da cabeça e ombros do suspeito -->
+  <g fill="url(#silhouetteGrad)">
+    <!-- Ombros / sobretudo -->
+    <path d="M 40 300 C 40 230, 80 205, 115 195 C 130 191, 170 191, 185 195 C 220 205, 260 230, 260 300 Z"/>
+    <!-- Colarinho clássico -->
+    <path d="M 125 190 L 150 220 L 175 190 L 160 180 L 140 180 Z" fill="#1b212b"/>
+    <!-- Gravata sutil -->
+    <polygon points="146,215 154,215 158,260 150,270 142,260" fill="#0b0d11"/>
+    <!-- Cabeça e queixo -->
+    <ellipse cx="150" cy="140" rx="42" ry="50"/>
+  </g>
+
+  <!-- Chapéu Fedora clássico noir -->
+  <g fill="#0c0e14" stroke="#1c232e" stroke-width="1.5">
+    <!-- Aba do chapéu -->
+    <path d="M 85 125 C 100 115, 200 115, 215 125 C 225 129, 210 135, 150 135 C 90 135, 75 129, 85 125 Z"/>
+    <!-- Copa do chapéu -->
+    <path d="M 110 120 C 108 90, 120 70, 140 72 C 150 73, 160 70, 190 75 C 195 95, 192 120, 190 120 Z"/>
+    <!-- Faixa do chapéu em âmbar escuro -->
+    <path d="M 109 116 C 130 112, 170 112, 191 116 L 191 121 C 170 117, 130 117, 109 121 Z" fill="#8c6b38" stroke="none"/>
+  </g>
+
+  <!-- Luz de contorno âmbar na silhueta -->
+  <path d="M 112 122 C 108 100, 118 75, 140 73" fill="none" stroke="#d4a359" stroke-width="2.5" opacity="0.6"/>
+  <path d="M 108 200 C 70 215, 45 250, 42 298" fill="none" stroke="#d4a359" stroke-width="2" opacity="0.4"/>
+
+  <!-- Placa de Identificação Policial na base (Placeholder) -->
+  <rect x="75" y="250" width="150" height="34" rx="3" fill="#12161f" stroke="#333d4e" stroke-width="1.5"/>
+  <text x="150" y="271" fill="#8a95a6" font-family="'Courier Prime', monospace" font-size="12" font-weight="700" letter-spacing="2" text-anchor="middle">SUSPEITO #00</text>
+</svg>

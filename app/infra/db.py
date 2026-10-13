@@ -24,10 +24,26 @@ def init_db():
         try:
             from sqlalchemy import inspect, text
             inspector = inspect(engine)
-            if "sessions" in inspector.get_table_names():
+            table_names = inspector.get_table_names()
+
+            if "sessions" in table_names:
                 columns = [c["name"] for c in inspector.get_columns("sessions")]
                 if "user_id" not in columns:
                     conn.execute(text("ALTER TABLE sessions ADD COLUMN user_id INTEGER REFERENCES users(id)"))
                     conn.commit()
+
+            if "suspects" in table_names:
+                s_cols = [c["name"] for c in inspector.get_columns("suspects")]
+                if "role_title" not in s_cols:
+                    conn.execute(text("ALTER TABLE suspects ADD COLUMN role_title VARCHAR"))
+                if "image_url" not in s_cols:
+                    conn.execute(text("ALTER TABLE suspects ADD COLUMN image_url VARCHAR"))
+                conn.commit()
+
+            if "evidences" in table_names:
+                e_cols = [c["name"] for c in inspector.get_columns("evidences")]
+                if "image_url" not in e_cols:
+                    conn.execute(text("ALTER TABLE evidences ADD COLUMN image_url VARCHAR"))
+                conn.commit()
         except Exception:
             pass

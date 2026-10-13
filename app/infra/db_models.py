@@ -50,6 +50,8 @@ class SuspectModel(Base):
     suspect_code = Column(String, nullable=True, index=True)
     scenario_id = Column(Integer, ForeignKey("scenarios.id"), nullable=False)
     name = Column(String, nullable=False)
+    role_title = Column(String, nullable=True)
+    image_url = Column(String, nullable=True)
     backstory = Column(String)
     personality = Column(String)
     internal_note = Column(String, nullable=True)
@@ -77,6 +79,7 @@ class EvidenceModel(Base):
     description = Column(String, nullable=True)
     internal_note = Column(String, nullable=True)
     related_topic_id = Column(String, nullable=True)
+    image_url = Column(String, nullable=True)
 
     scenario = relationship("ScenarioModel", back_populates="evidences")
     secrets = relationship("SecretModel", back_populates="evidence")
@@ -128,6 +131,19 @@ class SessionModel(Base):
     chat_messages = relationship("NpcChatMessageModel", back_populates="session")
     evidence_usages = relationship("SessionEvidenceUsageModel", back_populates="session")
     claim_states = relationship("SessionClaimStateModel", back_populates="session")
+    board_state = relationship("SessionBoardStateModel", back_populates="session", uselist=False, cascade="all, delete-orphan")
+
+
+class SessionBoardStateModel(Base):
+    """Estado espacial, conexões de barbante vermelho e post-its do Mural do Detetive."""
+    __tablename__ = "session_board_states"
+
+    session_id = Column(Integer, ForeignKey("sessions.id"), primary_key=True, index=True)
+    board_data = Column(JSON, default=dict)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+    session = relationship("SessionModel", back_populates="board_state")
+
 
 class SessionSuspectStateModel(Base):
     __tablename__ = "session_suspect_states"

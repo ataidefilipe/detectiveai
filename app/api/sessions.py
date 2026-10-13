@@ -4,9 +4,10 @@ from typing import List, Optional
 
 from app.api.schemas.chat import PlayerChatInput, PlayerTurnResponse
 from app.api.schemas.verdict import AccuseRequest, AccuseResponse
-from app.api.schemas.evidence import EvidenceResponse
-from app.api.schemas.suspect import SuspectSessionResponse
+from app.api.schemas.evidence import EvidenceResponse, EvidenceUsageDetailSchema
+from app.api.schemas.suspect import SuspectSessionResponse, UsedEvidenceItem, SuspectStateSchema
 from app.api.schemas.log import SessionTurnsLogResponse, TurnLogItemSchema, VerdictLogResponse
+from app.api.schemas.board import BoardStateResponse, SaveBoardStateRequest, BoardDataSchema, BoardNodeSchema
 
 from app.services.interrogation_turn_service import run_interrogation_turn
 from app.services.session_finalize_service import finalize_session
@@ -21,7 +22,8 @@ from app.infra.db import SessionLocal
 from app.infra.db_models import (
     NpcChatMessageModel, SessionModel, SessionSuspectStateModel,
     SessionSuspectTopicStateModel, SessionClaimStateModel, SuspectModel,
-    ScenarioModel, EvidenceModel, TurnLogModel, VerdictLogModel, UserModel
+    ScenarioModel, EvidenceModel, TurnLogModel, VerdictLogModel, UserModel,
+    SessionEvidenceUsageModel, SessionBoardStateModel
 )
 
 
@@ -368,11 +370,42 @@ def get_session_evidences(session_id: int):
             EvidenceModel.scenario_id == session.scenario_id
         ).all()
 
+        # 3. Buscar usos de evidência nesta sessão
+        usages = db.query(SessionEvidenceUsageModel).filter(
+            SessionEvidenceUsageModel.session_id == session_id
+        ).all()
+
+        # 4. Buscar suspeitos para mapear nomes
+        suspects = db.query(SuspectModel).filter(
+            SuspectModel.scenario_id == session.scenario_id
+        ).all()
+        suspect_map = {s.id: s.name for s in suspects}
+
+        # Agrupar usos por evidence_id
+        ev_usages_map: dict[int, list[EvidenceUsageDetailSchema]] = {}
+        for u in usages:
+            if u.evidence_id not in ev_usages_map:
+                ev_usages_map[u.evidence_id] = []
+            ev_usages_map[u.evidence_id].append(
+                EvidenceUsageDetailSchema(
+                    suspect_id=u.suspect_id,
+                    suspect_name=suspect_map.get(u.suspect_id, f"Suspeito #{u.suspect_id}"),
+                    was_effective=bool(u.was_effective),
+                    effect_type=u.effect_type,
+                    times_presented=u.times_presented or 1,
+                    last_used_at=u.last_used_at.isoformat() if u.last_used_at else None
+                )
+            )
+
         return [
             EvidenceResponse(
                 id=e.id,
                 name=e.name,
-                description=e.description
+                description=e.description,
+                evidence_code=e.evidence_code or f"EV-{e.id:02d}",
+                image_url=e.image_url or "/static/assets/templates/evidence-template.svg",
+                is_used=e.id in ev_usages_map and len(ev_usages_map[e.id]) > 0,
+                usages=ev_usages_map.get(e.id, [])
             )
             for e in evidences
         ]
@@ -404,22 +437,79 @@ def list_session_suspects(session_id: int):
         states = db.query(SessionSuspectStateModel).filter(
             SessionSuspectStateModel.session_id == session_id
         ).all()
-
         state_map = {s.suspect_id: s for s in states}
 
-        # 4. Montar resposta
-        return [
-            SuspectSessionResponse(
-                suspect_id=s.id,
-                name=s.name,
-                backstory=s.backstory,
-                initial_statement=s.initial_statement
+        # 4. Buscar histórico de evidências apresentadas nesta sessão
+        usages = db.query(SessionEvidenceUsageModel).filter(
+            SessionEvidenceUsageModel.session_id == session_id
+        ).all()
+
+        evidences = db.query(EvidenceModel).filter(
+            EvidenceModel.scenario_id == session.scenario_id
+        ).all()
+        ev_map = {e.id: e for e in evidences}
+
+        suspect_usages_map: dict[int, list[UsedEvidenceItem]] = {}
+        for u in usages:
+            if u.suspect_id not in suspect_usages_map:
+                suspect_usages_map[u.suspect_id] = []
+            ev_item = ev_map.get(u.evidence_id)
+            suspect_usages_map[u.suspect_id].append(
+                UsedEvidenceItem(
+                    evidence_id=u.evidence_id,
+                    name=ev_item.name if ev_item else f"Evidência #{u.evidence_id}",
+                    description=ev_item.description if ev_item else None,
+                    was_effective=bool(u.was_effective),
+                    effect_type=u.effect_type,
+                    times_presented=u.times_presented or 1,
+                    last_used_at=u.last_used_at.isoformat() if u.last_used_at else None
+                )
             )
-            for s in suspects
-        ]
+
+        # 5. Montar resposta rica de dossiê
+        response_list = []
+        for s in suspects:
+            st = state_map.get(s.id)
+            state_schema = None
+            if st:
+                state_schema = SuspectStateSchema(
+                    stance=st.stance or "neutral",
+                    patience=st.patience if st.patience is not None else 50.0,
+                    pressure=st.pressure if st.pressure is not None else 0.0,
+                    is_closed=bool(st.is_closed),
+                    progress=st.progress if st.progress is not None else 0.0
+                )
+
+            response_list.append(
+                SuspectSessionResponse(
+                    suspect_id=s.id,
+                    name=s.name,
+                    role_title=s.role_title or "Pessoa de Interesse",
+                    image_url=s.image_url or "/static/assets/templates/suspect-template.svg",
+                    backstory=s.backstory,
+                    initial_statement=s.initial_statement,
+                    personality=s.personality,
+                    state=state_schema,
+                    used_evidences=suspect_usages_map.get(s.id, [])
+                )
+            )
+
+        return response_list
 
     finally:
         db.close()
+
+
+@router.get(
+    "/sessions/{session_id}/suspects/{suspect_id}/dossier",
+    response_model=SuspectSessionResponse
+)
+def get_suspect_dossier(session_id: int, suspect_id: int):
+    suspects = list_session_suspects(session_id)
+    for s in suspects:
+        if s.suspect_id == suspect_id:
+            return s
+    raise HTTPException(status_code=404, detail="Suspect not found in this session.")
 
 
 @router.get(
@@ -518,5 +608,153 @@ def get_session_verdict_log(session_id: int):
         )
     finally:
         db.close()
+
+
+@router.get(
+    "/sessions/{session_id}/board",
+    response_model=BoardStateResponse
+)
+def get_session_board(session_id: int):
+    """
+    Retorna o estado do mural de investigação (posições, conexões de barbante e stickers).
+    Se não existir, inicializa um layout padrão com os suspeitos e evidências do caso.
+    """
+    db = SessionLocal()
+    try:
+        session = db.query(SessionModel).filter(SessionModel.id == session_id).first()
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+
+        board_record = db.query(SessionBoardStateModel).filter(
+            SessionBoardStateModel.session_id == session_id
+        ).first()
+
+        if board_record and board_record.board_data:
+            return BoardStateResponse(
+                session_id=session_id,
+                board_data=BoardDataSchema(**board_record.board_data),
+                updated_at=board_record.updated_at
+            )
+
+        # Gerar layout padrão inicial
+        suspects = db.query(SuspectModel).filter(
+            SuspectModel.scenario_id == session.scenario_id
+        ).order_by(SuspectModel.id).all()
+
+        evidences = db.query(EvidenceModel).filter(
+            EvidenceModel.scenario_id == session.scenario_id
+        ).order_by(EvidenceModel.id).all()
+
+        nodes: list[BoardNodeSchema] = []
+
+        # Fileira superior: Suspeitos
+        for i, s in enumerate(suspects):
+            nodes.append(
+                BoardNodeSchema(
+                    id=f"suspect-{s.id}",
+                    type="suspect",
+                    ref_id=s.id,
+                    title=s.name,
+                    subtitle=s.role_title or "Suspeito(a)",
+                    image_url=s.image_url or "/static/assets/templates/suspect-template.svg",
+                    x=float(60 + (i * 250)),
+                    y=float(60)
+                )
+            )
+
+        # Fileiras inferiores: Evidências
+        for j, e in enumerate(evidences):
+            col = j % 4
+            row = j // 4
+            nodes.append(
+                BoardNodeSchema(
+                    id=f"evidence-{e.id}",
+                    type="evidence",
+                    ref_id=e.id,
+                    title=e.name,
+                    subtitle=e.evidence_code or f"EV-{e.id:02d}",
+                    image_url=e.image_url or "/static/assets/templates/evidence-template.svg",
+                    x=float(60 + (col * 270)),
+                    y=float(390 + (row * 240))
+                )
+            )
+
+        initial_stickers = [
+            {
+                "id": "sticker-welcome",
+                "text": "📌 Dica do Detetive:\nConecte os alfinetes para traçar linhas de barbante vermelho entre suspeitos e evidências.",
+                "color": "yellow",
+                "x": float(840),
+                "y": float(60)
+            }
+        ]
+
+        board_data = BoardDataSchema(
+            nodes=nodes,
+            connections=[],
+            stickers=initial_stickers
+        )
+
+        if not board_record:
+            board_record = SessionBoardStateModel(
+                session_id=session_id,
+                board_data=board_data.model_dump()
+            )
+            db.add(board_record)
+        else:
+            board_record.board_data = board_data.model_dump()
+
+        db.commit()
+        db.refresh(board_record)
+
+        return BoardStateResponse(
+            session_id=session_id,
+            board_data=board_data,
+            updated_at=board_record.updated_at
+        )
+    finally:
+        db.close()
+
+
+@router.put(
+    "/sessions/{session_id}/board",
+    response_model=BoardStateResponse
+)
+def save_session_board(session_id: int, payload: SaveBoardStateRequest):
+    """
+    Atualiza o estado espacial do mural de investigação (nós, conexões e post-its).
+    """
+    db = SessionLocal()
+    try:
+        session = db.query(SessionModel).filter(SessionModel.id == session_id).first()
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+
+        board_record = db.query(SessionBoardStateModel).filter(
+            SessionBoardStateModel.session_id == session_id
+        ).first()
+
+        data_dict = payload.board_data.model_dump()
+
+        if not board_record:
+            board_record = SessionBoardStateModel(
+                session_id=session_id,
+                board_data=data_dict
+            )
+            db.add(board_record)
+        else:
+            board_record.board_data = data_dict
+
+        db.commit()
+        db.refresh(board_record)
+
+        return BoardStateResponse(
+            session_id=session_id,
+            board_data=payload.board_data,
+            updated_at=board_record.updated_at
+        )
+    finally:
+        db.close()
+
 
 
