@@ -15,7 +15,7 @@ from app.services.move_classification_service import classify_move
 from app.infra.db_models import (
     SessionEvidenceUsageModel, SessionModel, ScenarioModel, 
     NpcChatMessageModel, SuspectModel, SessionSuspectKnowledgeStateModel,
-    SessionClaimStateModel, TurnLogModel
+    SessionClaimStateModel, TurnLogModel, UserModel
 )
 from fastapi.encoders import jsonable_encoder
 from app.api.schemas.chat import (
@@ -34,7 +34,8 @@ def run_interrogation_turn(
     suspect_id: int,
     text: str,
     evidence_id: Optional[int],
-    db: Session
+    db: Session,
+    user: Optional[UserModel] = None
 ) -> Dict[str, Any]:
     """
     Orchestrates a full interrogation turn in a transactional manner.
@@ -68,6 +69,23 @@ def run_interrogation_turn(
     session = db.query(SessionModel).filter(SessionModel.id == session_id).first()
     scenario = db.query(ScenarioModel).filter(ScenarioModel.id == session.scenario_id).first()
     available_topics = scenario.topics if scenario and scenario.topics else []
+
+    turn_user = user
+    if turn_user is None and session and session.user_id:
+        turn_user = db.query(UserModel).filter(UserModel.id == session.user_id).first()
+
+    turn_classifier = None
+    if turn_user and turn_user.openai_api_key:
+        try:
+            from app.services.message_classifier_openai import OpenAISemanticMessageClassifier
+            c_model = turn_user.openai_classifier_model or turn_user.openai_model or settings.OPENAI_CLASSIFIER_MODEL
+            turn_classifier = OpenAISemanticMessageClassifier(
+                api_key=turn_user.openai_api_key,
+                model=c_model
+            )
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(f"[turn] Failed to create user OpenAI classifier: {e}")
     
     suspect_model = db.query(SuspectModel).filter(SuspectModel.id == suspect_id).first()
     suspect_profile = suspect_model.profile if suspect_model else None
@@ -103,6 +121,7 @@ def run_interrogation_turn(
         evidences=semantic_ctx["public_evidences"],
         suspect_state=semantic_ctx["suspect_state"],
         active_topic_id=semantic_ctx["active_topic_id"],
+        classifier=turn_classifier,
     )
 
     # 1.2.5 Resolve move_type: GPT tem precedência, com validação (T1.4)
@@ -410,7 +429,8 @@ def run_interrogation_turn(
         evidence_effect=evidence_effect,
         newly_broken_claims=newly_broken_claims,
         effective_message_ids=effective_message_ids,
-        db=db
+        db=db,
+        user=turn_user
     )
     ai_trace = npc_msg.pop("ai_trace", None) or {}
 

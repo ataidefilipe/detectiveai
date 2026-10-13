@@ -404,7 +404,9 @@ def list_sessions(user_id: Optional[int] = None, db: Optional[Session] = None) -
                 "result_type": s.result_type,
                 "created_at": s.created_at.isoformat() if s.created_at else None,
                 "messages_count": len(s.chat_messages) if s.chat_messages is not None else 0,
-                "user_id": s.user_id
+                "user_id": s.user_id,
+                "user_name": s.user.name if s.user else None,
+                "user_email": s.user.email if s.user else None,
             })
         return results
     finally:
@@ -412,10 +414,10 @@ def list_sessions(user_id: Optional[int] = None, db: Optional[Session] = None) -
             db.close()
 
 
-def delete_session(session_id: int, user_id: Optional[int] = None, db: Optional[Session] = None) -> bool:
+def delete_session(session_id: int, user_id: Optional[int] = None, is_admin: bool = False, db: Optional[Session] = None) -> bool:
     """
     Deletes a session and its associated data.
-    If user_id is provided, ensures the session belongs to that user (or user is authorized).
+    If user_id is provided, ensures the session belongs to that user (or user is authorized as admin).
     """
     close_session = False
     if db is None:
@@ -427,7 +429,7 @@ def delete_session(session_id: int, user_id: Optional[int] = None, db: Optional[
         if not session:
             raise NotFoundError(f"Session with id {session_id} not found.")
 
-        if user_id is not None and session.user_id is not None and session.user_id != user_id:
+        if not is_admin and user_id is not None and session.user_id is not None and session.user_id != user_id:
             raise PermissionError("Você não tem permissão para apagar esta sessão.")
 
         # Deletar explicitamente os registros dependentes

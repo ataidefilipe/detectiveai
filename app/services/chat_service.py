@@ -16,7 +16,8 @@ from app.infra.db_models import (
     EvidenceModel,
     ScenarioModel,
     SessionSuspectKnowledgeStateModel,
-    SessionClaimStateModel
+    SessionClaimStateModel,
+    UserModel
 )
 from app.core.exceptions import NotFoundError, RuleViolationError
 
@@ -269,11 +270,13 @@ def _generate_npc_text_with_fallback(
     player_message_dict: dict,
     render_context: dict,
     revealed_now: list,
-    effective_message_ids: Optional[List[int]] = None
+    effective_message_ids: Optional[List[int]] = None,
+    adapter: Optional[Any] = None
 ) -> tuple:
     """Returns (reply_text, fallback_error). fallback_error is None when the main adapter succeeded."""
+    active_adapter = adapter or ai
     try:
-        reply_text = ai.generate_reply(
+        reply_text = active_adapter.generate_reply(
             suspect_state=suspect_state,
             npc_context=npc_context,
             chat_history=chat_history,
@@ -311,7 +314,8 @@ def add_npc_reply(
     evidence_effect: str = "none",
     newly_broken_claims: Optional[List[dict]] = None,
     effective_message_ids: Optional[List[int]] = None,
-    db: Session = None
+    db: Session = None,
+    user: Optional[UserModel] = None
 ) -> dict:
     """
     Generates an NPC reply after a player sends a message.
@@ -413,6 +417,24 @@ def add_npc_reply(
             patience=state.patience
         )
 
+        turn_adapter = None
+        turn_user = user
+        if turn_user is None and session.user_id:
+            turn_user = db.query(UserModel).filter(UserModel.id == session.user_id).first()
+
+        if turn_user and turn_user.openai_api_key:
+            try:
+                from app.services.ai_adapter_openai import OpenAINpcAIAdapter
+                chat_m = turn_user.openai_chat_model or turn_user.openai_model or settings.OPENAI_MODEL
+                turn_adapter = OpenAINpcAIAdapter(
+                    api_key=turn_user.openai_api_key,
+                    model=chat_m
+                )
+            except Exception as e:
+                logger.warning(f"Failed to create user OpenAI adapter: {e}")
+
+        active_adapter = turn_adapter or ai
+
         started = time.perf_counter()
         reply_text, fallback_error = _generate_npc_text_with_fallback(
             suspect_id,
@@ -422,7 +444,8 @@ def add_npc_reply(
             player_message_dict,
             render_context,
             revealed_now,
-            effective_message_ids
+            effective_message_ids,
+            adapter=turn_adapter
         )
         latency_ms = int((time.perf_counter() - started) * 1000)
         raw_reply = reply_text
@@ -465,8 +488,8 @@ def add_npc_reply(
         except Exception:
             prompt = None  # logging nunca deve quebrar o turno
         ai_trace = {
-            "adapter": type(ai).__name__,
-            "model": getattr(ai, "model", None),
+            "adapter": type(active_adapter).__name__,
+            "model": getattr(active_adapter, "model", None),
             "latency_ms": latency_ms,
             "fallback_error": fallback_error,
             "guard_blocked": was_blocked,

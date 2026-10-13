@@ -83,6 +83,10 @@ def test_get_session_turn_logs_and_prompt_filtering(test_scenario):
     assert logs_prompt_resp.status_code == 200
     turn_with_prompt = logs_prompt_resp.json()["turns"][0]
     assert turn_with_prompt["prompt"] is not None
+    assert turn_with_prompt["state_before"] is not None
+    assert turn_with_prompt["state_after"] is not None
+    assert turn_with_prompt["ai"] is not None
+    assert turn_with_prompt["transition"] is not None
 
     # 8. Filtro por suspect_id
     logs_filtered = client.get(f"/sessions/{session_id}/logs/turns?suspect_id={suspect_id}")

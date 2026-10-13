@@ -45,5 +45,17 @@ def init_db():
                 if "image_url" not in e_cols:
                     conn.execute(text("ALTER TABLE evidences ADD COLUMN image_url VARCHAR"))
                 conn.commit()
+
+            if "users" in table_names:
+                u_cols = [c["name"] for c in inspector.get_columns("users")]
+                if "openai_api_key" not in u_cols:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN openai_api_key VARCHAR"))
+                if "openai_model" not in u_cols:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN openai_model VARCHAR"))
+                if "openai_chat_model" not in u_cols:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN openai_chat_model VARCHAR"))
+                if "openai_classifier_model" not in u_cols:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN openai_classifier_model VARCHAR"))
+                conn.commit()
         except Exception:
             pass

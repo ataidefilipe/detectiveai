@@ -110,3 +110,105 @@ def test_user_session_isolation_and_delete():
     list_after = client.get("/sessions", headers={"Authorization": f"Bearer {token1}"})
     ids_after = [s["id"] for s in list_after.json()]
     assert session1_id not in ids_after
+
+
+def test_admin_role_and_user_management():
+    # 1. Login como admin via is_admin=True
+    resp_admin = client.post("/auth/google", json={
+        "is_mock": True,
+        "is_admin": True,
+        "mock_email": "admin@detective.ai",
+        "mock_name": "Admin Chefe"
+    })
+    assert resp_admin.status_code == 200
+    admin_data = resp_admin.json()
+    assert admin_data["user"]["role"] == "admin"
+    admin_token = admin_data["access_token"]
+
+    # 2. Login como player comum
+    resp_player = client.post("/auth/google", json={
+        "is_mock": True,
+        "mock_email": "common_player@test.com",
+        "mock_name": "Common Player"
+    })
+    assert resp_player.status_code == 200
+    player_data = resp_player.json()
+    assert player_data["user"]["role"] == "player"
+    player_token = player_data["access_token"]
+    player_id = player_data["user"]["id"]
+
+    # 3. Player tenta listar /auth/users -> 403 Forbidden
+    resp_forbidden = client.get("/auth/users", headers={"Authorization": f"Bearer {player_token}"})
+    assert resp_forbidden.status_code == 403
+
+    # 4. Admin lista /auth/users -> 200 OK
+    resp_users = client.get("/auth/users", headers={"Authorization": f"Bearer {admin_token}"})
+    assert resp_users.status_code == 200
+    users_list = resp_users.json()
+    assert any(u["id"] == player_id for u in users_list)
+
+    # 5. Player tenta promover outro -> 403 Forbidden
+    resp_patch_forbidden = client.patch(
+        f"/auth/users/{player_id}/role",
+        json={"role": "admin"},
+        headers={"Authorization": f"Bearer {player_token}"}
+    )
+    assert resp_patch_forbidden.status_code == 403
+
+    # 6. Admin promove player -> 200 OK
+    resp_patch_ok = client.patch(
+        f"/auth/users/{player_id}/role",
+        json={"role": "admin"},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert resp_patch_ok.status_code == 200
+    assert resp_patch_ok.json()["role"] == "admin"
+
+
+def test_admin_session_management():
+    from tests.conftest import TestingSessionLocal
+    db = TestingSessionLocal()
+    try:
+        scenario = ScenarioModel(scenario_code="test_scen_admin", title="Caso Admin", culprit_id=1)
+        db.add(scenario)
+        db.commit()
+        scenario_id = scenario.id
+    finally:
+        db.close()
+
+    # Criar player e admin
+    resp_p = client.post("/auth/google", json={
+        "is_mock": True,
+        "mock_email": "player_case@test.com",
+        "mock_name": "Player Case"
+    })
+    p_token = resp_p.json()["access_token"]
+
+    resp_a = client.post("/auth/google", json={
+        "is_mock": True,
+        "is_admin": True,
+        "mock_email": "admin@detective.ai",
+        "mock_name": "Admin Inspector"
+    })
+    a_token = resp_a.json()["access_token"]
+
+    # Player cria sessão
+    create_resp = client.post(
+        "/sessions",
+        json={"scenario_id": scenario_id},
+        headers={"Authorization": f"Bearer {p_token}"}
+    )
+    session_id = create_resp.json()["session_id"]
+
+    # Admin consulta all_sessions=true -> deve ver a sessão do player com dados do usuário
+    resp_admin_list = client.get("/sessions?all_sessions=true", headers={"Authorization": f"Bearer {a_token}"})
+    assert resp_admin_list.status_code == 200
+    sessions = resp_admin_list.json()
+    found = next((s for s in sessions if s["id"] == session_id), None)
+    assert found is not None
+    assert found["user_email"] == "player_case@test.com"
+    assert found["user_name"] == "Player Case"
+
+    # Admin consegue apagar a sessão do player -> 200 OK
+    del_admin_resp = client.delete(f"/sessions/{session_id}", headers={"Authorization": f"Bearer {a_token}"})
+    assert del_admin_resp.status_code == 200

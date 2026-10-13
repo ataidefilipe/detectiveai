@@ -107,6 +107,10 @@ class UserModel(Base):
     is_active = Column(Boolean, default=True)
     role = Column(String, default="player")
     created_at = Column(DateTime, default=datetime.now)
+    openai_api_key = Column(String, nullable=True)
+    openai_model = Column(String, nullable=True)
+    openai_chat_model = Column(String, nullable=True)
+    openai_classifier_model = Column(String, nullable=True)
 
     sessions = relationship("SessionModel", back_populates="user")
 

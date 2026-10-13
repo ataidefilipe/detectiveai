@@ -58,6 +58,7 @@ class Settings(BaseSettings):
 
     # --- Auth & User Settings ---
     GOOGLE_CLIENT_ID: str = ""
+    ADMIN_EMAILS: str = "admin@detective.ai"
     JWT_SECRET_KEY: str = "detective-ai-jwt-secret-key-super-secure"
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7

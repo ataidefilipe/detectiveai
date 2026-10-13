@@ -1,5 +1,5 @@
 import os
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 from openai import OpenAI
 from app.services.ai_adapter import NpcAIAdapter
@@ -17,14 +17,14 @@ class OpenAINpcAIAdapter(NpcAIAdapter):
     - It must never infer or invent secrets
     """
 
-    def __init__(self):
-        api_key = os.getenv("OPENAI_API_KEY")
+    def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
+        api_key = api_key or os.getenv("OPENAI_API_KEY")
         if not api_key:
             raise RuntimeError("OPENAI_API_KEY not set")
 
         from app.core.config import settings
         self.client = OpenAI(api_key=api_key)
-        self.model = os.getenv("OPENAI_MODEL", settings.OPENAI_MODEL)
+        self.model = model or os.getenv("OPENAI_MODEL", settings.OPENAI_MODEL)
 
     def generate_reply(
         self,

@@ -71,13 +71,13 @@ class OpenAISemanticMessageClassifier(MessageClassifier):
     Não revela segredos, não decide resultado do jogo.
     """
 
-    def __init__(self):
-        api_key = os.getenv("OPENAI_API_KEY")
+    def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
+        api_key = api_key or os.getenv("OPENAI_API_KEY")
         if not api_key:
             raise RuntimeError("OPENAI_API_KEY not set")
 
         from app.core.config import settings
-        self.model = settings.OPENAI_CLASSIFIER_MODEL
+        self.model = model or settings.OPENAI_CLASSIFIER_MODEL
         self.timeout = settings.OPENAI_CLASSIFIER_TIMEOUT_SECONDS
         self.max_retries = settings.OPENAI_CLASSIFIER_MAX_RETRIES
         self.confidence_threshold = settings.OPENAI_CLASSIFIER_CONFIDENCE_THRESHOLD

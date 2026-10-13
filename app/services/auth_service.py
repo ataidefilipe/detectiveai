@@ -39,7 +39,21 @@ def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
         return None
 
 
-def verify_google_id_token(token: str, is_mock: bool = False, mock_email: Optional[str] = None, mock_name: Optional[str] = None) -> Dict[str, Any]:
+def is_admin_email(email: Optional[str]) -> bool:
+    """Verifica se o e-mail consta na lista de administradores configurados."""
+    if not email:
+        return False
+    configured = [e.strip().lower() for e in settings.ADMIN_EMAILS.split(",") if e.strip()]
+    return email.lower() in configured
+
+
+def verify_google_id_token(
+    token: str,
+    is_mock: bool = False,
+    mock_email: Optional[str] = None,
+    mock_name: Optional[str] = None,
+    is_admin: bool = False
+) -> Dict[str, Any]:
     """
     Valida o Google ID Token fornecido pelo Google Identity Services (frontend).
     Caso o Google Client ID não esteja configurado no .env ou is_mock seja solicitado,
@@ -47,13 +61,15 @@ def verify_google_id_token(token: str, is_mock: bool = False, mock_email: Option
     """
     # Modo Mock / Dev
     if is_mock or not settings.GOOGLE_CLIENT_ID or token.startswith("mock-"):
-        email = mock_email or "detetive@detective.ai"
-        name = mock_name or "Detetive Convidado"
+        email = mock_email or ("admin@detective.ai" if is_admin else "detetive@detective.ai")
+        name = mock_name or ("Administrador Chefe" if is_admin else "Detetive Convidado")
+        role = "admin" if (is_admin or is_admin_email(email)) else "player"
         return {
             "google_sub": f"mock-sub-{email}",
             "email": email,
             "name": name,
-            "picture": "https://api.dicebear.com/7.x/bottts/svg?seed=detective",
+            "picture": "https://api.dicebear.com/7.x/bottts/svg?seed=admin" if is_admin else "https://api.dicebear.com/7.x/bottts/svg?seed=detective",
+            "role": role,
         }
 
     # Validação Oficial Google
@@ -71,11 +87,13 @@ def verify_google_id_token(token: str, is_mock: bool = False, mock_email: Option
         if not email:
             raise ValueError("O token do Google não contém e-mail.")
 
+        role = "admin" if is_admin_email(email) else "player"
         return {
             "google_sub": idinfo.get("sub"),
             "email": email,
             "name": idinfo.get("name", "Detetive"),
             "picture": idinfo.get("picture"),
+            "role": role,
         }
     except Exception as exc:
         raise HTTPException(
@@ -93,21 +111,28 @@ def get_or_create_user(user_data: Dict[str, Any], db: Session) -> UserModel:
     if not user and user_data.get("email"):
         user = db.query(UserModel).filter(UserModel.email == user_data["email"]).first()
 
+    email = user_data["email"]
+    is_admin = is_admin_email(email) or user_data.get("role") == "admin"
+    assigned_role = "admin" if is_admin else user_data.get("role", "player")
+
     if not user:
         user = UserModel(
             google_sub=user_data.get("google_sub"),
-            email=user_data["email"],
+            email=email,
             name=user_data.get("name", "Detetive"),
             picture=user_data.get("picture"),
             is_active=True,
-            role="player"
+            role=assigned_role
         )
         db.add(user)
         db.commit()
         db.refresh(user)
     else:
-        # Atualiza nome/foto se mudou
+        # Atualiza nome/foto/role se mudou
         updated = False
+        if is_admin and user.role != "admin":
+            user.role = "admin"
+            updated = True
         if user_data.get("name") and user.name != user_data["name"]:
             user.name = user_data["name"]
             updated = True
@@ -156,5 +181,17 @@ def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Autenticação necessária.",
             headers={"WWW-Authenticate": "Bearer"}
+        )
+    return user
+
+
+def require_admin(
+    user: UserModel = Depends(get_current_user)
+) -> UserModel:
+    """Exige que o usuário autenticado tenha o papel de admin."""
+    if user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acesso restrito a administradores do sistema."
         )
     return user

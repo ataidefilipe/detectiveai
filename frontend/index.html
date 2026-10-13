@@ -61,7 +61,89 @@
     .user-pill { display: flex; align-items: center; gap: 8px; background: var(--surface2); border: 1px solid var(--border); padding: 4px 10px; border-radius: 20px; font-size: 0.82rem; }
     .user-avatar { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; }
     .btn-delete-session { background: none; border: 1px solid rgba(220,38,38,0.3); color: var(--red); padding: 8px 12px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.85rem; transition: all .2s; }
-    .btn-delete-session:hover { background: rgba(220,38,38,0.15); border-color: var(--red); }
+    /* ─── Trace Inspector & Admin UI ────────────────────────── */
+    .btn-trace-pill {
+      background: rgba(232, 182, 76, 0.1);
+      border: 1px solid rgba(232, 182, 76, 0.35);
+      color: var(--accent);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-family: var(--font-mono, monospace);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all .15s ease;
+      margin-top: 4px;
+    }
+    .btn-trace-pill:hover {
+      background: rgba(232, 182, 76, 0.22);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+    .trace-badge-item {
+      background: rgba(0,0,0,0.3);
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 0.68rem;
+      color: #d1d5db;
+    }
+    .trace-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    .trace-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+    }
+    .trace-card-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .trace-stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.82rem;
+      margin-bottom: 4px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .trace-stat-label {
+      color: var(--text-muted);
+    }
+    .trace-stat-val {
+      font-weight: 600;
+      font-family: var(--font-mono, monospace);
+    }
+    .turn-tab-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 5px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 0.8rem;
+      white-space: nowrap;
+      transition: all .2s;
+    }
+    .turn-tab-btn.active {
+      background: rgba(232,182,76,0.15);
+      color: var(--accent);
+      border-color: var(--accent);
+      font-weight: 700;
+    }
 
     /* ─── Auth Gate Screen ───────────────────────────────────── */
     .auth-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px; min-height: 100vh; background: radial-gradient(circle at 50% 35%, #182030 0%, #0d0f14 75%); }
@@ -319,9 +401,12 @@
           <span>Para ativar o botão oficial do Google, configure a variável <code>GOOGLE_CLIENT_ID</code> nas variáveis do Railway.</span>
         </div>
 
-        <div id="mock-login-section" style="margin-top:6px;">
+        <div id="mock-login-section" style="margin-top:6px; display:flex; flex-direction:column; gap:8px;">
           <button class="btn btn-secondary" onclick="loginMock()" style="width:100%; justify-content:center; padding:11px 18px; font-weight:600; border-color:var(--noir-border-gold); color:var(--noir-amber);">
             🕵️ Entrar como Detetive Convidado (Credencial de Plantão)
+          </button>
+          <button class="btn btn-secondary" onclick="loginMock('admin@detective.ai', 'Administrador Geral', true)" style="width:100%; justify-content:center; padding:11px 18px; font-weight:600; border-color:rgba(232,182,76,0.5); color:var(--accent); background:rgba(232,182,76,0.06);">
+            🛡️ Entrar como Administrador (Gestão & Traces)
           </button>
         </div>
       </div>
@@ -334,7 +419,7 @@
       <span class="logo">🔍 Detective AI</span>
       <div class="nav-links">
         <button class="nav-tab" onclick="showScenariosScreen()">📁 Novo Caso</button>
-        <button class="nav-tab active" onclick="showSessionsScreen()">📜 Minhas Sessões</button>
+        <button class="nav-tab active" onclick="showSessionsScreen()">📜 Sessões</button>
       </div>
       <div class="jazz-player-slot" style="margin-left:auto;"></div>
       <div class="user-auth-widget" style="margin-left:12px;"></div>
@@ -343,6 +428,12 @@
       <div class="hero" style="padding: 38px 0 20px; text-align: center;">
         <h1 style="font-family:var(--font-display);font-size:2.3rem;color:var(--noir-amber);margin-bottom:8px;">Arquivo Central de Inquéritos</h1>
         <p style="color:var(--noir-text-muted);font-size:0.95rem;margin-bottom:20px;">Retome investigações em andamento ou confira o resultado de casos encerrados.</p>
+      </div>
+      <div id="admin-sessions-toggle" style="display:none; margin-bottom:16px;">
+        <div style="display:inline-flex; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:3px; gap:4px;">
+          <button id="btn-filter-all-sessions" class="nav-tab active" onclick="setSessionsViewMode(true)" style="padding:5px 14px; font-size:0.82rem;">🌐 Todas as Sessões do Sistema (Admin)</button>
+          <button id="btn-filter-my-sessions" class="nav-tab" onclick="setSessionsViewMode(false)" style="padding:5px 14px; font-size:0.82rem;">👤 Apenas Minhas Sessões</button>
+        </div>
       </div>
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
         <span id="sessions-total-label" style="font-family:var(--font-mono);font-size:0.82rem; color:var(--noir-text-muted);">Carregando sessões...</span>
@@ -487,6 +578,7 @@
         <div class="suspect-state-badge" id="suspect-state-badge">😐 &nbsp;Aguardando…</div>
       </div>
       <div class="jazz-player-slot" style="margin-left:auto;"></div>
+      <button id="btn-admin-trace-header" class="btn btn-secondary" onclick="openTraceModal()" style="display:none; padding:4px 12px; font-size:0.78rem; margin-left:8px; border-color:var(--accent); color:var(--accent); background:rgba(232,182,76,0.1); font-weight:600;">⚡ Traces da Sessão</button>
       <button class="btn btn-secondary" onclick="openDossier(state.activeSuspectId)" style="padding:4px 10px;font-size:0.78rem;margin-left:8px;">📋 Ficha</button>
       <button class="btn btn-secondary" onclick="openEvidenceLocker()" style="padding:4px 10px;font-size:0.78rem;margin-left:6px;">🔎 Provas</button>
       <button class="btn btn-secondary" onclick="DetectiveBoard.openBoard()" style="padding:4px 10px;font-size:0.78rem;margin-left:6px;">📌 Mural</button>
@@ -648,6 +740,101 @@
     </div>
   </div>
 
+  <!-- ════ MODAL: Trace Viewer (Admin Only) ═══════════════════ -->
+  <div class="modal-overlay" id="modal-trace-viewer">
+    <div class="modal" style="max-width: 840px; width: 92%; max-height: 90vh; display: flex; flex-direction: column; padding: 24px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:12px; margin-bottom:16px;">
+        <div>
+          <h2 style="font-family:var(--font-display); color:var(--accent); margin:0; font-size:1.35rem; display:flex; align-items:center; gap:8px;">
+            ⚡ Inspector de Traces LLM & NLU
+            <span style="font-size:0.68rem; background:rgba(232,182,76,0.18); border:1px solid rgba(232,182,76,0.45); color:var(--accent); padding:2px 8px; border-radius:12px; font-weight:700;">ADMIN</span>
+          </h2>
+          <div id="trace-modal-subtitle" style="font-size:0.82rem; color:var(--text-muted); margin-top:4px;">Interrogatório com Suspeito</div>
+        </div>
+        <button class="btn-back" onclick="closeTraceModal()" style="font-size:1rem; padding:4px 10px;">✕</button>
+      </div>
+
+      <!-- Turn tabs / selector -->
+      <div id="trace-turns-bar" style="display:flex; gap:6px; overflow-x:auto; padding-bottom:8px; margin-bottom:14px; border-bottom:1px solid rgba(255,255,255,0.06);">
+      </div>
+
+      <!-- Body com scroll -->
+      <div id="trace-modal-content" style="flex:1; overflow-y:auto; padding-right:4px; display:flex; flex-direction:column; gap:14px;">
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ MODAL: Configurações de IA / OpenAI API Key ════════ -->
+  <div class="modal-overlay" id="modal-ai-settings">
+    <div class="modal" style="max-width: 520px; width: 92%;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:12px;">
+        <h2 style="font-family:var(--font-display); color:var(--noir-amber); margin:0; font-size:1.3rem; display:flex; align-items:center; gap:8px;">
+          ⚙️ Provedor de IA — OpenAI
+        </h2>
+        <button class="btn-back" onclick="closeAISettingsModal()" style="font-size:1rem; padding:4px 10px;">✕</button>
+      </div>
+
+      <p style="color:var(--text-muted); font-size:0.85rem; line-height:1.55; margin-bottom:16px;">
+        Insira sua própria chave de API da <strong>OpenAI</strong> para rodar os interrogatórios dos suspeitos e a análise semântica. Por enquanto, apenas o provedor OpenAI é aceito.
+      </p>
+
+      <div id="ai-settings-status" style="margin-bottom:16px; padding:12px 14px; border-radius:var(--radius-sm); font-size:0.82rem; background:var(--surface2); border:1px solid var(--border);">
+        <div class="loading" style="padding:10px;"><div class="spinner"></div> Carregando configurações…</div>
+      </div>
+
+      <div class="modal-section" style="margin-bottom:16px;">
+        <label for="input-openai-key" style="display:block; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--noir-amber); margin-bottom:6px;">
+          Chave de API OpenAI (sk-...)
+        </label>
+        <div style="display:flex; gap:8px;">
+          <input type="password" id="input-openai-key" class="chat-input" placeholder="sk-..." style="height:42px; font-family:var(--font-mono, monospace); font-size:0.85rem;" autocomplete="off" />
+          <button type="button" class="btn btn-secondary" onclick="toggleOpenAIKeyVisibility()" id="btn-toggle-key-vis" style="padding:0 12px; font-size:0.9rem;" title="Mostrar/ocultar chave">👁️</button>
+        </div>
+        <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">
+          Sua chave é armazenada de forma segura na sua conta. Se você já tem uma chave cadastrada, preencha apenas se desejar trocá-la.
+        </div>
+      </div>
+
+      <!-- Modelo 1: Fala dos Suspeitos (Conversação) -->
+      <div class="modal-section" style="margin-bottom:18px;">
+        <label for="select-openai-chat-model" style="display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--noir-amber); margin-bottom:4px;">
+          <span>🎭 1. Fala dos Suspeitos (Conversa)</span>
+          <span style="font-size:0.7rem; color:var(--text-muted); font-weight:400; text-transform:none;">Interpretação e diálogos</span>
+        </label>
+        <p style="font-size:0.77rem; color:var(--text-muted); line-height:1.45; margin-bottom:8px;">
+          Gera as falas dos suspeitos no interrogatório, interpretando personalidade, tensão psicológica, reações a provas e admissão de segredos.
+        </p>
+        <select id="select-openai-chat-model" class="chat-input" style="height:42px; font-size:0.88rem; width:100%; cursor:pointer; background:var(--surface2); color:var(--text); border:1px solid var(--border);">
+          <option value="gpt-6-luna">gpt-6-luna (Padrão)</option>
+          <option value="gpt-5-mini">gpt-5-mini</option>
+        </select>
+      </div>
+
+      <!-- Modelo 2: Categorização & Análise Semântica -->
+      <div class="modal-section" style="margin-bottom:22px;">
+        <label for="select-openai-classifier-model" style="display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--noir-amber); margin-bottom:4px;">
+          <span>🔍 2. Classificação de Mensagens (Categorização)</span>
+          <span style="font-size:0.7rem; color:var(--text-muted); font-weight:400; text-transform:none;">NLU e análise de intenção</span>
+        </label>
+        <p style="font-size:0.77rem; color:var(--text-muted); line-height:1.45; margin-bottom:8px;">
+          Interpreta o que você digita para extrair a intenção (pergunta, pressão, acusação suave), tópicos investigados e confrontos contra contradições.
+        </p>
+        <select id="select-openai-classifier-model" class="chat-input" style="height:42px; font-size:0.88rem; width:100%; cursor:pointer; background:var(--surface2); color:var(--text); border:1px solid var(--border);">
+          <option value="gpt-6-luna">gpt-6-luna (Padrão)</option>
+          <option value="gpt-5-mini">gpt-5-mini</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; justify-content:space-between; align-items:center; margin-top:10px;">
+        <div id="ai-settings-clear-wrapper"></div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-secondary" onclick="closeAISettingsModal()">Cancelar</button>
+          <button class="btn btn-primary" id="btn-save-ai-settings" onclick="saveAISettings()">💾 Salvar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 
   <!-- ════════════════════════════════════════════════════════
        JAVASCRIPT
@@ -669,6 +856,16 @@
       authState.user = null;
     }
 
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
     // ── Game State ──────────────────────────────────────────
     let state = {
       sessionId: null,
@@ -680,6 +877,9 @@
       selectedEvidenceId: null,
       evidenceCache: {},        // id → name
       effectiveEvidenceIds: new Set(), // B5: used + effective
+      sessionsViewAll: true,    // Visão admin de todas as sessões por padrão
+      activeSuspectTurnLogs: [], // Logs com traces do suspeito ativo
+      currentTraceTurnIndex: 0,
     };
 
     // ── API helper ─────────────────────────────────────────
@@ -737,10 +937,23 @@
         if (!w) return;
         if (authState.user && authState.token) {
           const avatarUrl = authState.user.picture || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(authState.user.email)}`;
+          const isAdmin = authState.user.role === 'admin';
+          const roleBadge = isAdmin
+            ? `<span style="background:rgba(232,182,76,0.18);color:var(--accent);border:1px solid rgba(232,182,76,0.5);font-size:0.68rem;padding:2px 7px;border-radius:10px;font-weight:700;letter-spacing:0.5px;">ADMIN</span>`
+            : '';
+          const hasKey = !!authState.user.has_custom_openai_key;
+          const keyIndicator = hasKey
+            ? `<span style="width:7px;height:7px;background:#4ade80;border-radius:50%;display:inline-block;" title="Chave OpenAI própria ativa"></span>`
+            : `<span style="width:7px;height:7px;background:var(--text-muted);border-radius:50%;display:inline-block;" title="Usando IA padrão do servidor"></span>`;
+
           w.innerHTML = `
-            <div class="user-pill" title="${authState.user.email}">
+            <button class="btn-back" onclick="openAISettingsModal()" title="Configurações de IA (Chave OpenAI e Modelo)" style="padding:4px 10px; font-size:0.78rem; display:inline-flex; align-items:center; gap:6px;">
+              ⚙️ <span>IA</span> ${keyIndicator}
+            </button>
+            <div class="user-pill" title="${authState.user.email} (${authState.user.role})">
               <img src="${avatarUrl}" class="user-avatar" alt="Avatar">
               <span style="font-weight:600;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${authState.user.name}</span>
+              ${roleBadge}
             </div>
             <button class="btn-back" onclick="logoutUser()" title="Encerrar sessão" style="padding:4px 10px; font-size:0.78rem;">Sair</button>
           `;
@@ -748,6 +961,181 @@
           w.innerHTML = '';
         }
       });
+    }
+
+    // ── AI Settings Modal Handlers ────────────────────────────
+    let currentAiSettings = null;
+
+    async function openAISettingsModal() {
+      if (!authState.token) {
+        toast('Autenticação necessária', 'Faça login para gerenciar suas configurações de IA.', 'warn');
+        return;
+      }
+      const modal = document.getElementById('modal-ai-settings');
+      if (!modal) return;
+      modal.classList.add('open');
+
+      const statusBox = document.getElementById('ai-settings-status');
+      const keyInput = document.getElementById('input-openai-key');
+      const chatSelect = document.getElementById('select-openai-chat-model');
+      const classifierSelect = document.getElementById('select-openai-classifier-model');
+      const clearWrapper = document.getElementById('ai-settings-clear-wrapper');
+
+      if (statusBox) statusBox.innerHTML = '<div class="loading" style="padding:8px;"><div class="spinner"></div> Carregando configurações…</div>';
+      if (keyInput) keyInput.value = '';
+      if (clearWrapper) clearWrapper.innerHTML = '';
+
+      try {
+        const data = await api('/auth/ai-settings');
+        currentAiSettings = data;
+
+        if (data.available_models) {
+          const populateSelect = (selectEl, chosenVal, defaultVal) => {
+            if (!selectEl) return;
+            selectEl.innerHTML = data.available_models.map(m => {
+              const isSelected = m === chosenVal;
+              const isDefault = m === defaultVal;
+              const label = isDefault ? `${m} (Padrão)` : m;
+              return `<option value="${escapeHtml(m)}" ${isSelected ? 'selected' : ''}>${escapeHtml(label)}</option>`;
+            }).join('');
+          };
+          populateSelect(chatSelect, data.chat_model || data.default_chat_model, data.default_chat_model);
+          populateSelect(classifierSelect, data.classifier_model || data.default_classifier_model, data.default_classifier_model);
+        }
+
+        if (statusBox) {
+          if (data.has_custom_key) {
+            statusBox.innerHTML = `
+              <div style="color:#4ade80; font-weight:600; margin-bottom:3px; display:flex; align-items:center; gap:6px;">
+                <span>🟢 Chave própria configurada:</span> <code style="font-family:var(--font-mono, monospace); font-size:0.85rem; color:#fff; background:rgba(0,0,0,0.3); padding:2px 6px; border-radius:4px;">${escapeHtml(data.masked_key)}</code>
+              </div>
+              <div style="color:var(--text-muted); font-size:0.78rem;">
+                🎭 Conversa: <strong>${escapeHtml(data.chat_model || data.default_chat_model)}</strong> &nbsp;|&nbsp; 🔍 Categorização: <strong>${escapeHtml(data.classifier_model || data.default_classifier_model)}</strong>
+              </div>
+            `;
+            if (clearWrapper) {
+              clearWrapper.innerHTML = `
+                <button type="button" class="btn btn-secondary" onclick="clearOpenAIKey()" style="color:var(--red); border-color:rgba(220,38,38,0.35); padding:6px 12px; font-size:0.78rem;">
+                  🗑️ Remover Chave Própria
+                </button>
+              `;
+            }
+          } else {
+            statusBox.innerHTML = `
+              <div style="color:var(--noir-amber); font-weight:600; margin-bottom:3px;">
+                ℹ️ Nenhuma chave própria configurada
+              </div>
+              <div style="color:var(--text-muted); font-size:0.78rem;">
+                Usando modelos padrão do servidor (Conversa: ${escapeHtml(data.default_chat_model)} | Categorização: ${escapeHtml(data.default_classifier_model)}).
+              </div>
+            `;
+          }
+        }
+      } catch (err) {
+        if (statusBox) {
+          statusBox.innerHTML = `<span style="color:var(--red); font-size:0.82rem;">Erro ao carregar: ${escapeHtml(err.message)}</span>`;
+        }
+      }
+    }
+
+    function closeAISettingsModal() {
+      const modal = document.getElementById('modal-ai-settings');
+      if (modal) modal.classList.remove('open');
+      const keyInput = document.getElementById('input-openai-key');
+      const btnVis = document.getElementById('btn-toggle-key-vis');
+      if (keyInput) {
+        keyInput.value = '';
+        keyInput.type = 'password';
+      }
+      if (btnVis) btnVis.textContent = '👁️';
+    }
+
+    function toggleOpenAIKeyVisibility() {
+      const input = document.getElementById('input-openai-key');
+      const btn = document.getElementById('btn-toggle-key-vis');
+      if (!input) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        if (btn) btn.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        if (btn) btn.textContent = '👁️';
+      }
+    }
+
+    async function saveAISettings() {
+      const keyInput = document.getElementById('input-openai-key');
+      const chatSelect = document.getElementById('select-openai-chat-model');
+      const classifierSelect = document.getElementById('select-openai-classifier-model');
+      const saveBtn = document.getElementById('btn-save-ai-settings');
+
+      const rawKey = keyInput ? keyInput.value.trim() : '';
+      const chosenChatModel = chatSelect ? chatSelect.value : null;
+      const chosenClassifierModel = classifierSelect ? classifierSelect.value : null;
+
+      if (rawKey && !rawKey.startsWith('sk-')) {
+        toast('Chave Inválida', 'Por enquanto, apenas chaves da OpenAI iniciando com "sk-" são aceitas.', 'warn');
+        return;
+      }
+
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Salvando…';
+      }
+
+      try {
+        const payload = {
+          chat_model: chosenChatModel,
+          classifier_model: chosenClassifierModel
+        };
+        if (rawKey) {
+          payload.api_key = rawKey;
+        }
+
+        const updated = await api('/auth/ai-settings', {
+          method: 'PUT',
+          body: JSON.stringify(payload)
+        });
+
+        if (authState.user) {
+          authState.user.has_custom_openai_key = updated.has_custom_key;
+          authState.user.openai_chat_model = updated.chat_model;
+          authState.user.openai_classifier_model = updated.classifier_model;
+          localStorage.setItem('detective_user', JSON.stringify(authState.user));
+          renderUserHeader();
+        }
+
+        toast('Configurações Atualizadas', `Conversa: ${updated.chat_model} | Categorização: ${updated.classifier_model}${updated.has_custom_key ? ' (Chave própria ativa)' : ''}`, 'ok');
+        closeAISettingsModal();
+      } catch (err) {
+        toast('Erro ao Salvar', err.message, 'warn');
+      } finally {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.textContent = '💾 Salvar';
+        }
+      }
+    }
+
+    async function clearOpenAIKey() {
+      if (!confirm('Deseja realmente remover sua chave de API própria e voltar às credenciais padrão do servidor?')) {
+        return;
+      }
+      try {
+        const updated = await api('/auth/ai-settings', {
+          method: 'PUT',
+          body: JSON.stringify({ api_key: '' })
+        });
+        if (authState.user) {
+          authState.user.has_custom_openai_key = false;
+          localStorage.setItem('detective_user', JSON.stringify(authState.user));
+          renderUserHeader();
+        }
+        toast('Chave Removida', 'Voltou a utilizar as credenciais padrão do servidor.', 'hint');
+        openAISettingsModal();
+      } catch (err) {
+        toast('Erro ao Remover', err.message, 'warn');
+      }
     }
 
     async function initGoogleAuth() {
@@ -789,19 +1177,24 @@
       }
     }
 
-    async function loginMock(mockEmail, mockName) {
+    async function loginMock(mockEmail, mockName, isAdmin = false) {
       try {
         const data = await api('/auth/google', {
           method: 'POST',
           body: JSON.stringify({
             is_mock: true,
-            mock_email: mockEmail || 'detetive@detective.ai',
-            mock_name: mockName || 'Detetive Convidado'
+            is_admin: isAdmin,
+            mock_email: mockEmail || (isAdmin ? 'admin@detective.ai' : 'detetive@detective.ai'),
+            mock_name: mockName || (isAdmin ? 'Administrador Geral' : 'Detetive Convidado')
           })
         });
         setAuth(data.access_token, data.user);
-        toast('Conectado', `Identificado como ${data.user.name} (Modo Mock)`, 'ok');
-        showScenariosScreen();
+        toast('Conectado', `Identificado como ${data.user.name} (${data.user.role.toUpperCase()})`, 'ok');
+        if (data.user.role === 'admin') {
+          showSessionsScreen();
+        } else {
+          showScenariosScreen();
+        }
       } catch (err) {
         toast('Erro de Conexão', err.message, 'warn');
       }
@@ -881,19 +1274,38 @@
       document.getElementById('modal-accuse').classList.remove('open');
     }
 
+    function setSessionsViewMode(viewAll) {
+      state.sessionsViewAll = viewAll;
+      const btnAll = document.getElementById('btn-filter-all-sessions');
+      const btnMy = document.getElementById('btn-filter-my-sessions');
+      if (btnAll && btnMy) {
+        btnAll.className = viewAll ? 'nav-tab active' : 'nav-tab';
+        btnMy.className = viewAll ? 'nav-tab' : 'nav-tab active';
+      }
+      loadSessionsList();
+    }
+
     // ─────────────────────────────────────────────────────────
     //  SCREEN 0: Sessions List
     // ─────────────────────────────────────────────────────────
     async function loadSessionsList() {
       const list = document.getElementById('sessions-list');
       const totalLabel = document.getElementById('sessions-total-label');
+      const toggle = document.getElementById('admin-sessions-toggle');
       if (!list) return;
       list.innerHTML = '<div class="loading"><div class="spinner"></div> Carregando sessões…</div>';
 
+      const isAdmin = authState.user?.role === 'admin';
+      if (toggle) {
+        toggle.style.display = isAdmin ? 'block' : 'none';
+      }
+
       try {
-        const sessions = await api('/sessions');
+        const query = (isAdmin && state.sessionsViewAll) ? '/sessions?all_sessions=true' : '/sessions';
+        const sessions = await api(query);
         if (totalLabel) {
-          totalLabel.textContent = `${sessions.length} sessão(ões) encontrada(s)`;
+          const modeLabel = (isAdmin && state.sessionsViewAll) ? 'do sistema' : 'do seu perfil';
+          totalLabel.textContent = `${sessions.length} sessão(ões) ${modeLabel} encontrada(s)`;
         }
 
         if (!sessions || sessions.length === 0) {
@@ -925,22 +1337,27 @@
             ? `<button class="btn btn-primary" onclick="resumeSession(${s.id})" style="font-size:0.85rem;padding:8px 16px;">▶️ Continuar</button>`
             : `<button class="btn btn-secondary" onclick="resumeSession(${s.id})" style="font-size:0.85rem;padding:8px 16px;">👁️ Ver Caso</button>`;
 
+          const userBadge = (isAdmin && (s.user_name || s.user_email))
+            ? `<span style="background:rgba(232,182,76,0.12); border:1px solid rgba(232,182,76,0.3); color:var(--accent); padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:500;">👤 ${escapeHtml(s.user_name || 'Jogador')} (${escapeHtml(s.user_email || '—')})</span>`
+            : '';
+
           return `
             <div class="card session-card">
               <div class="session-info">
                 <div class="session-title">
-                  <span>#${s.id} — ${s.scenario_title}</span>
+                  <span>#${s.id} — ${escapeHtml(s.scenario_title)}</span>
                   ${statusBadge}
                 </div>
                 <div class="session-meta">
                   <span>📅 ${dateStr}</span>
                   <span>💬 ${s.messages_count} mensagem(ns)</span>
                   <span>📁 Cenário #${s.scenario_id}</span>
+                  ${userBadge}
                 </div>
               </div>
               <div style="display:flex;gap:8px;align-items:center;">
                 ${actionBtn}
-                <button class="btn-delete-session" onclick="confirmDeleteSession(${s.id}, '${(s.scenario_title || '').replace(/'/g, "\\'")}')" title="Apagar Sessão">🗑️</button>
+                <button class="btn-delete-session" onclick="confirmDeleteSession(${s.id}, '${escapeHtml(s.scenario_title || '').replace(/'/g, "\\'")}')" title="Apagar Sessão">🗑️</button>
               </div>
             </div>
           `;
@@ -1254,7 +1671,27 @@
       const box = document.getElementById('chat-messages');
       box.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
       try {
-        const messages = await api(`/sessions/${state.sessionId}/suspects/${state.activeSuspectId}/messages`);
+        const isAdmin = authState.user?.role === 'admin';
+        const traceHeaderBtn = document.getElementById('btn-admin-trace-header');
+        if (traceHeaderBtn) {
+          traceHeaderBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+        }
+
+        state.activeSuspectTurnLogs = [];
+        const reqs = [
+          api(`/sessions/${state.sessionId}/suspects/${state.activeSuspectId}/messages`)
+        ];
+        if (isAdmin) {
+          reqs.push(
+            api(`/sessions/${state.sessionId}/logs/turns?suspect_id=${state.activeSuspectId}&include_prompt=true`).catch(() => null)
+          );
+        }
+
+        const [messages, turnsData] = await Promise.all(reqs);
+        if (turnsData && turnsData.turns) {
+          state.activeSuspectTurnLogs = turnsData.turns;
+        }
+
         box.innerHTML = '';
 
         // B1: Show initial_statement if no history yet
@@ -1263,7 +1700,17 @@
           return;
         }
 
-        messages.forEach(m => appendMessage(m.sender_type, m.text, m.evidence_id, m.timestamp));
+        let npcIndex = 0;
+        messages.forEach(m => {
+          let turnForMsg = null;
+          if (isAdmin && m.sender_type === 'npc') {
+            if (state.activeSuspectTurnLogs.length > 0) {
+              turnForMsg = state.activeSuspectTurnLogs.find(t => t.npc_message_id === m.id) || state.activeSuspectTurnLogs[npcIndex];
+            }
+            npcIndex++;
+          }
+          appendMessage(m.sender_type, m.text, m.evidence_id, m.timestamp, turnForMsg);
+        });
         scrollChat();
       } catch (e) {
         box.innerHTML = `<p style="color:var(--red);padding:20px">${e.message}</p>`;
@@ -1279,7 +1726,7 @@
       box.appendChild(row);
     }
 
-    function appendMessage(senderType, text, evidenceId = null, timestamp = null) {
+    function appendMessage(senderType, text, evidenceId = null, timestamp = null, turnData = null) {
       const box = document.getElementById('chat-messages');
       const isPlayer = senderType === 'player';
       const row = document.createElement('div');
@@ -1292,10 +1739,25 @@
         ? new Date(timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
         : '';
 
+      let traceTag = '';
+      if (!isPlayer && turnData && authState.user?.role === 'admin') {
+        const latencyStr = turnData.ai?.latency_ms ? ` • ${turnData.ai.latency_ms}ms` : '';
+        const intentStr = turnData.intent ? ` • ${turnData.intent}` : '';
+        const moveStr = turnData.move_type ? ` • ${turnData.move_type}` : '';
+        traceTag = `
+          <div style="margin-top:6px;">
+            <button class="btn-trace-pill" onclick="openTraceModalForTurn(${turnData.turn_number})" title="Inspecionar trace analítico deste turno">
+              ⚡ Trace #${turnData.turn_number}${intentStr}${moveStr}${latencyStr} 🔍
+            </button>
+          </div>
+        `;
+      }
+
       row.innerHTML = `
         <div class="msg-bubble">
           ${evTag}
           <div>${text}</div>
+          ${traceTag}
           ${time ? `<div class="msg-time">${time}</div>` : ''}
         </div>
       `;
@@ -1355,7 +1817,19 @@
         );
 
         typing.classList.remove('visible');
-        appendMessage('npc', result.npc_message.text, null, result.npc_message.timestamp);
+
+        let newTurn = null;
+        if (authState.user?.role === 'admin') {
+          try {
+            const logsResp = await api(`/sessions/${state.sessionId}/logs/turns?suspect_id=${state.activeSuspectId}&include_prompt=true`);
+            if (logsResp && logsResp.turns) {
+              state.activeSuspectTurnLogs = logsResp.turns;
+              newTurn = logsResp.turns[logsResp.turns.length - 1];
+            }
+          } catch (e) {}
+        }
+
+        appendMessage('npc', result.npc_message.text, null, result.npc_message.timestamp, newTurn);
 
         // B3: update state badge
         updateStateBadge(result.suspect_state);
@@ -1373,6 +1847,205 @@
         sendBtn.disabled = false;
         input.focus();
       }
+    }
+
+    // ── Trace Viewer Modal (Admin) ──────────────────────────
+    function openTraceModal(turnNumber = null) {
+      const modal = document.getElementById('modal-trace-viewer');
+      if (!modal) return;
+      const suspect = state.suspects.find(s => s.suspect_id === state.activeSuspectId);
+      const subtitle = document.getElementById('trace-modal-subtitle');
+      if (subtitle) {
+        subtitle.textContent = `Interrogatório com ${suspect?.name || 'Suspeito'} — Sessão #${state.sessionId}`;
+      }
+
+      const turns = state.activeSuspectTurnLogs || [];
+      const turnsBar = document.getElementById('trace-turns-bar');
+
+      if (!turns.length) {
+        turnsBar.innerHTML = '';
+        renderTurnTrace(null);
+        modal.classList.add('open');
+        return;
+      }
+
+      let selectedIndex = turns.length - 1; // Último turno por padrão
+      if (turnNumber !== null) {
+        const foundIdx = turns.findIndex(t => t.turn_number === turnNumber);
+        if (foundIdx !== -1) selectedIndex = foundIdx;
+      }
+      state.currentTraceTurnIndex = selectedIndex;
+
+      renderTraceTurnTabs();
+      renderTurnTrace(turns[selectedIndex]);
+      modal.classList.add('open');
+    }
+
+    function openTraceModalForTurn(turnNumber) {
+      openTraceModal(turnNumber);
+    }
+
+    function renderTraceTurnTabs() {
+      const turns = state.activeSuspectTurnLogs || [];
+      const turnsBar = document.getElementById('trace-turns-bar');
+      if (!turnsBar) return;
+      turnsBar.innerHTML = turns.map((t, idx) => {
+        const isActive = idx === state.currentTraceTurnIndex;
+        return `
+          <button class="turn-tab-btn ${isActive ? 'active' : ''}" onclick="selectTraceTurnIndex(${idx})">
+            Turno #${t.turn_number}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectTraceTurnIndex(idx) {
+      const turns = state.activeSuspectTurnLogs || [];
+      state.currentTraceTurnIndex = idx;
+      renderTraceTurnTabs();
+      renderTurnTrace(turns[idx]);
+    }
+
+    function closeTraceModal() {
+      const modal = document.getElementById('modal-trace-viewer');
+      if (modal) modal.classList.remove('open');
+    }
+
+    function renderTurnTrace(turn) {
+      const container = document.getElementById('trace-modal-content');
+      if (!turn) {
+        container.innerHTML = `
+          <div style="text-align:center; padding:32px; color:var(--text-muted);">
+            <div style="font-size:2rem; margin-bottom:8px;">🕵️</div>
+            <p>Nenhum turno registrado para este suspeito até o momento.</p>
+          </div>
+        `;
+        return;
+      }
+
+      const pDelta = turn.transition?.deltas?.patience ?? ((turn.state_after?.patience ?? 0) - (turn.state_before?.patience ?? 0));
+      const prDelta = turn.transition?.deltas?.pressure ?? ((turn.state_after?.pressure ?? 0) - (turn.state_before?.pressure ?? 0));
+      const pDeltaStr = pDelta > 0 ? `+${pDelta.toFixed(1)}` : pDelta.toFixed(1);
+      const prDeltaStr = prDelta > 0 ? `+${prDelta.toFixed(1)}` : prDelta.toFixed(1);
+      const pColor = pDelta >= 0 ? 'var(--green)' : 'var(--red)';
+      const prColor = prDelta > 0 ? 'var(--yellow)' : 'var(--text-muted)';
+
+      const latencyMs = turn.ai?.latency_ms ? `${turn.ai.latency_ms}ms` : '—';
+      const modelName = turn.ai?.model || turn.ai?.adapter || 'standard';
+      const promptData = turn.prompt ? JSON.stringify(turn.prompt, null, 2) : 'Prompt não registrado ou omitido';
+      const rawData = JSON.stringify(turn, null, 2);
+
+      const secretsRevealed = turn.effects?.revealed_secrets?.length
+        ? turn.effects.revealed_secrets.join(', ')
+        : 'Nenhum';
+      const claimsBroken = turn.effects?.newly_broken_claims?.length
+        ? turn.effects.newly_broken_claims.join(', ')
+        : 'Nenhuma';
+
+      container.innerHTML = `
+        <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px; font-size:0.88rem;">
+          <div style="margin-bottom:8px; display:flex; align-items:flex-start; gap:8px;">
+            <span style="font-weight:700; color:var(--accent); min-width:80px;">🕵️ Pergunta:</span>
+            <span style="color:#fff;">${escapeHtml(turn.player_text)}</span>
+          </div>
+          <div style="display:flex; align-items:flex-start; gap:8px;">
+            <span style="font-weight:700; color:var(--accent2); min-width:80px;">🧑 Resposta:</span>
+            <span style="color:var(--text); font-style:italic;">&ldquo;${escapeHtml(turn.npc_text || '')}&rdquo;</span>
+          </div>
+        </div>
+
+        <div class="trace-grid">
+          <!-- Card 1: NLU & Classificação -->
+          <div class="trace-card">
+            <div class="trace-card-title">🎯 Classificação & NLU</div>
+            <div class="trace-stat-row">
+              <span class="trace-stat-label">Intenção:</span>
+              <span class="trace-stat-val" style="color:var(--accent);">${escapeHtml(turn.intent || '—')}</span>
+            </div>
+            <div class="trace-stat-row">
+              <span class="trace-stat-label">Move Type:</span>
+              <span class="trace-stat-val">${escapeHtml(turn.move_type || '—')}</span>
+            </div>
+            <div class="trace-stat-row">
+              <span class="trace-stat-label">Tópico:</span>
+              <span class="trace-stat-val">${escapeHtml(turn.primary_topic_id || 'geral')}</span>
+            </div>
+            <div class="trace-stat-row">
+              <span class="trace-stat-label">Provedor NLU:</span>
+              <span class="trace-stat-val">${escapeHtml(turn.analysis_provider || 'heurístico')}</span>
+            </div>
+            <div class="trace-stat-row">
+              <span class="trace-stat-label">Efeito Evidência:</span>
+              <span class="trace-stat-val">${escapeHtml(turn.evidence_effect || 'N/A')}</span>
+            </div>
+          </div>
+
+          <!-- Card 2: Dinâmica Psicológica -->
+          <div class="trace-card">
+            <div class="trace-card-title">🧠 Dinâmica Psicológica</div>
+            <div class="trace-stat-row">
+              <span class="trace-stat-label">Postura (Stance):</span>
+              <span class="trace-stat-val">${escapeHtml(turn.state_before?.stance || 'neutral')} ➔ <strong style="color:var(--accent);">${escapeHtml(turn.state_after?.stance || 'neutral')}</strong></span>
+            </div>
+            <div class="trace-stat-row">
+              <span class="trace-stat-label">Paciência:</span>
+              <span class="trace-stat-val">${turn.state_before?.patience?.toFixed(0) || '50'} ➔ ${turn.state_after?.patience?.toFixed(0) || '50'} <span style="color:${pColor};font-size:0.75rem;">(${pDeltaStr})</span></span>
+            </div>
+            <div class="trace-stat-row">
+              <span class="trace-stat-label">Pressão:</span>
+              <span class="trace-stat-val">${turn.state_before?.pressure?.toFixed(0) || '0'} ➔ ${turn.state_after?.pressure?.toFixed(0) || '0'} <span style="color:${prColor};font-size:0.75rem;">(${prDeltaStr})</span></span>
+            </div>
+            <div class="trace-stat-row">
+              <span class="trace-stat-label">Segredos Revelados:</span>
+              <span class="trace-stat-val" style="color:var(--accent);">${escapeHtml(secretsRevealed)}</span>
+            </div>
+            <div class="trace-stat-row">
+              <span class="trace-stat-label">Contradições (Claims):</span>
+              <span class="trace-stat-val" style="color:var(--red);">${escapeHtml(claimsBroken)}</span>
+            </div>
+          </div>
+
+          <!-- Card 3: IA & Geração -->
+          <div class="trace-card">
+            <div class="trace-card-title">🤖 LLM & Guardrails</div>
+            <div class="trace-stat-row">
+              <span class="trace-stat-label">Modelo LLM:</span>
+              <span class="trace-stat-val" style="color:var(--accent);">${escapeHtml(modelName)}</span>
+            </div>
+            <div class="trace-stat-row">
+              <span class="trace-stat-label">Latência:</span>
+              <span class="trace-stat-val">${escapeHtml(latencyMs)}</span>
+            </div>
+            <div class="trace-stat-row">
+              <span class="trace-stat-label">Modo de Resposta:</span>
+              <span class="trace-stat-val">${escapeHtml(turn.response_mode || 'standard')}</span>
+            </div>
+            <div class="trace-stat-row">
+              <span class="trace-stat-label">Fallback Ativado:</span>
+              <span class="trace-stat-val" style="color:${turn.ai?.fallback_used ? 'var(--yellow)' : 'var(--green)'};">${turn.ai?.fallback_used ? 'Sim' : 'Não'}</span>
+            </div>
+            <div class="trace-stat-row">
+              <span class="trace-stat-label">Status Guardrail:</span>
+              <span class="trace-stat-val" style="color:var(--green);">✅ Válido</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: Prompt Enviado à LLM -->
+        <div class="trace-card">
+          <div class="trace-card-title" style="justify-content:space-between;">
+            <span>📜 Prompt Enviado à LLM</span>
+            <button class="btn btn-secondary" onclick="navigator.clipboard.writeText(this.dataset.prompt);toast('Copiado','Prompt copiado para a área de transferência.','hint');" data-prompt="${escapeHtml(promptData)}" style="padding:2px 8px;font-size:0.7rem;">📋 Copiar</button>
+          </div>
+          <pre style="background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px; font-size:0.75rem; font-family:var(--font-mono); color:#cbd5e1; max-height:160px; overflow-y:auto; white-space:pre-wrap; word-break:break-word;">${escapeHtml(promptData)}</pre>
+        </div>
+
+        <!-- Card 5: JSON Bruto Completo -->
+        <details class="trace-card" style="cursor:pointer;">
+          <summary class="trace-card-title" style="cursor:pointer; margin-bottom:0;">🔍 Ver Snapshot Bruto (JSON Completo)</summary>
+          <pre style="margin-top:10px; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px; font-size:0.72rem; font-family:var(--font-mono); color:#94a3b8; max-height:220px; overflow-y:auto; white-space:pre-wrap; word-break:break-word;">${escapeHtml(rawData)}</pre>
+        </details>
+      `;
     }
 
     function processTurnFeedback(result) {

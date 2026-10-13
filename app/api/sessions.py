@@ -53,13 +53,21 @@ class SessionSummaryResponse(BaseModel):
     created_at: Optional[str] = None
     messages_count: int = 0
     user_id: Optional[int] = None
+    user_name: Optional[str] = None
+    user_email: Optional[str] = None
 
 
 # -----------------------------
 # GET /sessions
 # -----------------------------
 @router.get("/sessions", response_model=List[SessionSummaryResponse])
-def api_list_sessions(current_user: Optional[UserModel] = Depends(get_current_user_optional)):
+def api_list_sessions(
+    all_sessions: bool = False,
+    current_user: Optional[UserModel] = Depends(get_current_user_optional)
+):
+    is_admin = current_user is not None and current_user.role == "admin"
+    if is_admin and all_sessions:
+        return list_sessions(user_id=None)
     user_id = current_user.id if current_user else None
     return list_sessions(user_id=user_id)
 
@@ -93,7 +101,8 @@ def api_delete_session(
 ):
     try:
         user_id = current_user.id if current_user else None
-        delete_session(session_id=session_id, user_id=user_id)
+        is_admin = current_user is not None and current_user.role == "admin"
+        delete_session(session_id=session_id, user_id=user_id, is_admin=is_admin)
         return {"success": True, "message": f"Sessão {session_id} apagada com sucesso."}
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))
@@ -106,7 +115,12 @@ def api_delete_session(
     "/sessions/{session_id}/suspects/{suspect_id}/messages",
     response_model=PlayerTurnResponse
 )
-def send_message_to_suspect(session_id: int, suspect_id: int, payload: PlayerChatInput):
+def send_message_to_suspect(
+    session_id: int,
+    suspect_id: int,
+    payload: PlayerChatInput,
+    current_user: Optional[UserModel] = Depends(get_current_user_optional)
+):
     """
     Handles a full interrogation turn atomically.
     """
@@ -117,7 +131,8 @@ def send_message_to_suspect(session_id: int, suspect_id: int, payload: PlayerCha
             suspect_id=suspect_id,
             text=payload.text,
             evidence_id=payload.evidence_id,
-            db=db
+            db=db,
+            user=current_user
         )
         db.commit()
         return result
