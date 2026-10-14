@@ -16,6 +16,9 @@ import sys
 import json
 from typing import List
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 try:
     from pydantic import ValidationError
     from app.domain.schema_scenario import ScenarioConfig
@@ -92,7 +95,8 @@ def validate_scenario(path: str) -> List[str]:
                     errors.append(
                         f"[Reference] Suspect '{s.id}', Claim '{claim.claim_id}': topic_id '{claim.topic_id}' not found in topics"
                     )
-                for ev in claim.breakable_by_evidence_ids:
+                evidence_codes = getattr(claim, "breakable_by_evidence_codes", []) or getattr(claim, "breakable_by_evidence_ids", [])
+                for ev in evidence_codes:
                     if ev not in valid_evidence_ids:
                         errors.append(
                             f"[Reference] Suspect '{s.id}', Claim '{claim.claim_id}': breakable_by_evidence '{ev}' not found in evidences"
