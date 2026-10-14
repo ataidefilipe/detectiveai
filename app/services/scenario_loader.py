@@ -13,6 +13,19 @@ from app.infra.db_models import (
 from app.core.exceptions import DomainError
 
 
+import os
+
+
+def resolve_suspect_image(code: Optional[str], configured_img: Optional[str]) -> str:
+    if configured_img:
+        return configured_img
+    if code:
+        candidate = f"frontend/assets/suspects/{code}.webp"
+        if os.path.exists(candidate):
+            return f"/static/assets/suspects/{code}.webp"
+    return "/static/assets/templates/suspect-template.svg"
+
+
 def infer_suspect_role(code: Optional[str], backstory: Optional[str]) -> str:
     c = (code or "").lower()
     if "marina" in c:
@@ -87,7 +100,7 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
             suspect_map = {s.suspect_code: s for s in db_suspects}
             for s in config.suspects:
                 computed_role = s.role_title or infer_suspect_role(s.id, s.backstory)
-                computed_img = s.image_url or "/static/assets/templates/suspect-template.svg"
+                computed_img = resolve_suspect_image(s.id, s.image_url)
                 if s.id in suspect_map:
                     target = suspect_map[s.id]
                     target.name = s.name
@@ -317,7 +330,7 @@ def load_scenario_from_json(path: str, db: Optional[Session] = None) -> Scenario
 
         for s in config.suspects:
             computed_role = s.role_title or infer_suspect_role(s.id, s.backstory)
-            computed_img = s.image_url or "/static/assets/templates/suspect-template.svg"
+            computed_img = resolve_suspect_image(s.id, s.image_url)
             suspect = SuspectModel(
                 scenario_id=scenario.id,
                 suspect_code=s.id,

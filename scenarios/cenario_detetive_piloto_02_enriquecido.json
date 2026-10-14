@@ -538,7 +538,8 @@
           ]
         }
       ],
-      "final_phrase": "Eu já disse tudo que tinha para dizer. Preciso falar com meu advogado."
+      "final_phrase": "Eu já disse tudo que tinha para dizer. Preciso falar com meu advogado.",
+      "image_url": "/static/assets/suspects/marina_souza.webp"
     },
     {
       "id": "rogerio_lima",
@@ -699,7 +700,8 @@
           ]
         }
       ],
-      "final_phrase": "Já falei tudo o que sei. Se as câmeras falharam, foi um acidente."
+      "final_phrase": "Já falei tudo o que sei. Se as câmeras falharam, foi um acidente.",
+      "image_url": "/static/assets/suspects/rogerio_lima.webp"
     },
     {
       "id": "clara_martins",
@@ -869,7 +871,8 @@
           ]
         }
       ],
-      "final_phrase": "Eu não vi o que aconteceu dentro da sala. Eu vi a Marina no corredor e fiquei com medo de contar."
+      "final_phrase": "Eu não vi o que aconteceu dentro da sala. Eu vi a Marina no corredor e fiquei com medo de contar.",
+      "image_url": "/static/assets/suspects/clara_martins.webp"
     },
     {
       "id": "eduardo_farias",
@@ -1048,7 +1051,8 @@
           ]
         }
       ],
-      "final_phrase": "Ouvi uma discussão e vi café no corredor. Foi só isso. Não entrei no escritório."
+      "final_phrase": "Ouvi uma discussão e vi café no corredor. Foi só isso. Não entrei no escritório.",
+      "image_url": "/static/assets/suspects/eduardo_farias.webp"
     }
   ],
   "evidences": [

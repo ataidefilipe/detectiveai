@@ -396,7 +396,8 @@
           ]
         }
       ],
-      "final_phrase": "Eu... ja disse tudo que tinha pra dizer. Preciso falar com meu advogado."
+      "final_phrase": "Eu... ja disse tudo que tinha pra dizer. Preciso falar com meu advogado.",
+      "image_url": "/static/assets/suspects/marina_souza.webp"
     },
     {
       "id": "rogerio_lima",
@@ -538,7 +539,8 @@
           ]
         }
       ],
-      "final_phrase": "Ja falei tudo que eu sei, chefe."
+      "final_phrase": "Ja falei tudo que eu sei, chefe.",
+      "image_url": "/static/assets/suspects/rogerio_lima.webp"
     },
     {
       "id": "clara_martins",
@@ -680,7 +682,8 @@
           ]
         }
       ],
-      "final_phrase": "Serio, nao tenho mais nada pra dizer."
+      "final_phrase": "Serio, nao tenho mais nada pra dizer.",
+      "image_url": "/static/assets/suspects/clara_martins.webp"
     },
     {
       "id": "eduardo_farias",
@@ -834,7 +837,8 @@
           ]
         }
       ],
-      "final_phrase": "Nao adianta insistir. Ja respondi tudo o que tinha pra responder."
+      "final_phrase": "Nao adianta insistir. Ja respondi tudo o que tinha pra responder.",
+      "image_url": "/static/assets/suspects/eduardo_farias.webp"
     }
   ],
   "evidences": [

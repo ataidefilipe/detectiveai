@@ -489,6 +489,13 @@
             </div>
             <span class="rubber-stamp confidential" style="font-size:0.85rem;padding:6px 14px;border-width:2px;transform:rotate(-4deg);">CONFIDENCIAL</span>
           </div>
+
+          <!-- Fotografia da Cena do Crime (Briefing) -->
+          <div class="briefing-scene-container">
+            <div class="briefing-scene-tag">ARQUIVO DE EVIDÊNCIA FOTOGRÁFICA // CENA DO CRIME</div>
+            <img id="briefing-scene-img" src="/static/assets/cases/escritorio_trancado_crime_scene.webp" alt="Fotografia Forense da Cena do Crime" class="briefing-scene-img" onerror="this.parentElement.style.display='none'" />
+            <div class="briefing-scene-caption">LOCALIZAÇÃO: 9º ANDAR, DIRETORIA FINANCEIRA // SOLARIUM CORP // HORÁRIO ESTIMADO: 22H20–22H50</div>
+          </div>
           
           <div style="font-family:var(--font-mono);font-size:0.75rem;color:var(--noir-paper-ink-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;font-weight:700;">
             CIRCUNSTÂNCIAS DO CRIME (RELATÓRIO PRELIMINAR):
@@ -1661,6 +1668,11 @@
       state.activeSuspectId = suspectId;
       const suspect = state.suspects.find(s => s.suspect_id === suspectId);
       document.getElementById('chat-suspect-name').textContent = suspect?.name || '—';
+      const avatarBox = document.getElementById('chat-avatar');
+      if (avatarBox) {
+        const imgSrc = suspect?.image_url || '/static/assets/templates/suspect-template.svg';
+        avatarBox.innerHTML = `<img src="${imgSrc}" alt="${suspect?.name || ''}" onerror="this.src='/static/assets/templates/suspect-template.svg'" />`;
+      }
       document.getElementById('suspect-state-badge').textContent = '😐 Tranquilo';
       document.getElementById('suspect-state-badge').className = 'suspect-state-badge calm';
       showScreen('screen-interrogation');
@@ -1720,17 +1732,32 @@
     // B1: initial statement as styled opening bubble
     function appendInitialStatement(text) {
       const box = document.getElementById('chat-messages');
+      const suspect = state.suspects.find(s => s.suspect_id === state.activeSuspectId);
+      const imgSrc = suspect?.image_url || '/static/assets/templates/suspect-template.svg';
       const row = document.createElement('div');
       row.className = 'msg-row npc-initial';
-      row.innerHTML = `<div class="msg-bubble">💬 &ldquo;${text}&rdquo;</div>`;
+      row.innerHTML = `
+        <div class="msg-avatar npc" title="${suspect?.name || 'Suspeito'}">
+          <img src="${imgSrc}" alt="${suspect?.name || 'Suspeito'}" onerror="this.src='/static/assets/templates/suspect-template.svg'" />
+        </div>
+        <div class="msg-bubble">💬 &ldquo;${text}&rdquo;</div>
+      `;
       box.appendChild(row);
     }
 
     function appendMessage(senderType, text, evidenceId = null, timestamp = null, turnData = null) {
       const box = document.getElementById('chat-messages');
       const isPlayer = senderType === 'player';
+      const suspect = state.suspects.find(s => s.suspect_id === state.activeSuspectId);
+      const npcImg = suspect?.image_url || '/static/assets/templates/suspect-template.svg';
+      const playerImg = '/static/assets/templates/detective-avatar.webp';
+
       const row = document.createElement('div');
       row.className = `msg-row ${isPlayer ? 'player' : 'npc'}`;
+
+      const avatarHtml = isPlayer
+        ? `<div class="msg-avatar player" title="Você (Detetive)"><img src="${playerImg}" alt="Detetive" onerror="this.src='/static/assets/templates/suspect-template.svg'" /></div>`
+        : `<div class="msg-avatar npc" title="${suspect?.name || 'Suspeito'}"><img src="${npcImg}" alt="${suspect?.name || 'Suspeito'}" onerror="this.src='/static/assets/templates/suspect-template.svg'" /></div>`;
 
       const evTag = evidenceId
         ? `<div class="msg-evidence-tag">🔎 ${state.evidenceCache[evidenceId] || 'Evidência'}</div>`
@@ -1753,14 +1780,26 @@
         `;
       }
 
-      row.innerHTML = `
-        <div class="msg-bubble">
-          ${evTag}
-          <div>${text}</div>
-          ${traceTag}
-          ${time ? `<div class="msg-time">${time}</div>` : ''}
-        </div>
-      `;
+      if (isPlayer) {
+        row.innerHTML = `
+          <div class="msg-bubble">
+            ${evTag}
+            <div>${text}</div>
+            ${time ? `<div class="msg-time">${time}</div>` : ''}
+          </div>
+          ${avatarHtml}
+        `;
+      } else {
+        row.innerHTML = `
+          ${avatarHtml}
+          <div class="msg-bubble">
+            ${evTag}
+            <div>${text}</div>
+            ${traceTag}
+            ${time ? `<div class="msg-time">${time}</div>` : ''}
+          </div>
+        `;
+      }
       box.appendChild(row);
     }
 

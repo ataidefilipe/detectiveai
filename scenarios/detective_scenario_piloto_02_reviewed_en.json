@@ -526,7 +526,8 @@
           ]
         }
       ],
-      "final_phrase": "I have already told you everything I have to say. I need to speak with my lawyer."
+      "final_phrase": "I have already told you everything I have to say. I need to speak with my lawyer.",
+      "image_url": "/static/assets/suspects/marina_souza.webp"
     },
     {
       "id": "rogerio_lima",
@@ -683,7 +684,8 @@
           ]
         }
       ],
-      "final_phrase": "I have told you everything I know. If the cameras failed, it was an accident."
+      "final_phrase": "I have told you everything I know. If the cameras failed, it was an accident.",
+      "image_url": "/static/assets/suspects/rogerio_lima.webp"
     },
     {
       "id": "clara_martins",
@@ -848,7 +850,8 @@
           ]
         }
       ],
-      "final_phrase": "I did not see what happened inside the room. I saw Marina in the corridor, and I was afraid to say so."
+      "final_phrase": "I did not see what happened inside the room. I saw Marina in the corridor, and I was afraid to say so.",
+      "image_url": "/static/assets/suspects/clara_martins.webp"
     },
     {
       "id": "eduardo_farias",
@@ -1004,7 +1007,8 @@
           ]
         }
       ],
-      "final_phrase": "I heard an argument and saw coffee in the corridor. That is all. I did not enter the office."
+      "final_phrase": "I heard an argument and saw coffee in the corridor. That is all. I did not enter the office.",
+      "image_url": "/static/assets/suspects/eduardo_farias.webp"
     }
   ],
   "evidences": [

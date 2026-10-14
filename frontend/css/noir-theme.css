@@ -1131,3 +1131,157 @@ body {
   overflow: hidden;
 }
 
+/* ═════════════════════════════════════════════════════════════
+   AVATARES NO CHAT DE INTERROGATÓRIO NOIR
+   ═════════════════════════════════════════════════════════════ */
+.msg-row {
+  display: flex !important;
+  align-items: flex-end !important;
+  gap: 12px !important;
+}
+
+.msg-row.player {
+  justify-content: flex-end !important;
+}
+
+.msg-row.npc,
+.msg-row.npc-initial {
+  justify-content: flex-start !important;
+}
+
+.msg-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid var(--noir-border-medium);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
+  background: var(--noir-surface);
+  margin-bottom: 2px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.msg-avatar:hover {
+  transform: scale(1.08);
+  border-color: var(--noir-gold-dim);
+}
+
+.msg-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.msg-avatar.player {
+  border-color: rgba(212, 163, 89, 0.45);
+  order: 2;
+}
+
+.msg-avatar.npc {
+  border-color: rgba(197, 160, 89, 0.35);
+  order: 1;
+}
+
+.msg-row.player .msg-bubble {
+  order: 1;
+}
+
+.msg-row.npc .msg-bubble,
+.msg-row.npc-initial .msg-bubble {
+  order: 2;
+}
+
+.chat-header .suspect-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--noir-gold-dim);
+  background: var(--noir-surface);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-header .suspect-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ═════════════════════════════════════════════════════════════
+   FOTOGRAFIA DA CENA DO CRIME (BRIEFING NOIR)
+   ═════════════════════════════════════════════════════════════ */
+.briefing-scene-container {
+  margin: 18px 0 24px;
+  border: 1px solid rgba(26, 24, 21, 0.35);
+  background: #110f0d;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+.briefing-scene-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.6) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.briefing-scene-tag {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(18, 16, 14, 0.9);
+  border: 1px solid rgba(212, 163, 89, 0.6);
+  color: var(--noir-gold);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 1px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.65);
+}
+
+.briefing-scene-img {
+  width: 100%;
+  max-height: 340px;
+  object-fit: cover;
+  display: block;
+  filter: contrast(1.08) brightness(0.92) sepia(0.12);
+  transition: transform 0.4s ease;
+}
+
+.briefing-scene-container:hover .briefing-scene-img {
+  transform: scale(1.02);
+}
+
+.briefing-scene-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px 16px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: #e8e2d8;
+  background: linear-gradient(0deg, rgba(14, 12, 10, 0.95) 0%, rgba(14, 12, 10, 0) 100%);
+  letter-spacing: 0.6px;
+  z-index: 2;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+}
+
