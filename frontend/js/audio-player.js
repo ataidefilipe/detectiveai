@@ -99,7 +99,7 @@
   function updateMuteState(isMuted) {
     document.querySelectorAll('.jazz-btn-mute').forEach(btn => {
       btn.textContent = isMuted ? '🔇' : '🔊';
-      btn.title = isMuted ? 'Desmutar Jazz' : 'Mutar Jazz';
+      btn.title = isMuted ? 'Unmute Jazz' : 'Mute Jazz';
     });
   }
 
@@ -113,7 +113,7 @@
     isPlaying = playing;
     document.querySelectorAll('.jazz-btn-play').forEach(btn => {
       btn.textContent = playing ? '⏸' : '▶';
-      btn.title = playing ? 'Pausar Trilha' : 'Tocar Jazz Noir';
+      btn.title = playing ? 'Pause Soundtrack' : 'Play Jazz Noir';
     });
 
     document.querySelectorAll('.jazz-sound-waves').forEach(wave => {
@@ -125,7 +125,7 @@
     });
 
     document.querySelectorAll('.jazz-status').forEach(status => {
-      status.textContent = playing ? 'Em reprodução' : 'Pausado';
+      status.textContent = playing ? 'Playing' : 'Paused';
     });
   }
 
@@ -135,16 +135,16 @@
     const vol = audioElement ? Math.round(audioElement.volume * 100) : 40;
     return `
       <div class="jazz-player-widget">
-        <button class="jazz-btn-play" title="Tocar Jazz Noir">▶</button>
+        <button class="jazz-btn-play" title="Play Jazz Noir">▶</button>
         <div class="jazz-info">
           <div style="display:flex;align-items:center;gap:4px;">
             <span class="jazz-title">JAZZ NOIR</span>
             <div class="jazz-sound-waves"><span></span><span></span><span></span></div>
           </div>
-          <span class="jazz-status">Pausado</span>
+          <span class="jazz-status">Paused</span>
         </div>
         <input type="range" class="jazz-volume-slider" min="0" max="100" value="${vol}" title="Volume">
-        <button class="jazz-btn-mute" title="Mutar/Desmutar">${isMuted ? '🔇' : '🔊'}</button>
+        <button class="jazz-btn-mute" title="Mute/Unmute">${isMuted ? '🔇' : '🔊'}</button>
       </div>
     `;
   }

@@ -19,21 +19,21 @@ const DetectiveBoard = (() => {
   // ── Inicialização & Carregamento ──────────────────────────────
   async function openBoard() {
     if (!state.sessionId) {
-      toast('⚠️', 'Nenhuma investigação ativa selecionada.', 'warn');
+      toast('⚠️', 'No active investigation selected.', 'warn');
       return;
     }
 
     showScreen('screen-board');
-    updateSaveStatus('Carregando mural…', '');
+    updateSaveStatus('Loading whiteboard…', '');
 
     try {
       const data = await api(`/sessions/${state.sessionId}/board`);
       boardState = data.board_data || { nodes: [], connections: [], stickers: [] };
       renderAll();
-      updateSaveStatus('🟢 Salvo', 'saved');
+      updateSaveStatus('🟢 Saved', 'saved');
     } catch (e) {
-      toast('Erro no Mural', e.message, 'lie');
-      updateSaveStatus('🔴 Erro ao sincronizar', 'error');
+      toast('Whiteboard Error', e.message, 'lie');
+      updateSaveStatus('🔴 Error syncing', 'error');
     }
   }
 
@@ -75,20 +75,20 @@ const DetectiveBoard = (() => {
 
       if (isSuspect) {
         el.innerHTML = `
-          <div class="board-pin" title="Clique para conectar fio vermelho" data-pin-id="${node.id}"></div>
+          <div class="board-pin" title="Click to connect red string" data-pin-id="${node.id}"></div>
           <div class="board-suspect-card">
             <div class="board-suspect-photo">
               <img src="${imgSrc}" alt="${node.title}" onerror="this.src='/static/assets/templates/suspect-template.svg'" />
             </div>
             <div class="board-suspect-info">
               <div class="board-suspect-name">${node.title}</div>
-              <div class="board-suspect-role">${node.subtitle || 'Suspeito'}</div>
+              <div class="board-suspect-role">${node.subtitle || 'Suspect'}</div>
             </div>
           </div>
         `;
       } else {
         el.innerHTML = `
-          <div class="board-pin" title="Clique para conectar fio vermelho" data-pin-id="${node.id}"></div>
+          <div class="board-pin" title="Click to connect red string" data-pin-id="${node.id}"></div>
           <div class="board-evidence-card">
             <div class="board-evidence-thumb">
               <img src="${imgSrc}" alt="${node.title}" onerror="this.src='/static/assets/templates/evidence-template.svg'" />
@@ -120,17 +120,17 @@ const DetectiveBoard = (() => {
 
     const color = sticker.color || 'yellow';
     el.innerHTML = `
-      <div class="board-pin" title="Clique para conectar fio vermelho" data-pin-id="${sticker.id}"></div>
+      <div class="board-pin" title="Click to connect red string" data-pin-id="${sticker.id}"></div>
       <div class="board-sticky-note ${color}" id="note-${sticker.id}">
         <div class="sticky-top-bar">
           <div class="sticky-colors">
-            <span class="sticky-color-dot yellow" title="Amarelo" onclick="DetectiveBoard.setStickyColor('${sticker.id}', 'yellow')"></span>
-            <span class="sticky-color-dot pink" title="Alerta" onclick="DetectiveBoard.setStickyColor('${sticker.id}', 'pink')"></span>
-            <span class="sticky-color-dot blue" title="Pista" onclick="DetectiveBoard.setStickyColor('${sticker.id}', 'blue')"></span>
+            <span class="sticky-color-dot yellow" title="Yellow" onclick="DetectiveBoard.setStickyColor('${sticker.id}', 'yellow')"></span>
+            <span class="sticky-color-dot pink" title="Alert" onclick="DetectiveBoard.setStickyColor('${sticker.id}', 'pink')"></span>
+            <span class="sticky-color-dot blue" title="Clue" onclick="DetectiveBoard.setStickyColor('${sticker.id}', 'blue')"></span>
           </div>
-          <button class="sticky-delete-btn" title="Remover nota" onclick="DetectiveBoard.deleteStickyNote('${sticker.id}')">✕</button>
+          <button class="sticky-delete-btn" title="Delete note" onclick="DetectiveBoard.deleteStickyNote('${sticker.id}')">✕</button>
         </div>
-        <textarea class="sticky-textarea" placeholder="Escreva sua dedução…" oninput="DetectiveBoard.onStickyTextChange('${sticker.id}', this.value)">${escapeHtml(sticker.text || '')}</textarea>
+        <textarea class="sticky-textarea" placeholder="Write your deduction…" oninput="DetectiveBoard.onStickyTextChange('${sticker.id}', this.value)">${escapeHtml(sticker.text || '')}</textarea>
       </div>
     `;
 
@@ -223,7 +223,7 @@ const DetectiveBoard = (() => {
         // Seleciona primeiro ponto
         activePinId = id;
         pin.classList.add('pin-selected');
-        toast('🧶 Barbante', 'Selecione o segundo alfinete para ligar a conexão.', 'hint', 4000);
+        toast('🧶 String', 'Select the second pin to link the connection.', 'hint', 4000);
       } else if (activePinId === id) {
         // Clicou no mesmo alfinete: cancela seleção
         activePinId = null;
@@ -249,14 +249,14 @@ const DetectiveBoard = (() => {
 
     if (existingIdx >= 0) {
       boardState.connections.splice(existingIdx, 1);
-      toast('✂️ Fio Removido', 'Conexão desfeita.', 'hint', 2000);
+      toast('✂️ String Cut', 'Connection removed.', 'hint', 2000);
     } else {
       boardState.connections.push({
         id: `conn-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
         from_id: fromId,
         to_id: toId
       });
-      toast('🧶 Fio Ligado', 'Conexão estabelecida.', 'ok', 2000);
+      toast('🧶 String Connected', 'Connection linked.', 'ok', 2000);
     }
 
     renderStrings();
@@ -291,7 +291,7 @@ const DetectiveBoard = (() => {
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', `M ${p1.x} ${p1.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${p2.x} ${p2.y}`);
       path.setAttribute('class', 'red-string-path');
-      path.setAttribute('title', 'Clique para cortar esta linha');
+      path.setAttribute('title', 'Click to cut this string');
 
       path.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -346,7 +346,7 @@ const DetectiveBoard = (() => {
 
     renderStrings();
     saveBoardDebounced();
-    toast('🗑️ Nota Removida', 'Post-it excluído.', 'hint', 2000);
+    toast('🗑️ Note Removed', 'Sticky note deleted.', 'hint', 2000);
   }
 
   function setStickyColor(id, color) {
@@ -371,18 +371,18 @@ const DetectiveBoard = (() => {
 
   function clearConnections() {
     if (!boardState.connections.length) {
-      toast('ℹ️ Mural', 'Não há conexões de barbante para remover.', 'hint', 2000);
+      toast('ℹ️ Whiteboard', 'No string connections to remove.', 'hint', 2000);
       return;
     }
     boardState.connections = [];
     renderStrings();
     saveBoardDebounced();
-    toast('✂️ Barbantes Removidos', 'Todas as conexões do mural foram limpas.', 'ok', 3000);
+    toast('✂️ Strings Cleared', 'All board connections have been cleared.', 'ok', 3000);
   }
 
   // ── Persistência com Debounce ─────────────────────────────────
   function saveBoardDebounced() {
-    updateSaveStatus('🟡 Salvando…', 'saving');
+    updateSaveStatus('🟡 Saving…', 'saving');
     clearTimeout(saveTimer);
 
     saveTimer = setTimeout(async () => {
@@ -391,10 +391,10 @@ const DetectiveBoard = (() => {
           method: 'PUT',
           body: JSON.stringify({ board_data: boardState })
         });
-        updateSaveStatus('🟢 Salvo', 'saved');
+        updateSaveStatus('🟢 Saved', 'saved');
       } catch (e) {
-        updateSaveStatus('🔴 Erro ao salvar', 'error');
-        toast('Erro ao Salvar', e.message, 'lie');
+        updateSaveStatus('🔴 Error saving', 'error');
+        toast('Save Error', e.message, 'lie');
       }
     }, 800);
   }

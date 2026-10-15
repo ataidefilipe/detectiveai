@@ -32,7 +32,7 @@
     <line x1="240" y1="264" x2="240" y2="270"/>
     <line x1="270" y1="260" x2="270" y2="270"/>
   </g>
-  <text x="150" y="284" fill="#606f85" font-family="'Courier Prime', monospace" font-size="9" letter-spacing="1" text-anchor="middle">ESCALA FORENSE 1:1</text>
+  <text x="150" y="284" fill="#606f85" font-family="'Courier Prime', monospace" font-size="9" letter-spacing="1" text-anchor="middle">FORENSIC SCALE 1:1</text>
 
   <!-- Marcador de Evidência Amarelo (Tenda Pericial em perspectiva) -->
   <g transform="translate(185, 55)">
@@ -50,7 +50,7 @@
 
   <!-- Carimbo confidencial na folha -->
   <rect x="75" y="165" width="85" height="22" rx="2" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="3,2" transform="rotate(-15 117 176)"/>
-  <text x="117" y="180" fill="#dc2626" font-family="'Courier Prime', monospace" font-size="10" font-weight="700" letter-spacing="1" text-anchor="middle" transform="rotate(-15 117 176)">PROVA MATERIAL</text>
+  <text x="117" y="180" fill="#dc2626" font-family="'Courier Prime', monospace" font-size="10" font-weight="700" letter-spacing="1" text-anchor="middle" transform="rotate(-15 117 176)">MATERIAL EVIDENCE</text>
 
   <!-- Lupa Forense -->
   <g transform="translate(110, 85)">

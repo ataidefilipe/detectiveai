@@ -170,10 +170,21 @@ def accuse_session(session_id: int, payload: AccuseRequest):
         # ----------------------------------------
         # 2. Basic description (non-AI)
         # ----------------------------------------
+        session_obj = db.query(SessionModel).filter(SessionModel.id == session_id).first()
+        scenario_obj = session_obj.scenario if session_obj else None
+        is_english = bool(
+            scenario_obj and (
+                (scenario_obj.scenario_code and scenario_obj.scenario_code.endswith("-en"))
+                or scenario_obj.scenario_code == "piloto-03"
+                or "The Locked Office" in (scenario_obj.title or "")
+            )
+        )
+
         if verdict["result_type"] == "correct":
             description = (
-                "Você identificou corretamente o culpado e apresentou todas "
-                "as evidências essenciais."
+                "You have correctly identified the culprit and presented all essential evidence."
+                if is_english else
+                "Você identificou corretamente o culpado e apresentou todas as evidências essenciais."
             )
         elif verdict["result_type"] == "partial":
             reasons = verdict.get("reason_codes", [])
@@ -182,23 +193,32 @@ def accuse_session(session_id: int, payload: AccuseRequest):
             
             if has_wrong_motive and has_missing_evidence:
                 description = (
-                    "Você identificou corretamente o culpado, mas escolheu a motivação incorreta "
-                    "e deixou passar evidências essenciais."
+                    "You correctly identified the culprit, but chose the wrong motive and missed essential evidence."
+                    if is_english else
+                    "Você identificou corretamente o culpado, mas escolheu a motivação incorreta e deixou passar evidências essenciais."
                 )
             elif has_wrong_motive:
                 description = (
+                    "You correctly identified the culprit, but chose the wrong motive."
+                    if is_english else
                     "Você identificou corretamente o culpado, mas escolheu a motivação incorreta."
                 )
             elif has_missing_evidence:
                 description = (
+                    "You correctly identified the culprit, but missed essential evidence."
+                    if is_english else
                     "Você identificou corretamente o culpado, mas deixou passar evidências essenciais."
                 )
             else:
                 description = (
+                    "You correctly identified the culprit, but the accusation is incomplete."
+                    if is_english else
                     "Você identificou corretamente o culpado, mas a acusação está incompleta."
                 )
         else:
             description = (
+                "The accused suspect is not the true culprit."
+                if is_english else
                 "O suspeito acusado não é o verdadeiro culpado."
             )
 

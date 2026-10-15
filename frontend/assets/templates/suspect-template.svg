@@ -53,5 +53,5 @@
 
   <!-- Placa de Identificação Policial na base (Placeholder) -->
   <rect x="75" y="250" width="150" height="34" rx="3" fill="#12161f" stroke="#333d4e" stroke-width="1.5"/>
-  <text x="150" y="271" fill="#8a95a6" font-family="'Courier Prime', monospace" font-size="12" font-weight="700" letter-spacing="2" text-anchor="middle">SUSPEITO #00</text>
+  <text x="150" y="271" fill="#8a95a6" font-family="'Courier Prime', monospace" font-size="12" font-weight="700" letter-spacing="2" text-anchor="middle">SUSPECT #00</text>
 </svg>
