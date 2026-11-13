@@ -130,3 +130,93 @@ def test_get_allowed_knowledge_facts_uses_provided_suspect_state():
 
     assert "layer 1 fact" in result["new_knowledge_this_turn"]
 
+
+def test_get_allowed_knowledge_facts_blocks_reveal_on_break_until_claim_broken():
+    from types import SimpleNamespace
+    from unittest.mock import MagicMock, patch
+    from app.services.reveal_policy_service import get_allowed_knowledge_facts
+
+    mock_db = MagicMock()
+    mock_suspect = MagicMock()
+    mock_suspect.claims = [
+        {
+            "claim_id": "claim_alibi",
+            "topic_id": "alibi",
+            "reveal_on_break": ["k_secret"],
+        }
+    ]
+    mock_suspect.knowledge_items = [
+        {"id": "k_public", "topic_id": "presenca_local", "content_layers": ["public fact"]},
+        {"id": "k_secret", "topic_id": "presenca_local", "content_layers": ["secret confession"]},
+    ]
+
+    # Case 1: claim is active (no broken claims) -> k_secret stays blocked, only k_public reveals
+    mock_db.query.return_value.filter.return_value.first.side_effect = [
+        mock_suspect,  # suspect query
+        None,  # k_state for k_public
+        None,  # k_state for k_secret
+    ]
+    mock_db.query.return_value.filter.return_value.all.return_value = []
+
+    with patch("app.services.reveal_policy_service.get_topic_state", return_value={"status": "touched", "times_touched": 1}):
+        res_active = get_allowed_knowledge_facts(
+            session_id=1,
+            suspect_id=1,
+            detected_topics=["presenca_local"],
+            db=mock_db,
+            suspect_state={"patience": 50.0, "pressure": 10.0},
+        )
+
+    assert res_active["new_knowledge_this_turn"] == ["public fact"]
+
+    # Case 2: claim_alibi is broken -> k_secret is unlocked
+    mock_db.query.return_value.filter.return_value.first.side_effect = [
+        mock_suspect,
+        SimpleNamespace(max_revealed_depth=1),  # k_public already revealed
+        None,  # k_secret not yet revealed
+    ]
+    mock_db.query.return_value.filter.return_value.all.return_value = [
+        SimpleNamespace(claim_id="claim_alibi", status="broken")
+    ]
+
+    with patch("app.services.reveal_policy_service.get_topic_state", return_value={"status": "touched", "times_touched": 1}):
+        res_broken = get_allowed_knowledge_facts(
+            session_id=1,
+            suspect_id=1,
+            detected_topics=["presenca_local"],
+            db=mock_db,
+            suspect_state={"patience": 50.0, "pressure": 10.0},
+        )
+
+    assert res_broken["known_knowledge"] == ["public fact"]
+    assert res_broken["new_knowledge_this_turn"] == ["secret confession"]
+
+
+def test_get_allowed_knowledge_facts_limits_to_one_new_item_per_topic_per_turn():
+    from unittest.mock import MagicMock, patch
+    from app.services.reveal_policy_service import get_allowed_knowledge_facts
+
+    mock_db = MagicMock()
+    mock_suspect = MagicMock()
+    mock_suspect.claims = []
+    mock_suspect.knowledge_items = [
+        {"id": "k1", "topic_id": "conflito", "content_layers": ["fato 1"]},
+        {"id": "k2", "topic_id": "conflito", "content_layers": ["fato 2"]},
+    ]
+    mock_db.query.return_value.filter.return_value.first.side_effect = [
+        mock_suspect,
+        None,
+        None,
+    ]
+
+    with patch("app.services.reveal_policy_service.get_topic_state", return_value={"status": "touched", "times_touched": 1}):
+        res = get_allowed_knowledge_facts(
+            session_id=1,
+            suspect_id=1,
+            detected_topics=["conflito"],
+            db=mock_db,
+            suspect_state={"patience": 50.0, "pressure": 10.0},
+        )
+
+    assert res["new_knowledge_this_turn"] == ["fato 1"]
+

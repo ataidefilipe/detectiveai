@@ -101,7 +101,7 @@ def curate_prompt_context(
         if m.get("id") is not None and m.get("id") not in effective_set and (m.get("text") or "").strip()
     ][-_MAX_OLDER_HISTORY_CANDIDATES:]
 
-    has_accumulation = (len(raw_may_say) + len(raw_claims) >= _MIN_ACCUMULATED_ITEMS) or bool(older_candidates)
+    has_accumulation = (len(raw_may_say) >= _MIN_ACCUMULATED_ITEMS) or bool(older_candidates)
     if not has_accumulation:
         return base_result
 
@@ -111,14 +111,6 @@ def curate_prompt_context(
             instructions=(
                 f"O fato opcional may_say[{idx}] ('{text[:140]}') é diretamente pertinente "
                 "para responder à pergunta atual do detetive sem despejar assunto fora de hora?"
-            )
-        )
-
-    for idx, text in enumerate(raw_claims):
-        questions[f"claim::{idx}"] = Noul(
-            instructions=(
-                f"A declaração oficial active_claims[{idx}] ('{text[:140]}') precisa estar no "
-                "contexto porque a pergunta atual do detetive toca nesse tema, horário ou álibi?"
             )
         )
 
@@ -140,8 +132,8 @@ def curate_prompt_context(
         "player_text": player_text,
         "active_topic_id": active_topic_id,
         "must_say": must_say or [],
+        "active_claims": raw_claims,
         "may_say_candidates": [{"idx": i, "text": t} for i, t in enumerate(raw_may_say)],
-        "active_claim_candidates": [{"idx": i, "text": t} for i, t in enumerate(raw_claims)],
         "older_history_candidates": [
             {"id": m["id"], "sender": m.get("sender"), "text": m.get("text")}
             for m in older_candidates
@@ -177,12 +169,7 @@ def curate_prompt_context(
         if prob >= rel_threshold:
             curated_may_say.append(text)
 
-    curated_claims: List[str] = []
-    for idx, text in enumerate(raw_claims):
-        n = nouls.get(f"claim::{idx}")
-        prob = float(n.noul) if n is not None and hasattr(n, "noul") else 1.0
-        if prob >= rel_threshold:
-            curated_claims.append(text)
+    curated_claims = raw_claims
 
     scored_history: List[tuple[float, int]] = []
     for m in older_candidates:

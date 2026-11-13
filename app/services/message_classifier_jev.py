@@ -137,6 +137,7 @@ class JevSemanticMessageClassifier(MessageClassifier):
             {
                 "id": t["id"],
                 "label": t.get("label", t["id"]),
+                "aliases": list(t.get("aliases") or [])[:8],
                 "is_sensitive": bool(t.get("is_sensitive", False)),
             }
             for t in topics
@@ -239,7 +240,14 @@ class JevSemanticMessageClassifier(MessageClassifier):
                 )
 
         if topics:
-            topic_criteria = {t["id"]: t.get("label", t["id"]) for t in topics if "id" in t}
+            topic_criteria = {}
+            for t in topics:
+                if "id" in t:
+                    label = t.get("label", t["id"])
+                    aliases = [str(a) for a in (t.get("aliases") or [])[:5] if a]
+                    topic_criteria[t["id"]] = (
+                        f"{label} (ex.: {', '.join(aliases)})" if aliases else label
+                    )
             topic_criteria["none"] = "Nenhum tópico do caso se aplica (fala fora do caso)"
             questions["primary_topic"] = Choice(
                 instructions="Qual é o tópico principal da fala do detetive?",
@@ -248,8 +256,10 @@ class JevSemanticMessageClassifier(MessageClassifier):
             for t in topics[:12]:
                 tid = t.get("id")
                 if tid:
+                    aliases = [str(a) for a in (t.get("aliases") or [])[:5] if a]
+                    alias_hint = f" (termos relacionados: {', '.join(aliases)})" if aliases else ""
                     questions[f"topic::{tid}"] = Noul(
-                        instructions=f"A fala do detetive aborda ou toca no tópico '{t.get('label', tid)}'?"
+                        instructions=f"A fala do detetive aborda ou toca no tópico '{t.get('label', tid)}'{alias_hint}?"
                     )
 
         for c in claims[:12]:

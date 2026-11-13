@@ -2,7 +2,12 @@ from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
 from app.services.session_service import get_suspect_state
 from app.services.topic_state_service import get_topic_state
-from app.infra.db_models import SessionModel, SuspectModel, SessionSuspectKnowledgeStateModel
+from app.infra.db_models import (
+    SessionModel,
+    SuspectModel,
+    SessionSuspectKnowledgeStateModel,
+    SessionClaimStateModel,
+)
 from app.infra.db import SessionLocal
 from app.core.config import settings
 
@@ -93,59 +98,102 @@ def get_allowed_knowledge_facts(
 
         if suspect_state is None:
             suspect_state = get_suspect_state(session_id, suspect_id, db)
-        
+
+        # Map knowledge_ids gated behind reveal_on_break of active (unbroken) claims
+        raw_claims = suspect.claims if isinstance(getattr(suspect, "claims", None), list) else []
+        gated_by_claims: Dict[str, set] = {}
+        for claim in raw_claims:
+            if not isinstance(claim, dict):
+                continue
+            cid = str(claim.get("claim_id", claim.get("id", ""))).strip()
+            if not cid:
+                continue
+            for reward in claim.get("reveal_on_break", []) or []:
+                rkid = str(reward.get("id")) if isinstance(reward, dict) else str(reward)
+                if rkid:
+                    gated_by_claims.setdefault(rkid, set()).add(cid)
+
+        broken_claim_ids: set = set()
+        if gated_by_claims:
+            claim_states = (
+                db.query(SessionClaimStateModel)
+                .filter(
+                    SessionClaimStateModel.session_id == session_id,
+                    SessionClaimStateModel.suspect_id == suspect_id,
+                    SessionClaimStateModel.status == "broken",
+                )
+                .all()
+            )
+            broken_claim_ids = {str(cs.claim_id) for cs in (claim_states or [])}
+
+        # At most 1 new knowledge advancement per topic per turn (progressive reveal)
+        new_revealed_topics: set = set()
+
         for k_item in suspect.knowledge_items:
             # We only evaluate facts for topics the player is currently asking about
-            if k_item.get("topic_id") in detected_topics:
+            topic_id = k_item.get("topic_id")
+            if topic_id in detected_topics:
                 # Get the state of this specifically demanded topic
                 knowledge_id = k_item.get("id")
+                kid_str = str(knowledge_id) if knowledge_id else ""
+                is_locked_by_active_claim = bool(
+                    kid_str
+                    and kid_str in gated_by_claims
+                    and not (gated_by_claims[kid_str] & broken_claim_ids)
+                )
+
                 try:
-                    topic_state = get_topic_state(session_id, suspect_id, k_item["topic_id"], db)
+                    topic_state = get_topic_state(session_id, suspect_id, topic_id, db)
                 except Exception:
                     topic_state = {"status": "untouched", "times_touched": 0}
 
-                allowed_depth = evaluate_reveal_layer(k_item, suspect_state, topic_state)
-                
-                if allowed_depth > 0:
-                    layers = k_item.get("content_layers", [])
-                    max_available = len(layers)
-                    
-                    # Fetch persistence of knowledge state
-                    k_state = None
+                allowed_depth = 0 if is_locked_by_active_claim else evaluate_reveal_layer(
+                    k_item, suspect_state, topic_state
+                )
+
+                layers = k_item.get("content_layers", [])
+                max_available = len(layers)
+
+                # Fetch persistence of knowledge state (only if already needed)
+                k_state = None
+                if knowledge_id and (allowed_depth > 0 or is_locked_by_active_claim):
+                    k_state = db.query(SessionSuspectKnowledgeStateModel).filter(
+                        SessionSuspectKnowledgeStateModel.session_id == session_id,
+                        SessionSuspectKnowledgeStateModel.suspect_id == suspect_id,
+                        SessionSuspectKnowledgeStateModel.knowledge_id == kid_str
+                    ).first()
+
+                current_depth = k_state.max_revealed_depth if k_state else 0
+                allowed_clamped = min(max(allowed_depth, current_depth), max_available)
+
+                # Known knowledge (already revealed up to current_depth)
+                for i in range(min(current_depth, allowed_clamped)):
+                    result["known_knowledge"].append(layers[i])
+
+                # New knowledge (only if unlocked and topic hasn't already revealed a new item this turn)
+                if (
+                    not is_locked_by_active_claim
+                    and allowed_clamped > current_depth
+                    and topic_id not in new_revealed_topics
+                ):
+                    for i in range(current_depth, allowed_clamped):
+                        result["new_knowledge_this_turn"].append(layers[i])
+                    new_revealed_topics.add(topic_id)
+
+                    # Persist new depth
                     if knowledge_id:
-                        k_state = db.query(SessionSuspectKnowledgeStateModel).filter(
-                            SessionSuspectKnowledgeStateModel.session_id == session_id,
-                            SessionSuspectKnowledgeStateModel.suspect_id == suspect_id,
-                            SessionSuspectKnowledgeStateModel.knowledge_id == str(knowledge_id)
-                        ).first()
-                        
-                    current_depth = k_state.max_revealed_depth if k_state else 0
-                    
-                    allowed_clamped = min(allowed_depth, max_available)
-                    
-                    # Known knowledge (already revealed up to current_depth)
-                    for i in range(min(current_depth, allowed_clamped)):
-                        result["known_knowledge"].append(layers[i])
-                        
-                    # New knowledge
-                    if allowed_clamped > current_depth:
-                        for i in range(current_depth, allowed_clamped):
-                            result["new_knowledge_this_turn"].append(layers[i])
-                            
-                        # Persist new depth
-                        if knowledge_id:
-                            if not k_state:
-                                k_state = SessionSuspectKnowledgeStateModel(
-                                    session_id=session_id,
-                                    suspect_id=suspect_id,
-                                    knowledge_id=str(knowledge_id),
-                                    max_revealed_depth=allowed_clamped
-                                )
-                                db.add(k_state)
-                            else:
-                                k_state.max_revealed_depth = allowed_clamped
-                            # flush is fine, but overall transaction commits at turn level
-                            db.flush()
+                        if not k_state:
+                            k_state = SessionSuspectKnowledgeStateModel(
+                                session_id=session_id,
+                                suspect_id=suspect_id,
+                                knowledge_id=kid_str,
+                                max_revealed_depth=allowed_clamped
+                            )
+                            db.add(k_state)
+                        else:
+                            k_state.max_revealed_depth = allowed_clamped
+                        # flush is fine, but overall transaction commits at turn level
+                        db.flush()
 
         return result
     finally:

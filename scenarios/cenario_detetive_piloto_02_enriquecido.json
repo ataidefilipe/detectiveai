@@ -388,7 +388,8 @@
           ],
           "breakable_by_claim_ids": [],
           "reveal_on_break": [
-            "know_presenca_01"
+            "know_presenca_01",
+            "know_conflito_02"
           ]
         },
         {
@@ -403,7 +404,8 @@
           ],
           "breakable_by_claim_ids": [],
           "reveal_on_break": [
-            "know_relatorio_02"
+            "know_relatorio_02",
+            "know_relatorio_04"
           ]
         },
         {
@@ -436,6 +438,16 @@
         }
       ],
       "knowledge": [
+        {
+          "id": "know_marina_alibi_01",
+          "topic_id": "alibi",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "Saí da Solarium no início da noite porque estava exausta depois de revisar os relatórios. Fui direto para o hotel e passei meu cartão na recepção por volta das 19h45.",
+            "Fiquei no quarto descansando e checando e-mails de trabalho. Não voltei para o prédio da empresa depois disso."
+          ]
+        },
         {
           "id": "know_relatorio_01",
           "topic_id": "relatorio_contabil",
@@ -789,7 +801,9 @@
           ],
           "breakable_by_claim_ids": [],
           "reveal_on_break": [
-            "know_clara_viu_marina_01"
+            "know_clara_viu_marina_01",
+            "know_clara_viu_marina_02",
+            "know_clara_silence_01"
           ]
         },
         {
@@ -803,7 +817,9 @@
           ],
           "breakable_by_claim_ids": [],
           "reveal_on_break": [
-            "know_clara_viu_marina_01"
+            "know_clara_viu_marina_01",
+            "know_clara_viu_marina_02",
+            "know_clara_silence_01"
           ]
         }
       ],
@@ -972,7 +988,8 @@
           ],
           "breakable_by_claim_ids": [],
           "reveal_on_break": [
-            "know_eduardo_luvas_01"
+            "know_eduardo_luvas_01",
+            "know_eduardo_luvas_02"
           ]
         }
       ],
@@ -994,9 +1011,7 @@
           "kind": "observed",
           "reliability": "high",
           "content_layers": [
-            "Passei pelo corredor do 9º andar porque estava indo embora depois de buscar documentos.",
-            "O andar não estava tão silencioso quanto eu disse. Ouvi vozes abafadas, mas não consegui identificar as palavras.",
-            "Vi um líquido escuro saindo por baixo da porta, mas preferi não me envolver."
+            "Passei pelo corredor do 9º andar porque estava indo embora depois de buscar documentos em uma sala de reunião."
           ]
         },
         {
