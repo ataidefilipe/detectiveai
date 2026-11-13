@@ -1,6 +1,7 @@
-from typing import Optional, List
+from typing import Optional, List, Dict
 from sqlalchemy.orm import Session
 from app.api.schemas.chat import ConversationMemory
+from app.core.config import settings
 from app.infra.db_models import EvidenceModel
 
 def evaluate_evidence_context(
@@ -60,3 +61,61 @@ def evaluate_evidence_context(
                             return True
 
     return False
+
+
+def evaluate_evidence_context_calibrated(
+    evidence_id: int,
+    conversation_memory: ConversationMemory,
+    detected_topics: Optional[List[str]] = None,
+    referenced_evidence_ids: Optional[List[int]] = None,
+    target_claim_ids: Optional[List[str]] = None,
+    evidence_probabilities: Optional[Dict[int, float]] = None,
+    claim_probabilities: Optional[Dict[str, float]] = None,
+    db: Session = None,
+) -> str:
+    """
+    EPIC 2 (Tarefa 2.2) — Avaliação calibrada com Zona Cinzenta:
+      - "valid": evidência encaixa no contexto (ou sem restrição de tópico)
+      - "near_miss": evidência ou claim relacionada caiu na faixa intermediária
+        [JEV_GRAY_ZONE_LOW, JEV_GRAY_ZONE_HIGH)
+      - "out_of_context": fora de contexto
+    """
+    if evaluate_evidence_context(
+        evidence_id=evidence_id,
+        conversation_memory=conversation_memory,
+        detected_topics=detected_topics,
+        referenced_evidence_ids=referenced_evidence_ids,
+        target_claim_ids=target_claim_ids,
+        db=db,
+    ):
+        return "valid"
+
+    low = settings.JEV_GRAY_ZONE_LOW
+    high = settings.JEV_GRAY_ZONE_HIGH
+
+    if evidence_probabilities:
+        ev_prob = evidence_probabilities.get(evidence_id, 0.0)
+        if low <= ev_prob < high:
+            return "near_miss"
+
+    if claim_probabilities and db is not None:
+        evidence = db.query(EvidenceModel).filter(EvidenceModel.id == evidence_id).first()
+        if evidence and evidence.evidence_code:
+            from app.infra.db_models import SecretModel, SuspectModel
+
+            secret = db.query(SecretModel).filter(SecretModel.evidence_id == evidence_id).first()
+            if secret:
+                suspect = db.query(SuspectModel).filter(SuspectModel.id == secret.suspect_id).first()
+                if suspect and suspect.claims:
+                    for claim in suspect.claims:
+                        cid = claim.get("claim_id")
+                        breakable = claim.get(
+                            "breakable_by_evidence_codes",
+                            claim.get("breakable_by_evidence_ids", []),
+                        )
+                        if cid and evidence.evidence_code in breakable:
+                            c_prob = claim_probabilities.get(cid, 0.0)
+                            if low <= c_prob < high:
+                                return "near_miss"
+
+    return "out_of_context"

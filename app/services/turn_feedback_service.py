@@ -37,7 +37,10 @@ def build_turn_feedback(
         return t_signal, hints
 
     # 2. Evidence context takes precedence in hints
-    if evidence_effect == "out_of_context":
+    if evidence_effect == "near_miss":
+        hints.append("conexão quase lá")
+        t_signal = TopicSignal.good
+    elif evidence_effect == "out_of_context":
         hints.append("evidência fora de contexto")
         if analysis.sensitivity_hit.value in ["high", "medium"]:
             hints.append("tema promissor, mas evidência não encaixou")
@@ -123,7 +126,10 @@ def build_narrative_feedback(
     recent_guidances = recent_guidances or []
     guidance = None
 
-    if evidence_effect == "out_of_context":
+    if evidence_effect == "near_miss":
+        cand = "O suspeito hesitou ao olhar para a prova, mas você precisa deixar mais clara a contradição com o depoimento."
+        guidance = cand if cand not in recent_guidances else None
+    elif evidence_effect == "out_of_context":
         if "tema promissor, mas evidência não encaixou" in hints:
             cand = "A direção é boa, mas essa ligação ainda não faz sentido para o suspeito."
         else:

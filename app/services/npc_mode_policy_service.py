@@ -40,6 +40,9 @@ def determine_response_mode(
         return ResponseMode.context_request
 
     # 2. Deflexão sob pressão ou efeito adverso de evidência
+    if evidence_effect == "near_miss":
+        return ResponseMode.pressured_deflection
+
     if evidence_effect == "out_of_context":
         if transition.npc_shift == NpcShift.more_defensive:
             return ResponseMode.deny
@@ -60,6 +63,9 @@ def determine_response_mode(
         return ResponseMode.guarded
 
     if transition.npc_shift == NpcShift.more_cooperative:
+        return ResponseMode.clarify
+
+    if getattr(analysis, "move_type", None) == "clarify":
         return ResponseMode.clarify
 
     return ResponseMode.neutral_answer

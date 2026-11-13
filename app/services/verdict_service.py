@@ -1,5 +1,6 @@
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 from sqlalchemy.orm import Session
+from typesafe_sdk import Noul, Score
 
 from app.infra.db import SessionLocal
 from app.infra.db_models import (
@@ -17,12 +18,85 @@ from app.core.config import settings
 import json
 
 
+def evaluate_narrative_theory(
+    narrative_theory: Optional[str],
+    scenario: ScenarioModel,
+    real_culprit_name: Optional[str] = None,
+    true_motive_label: Optional[str] = None,
+    provider: Optional[str] = None,
+) -> Tuple[Optional[float], Optional[List[str]]]:
+    """
+    EPIC 4 (Tarefa 4.1) — Avalia a reconstrução narrativa livre do detetive
+    contra a verdade objetiva do caso (case_summary, culpado e motivo).
+    Retorna (theory_score_0_to_1, matched_elements) ou (None, None) se vazio.
+    """
+    if not narrative_theory or not narrative_theory.strip():
+        return None, None
+
+    from app.services.typesafe_client import evaluate_system_one, resolve_typesafe_api_key
+
+    use_jev = provider == "jev" or (provider is None and bool(resolve_typesafe_api_key()))
+    if use_jev:
+        questions = {
+            "culprit_identified": Noul(
+                instructions="A teoria do jogador identifica corretamente o verdadeiro culpado pelo crime?"
+            ),
+            "motive_explained": Noul(
+                instructions="A teoria explica corretamente o motivo real (true_motive) do crime?"
+            ),
+            "method_and_opportunity": Noul(
+                instructions="A teoria descreve de forma compatível como e em que circunstâncias o crime ocorreu?"
+            ),
+            "alibi_or_coverup": Noul(
+                instructions="A teoria identifica a tentativa de ocultação, álibi falso ou adulteração ligada ao caso?"
+            ),
+            "coherence": Score(
+                instructions="Quão aderente e completa é a reconstrução do jogador em relação ao case_summary real?",
+                criteria=["totalmente errada", "parcial / superficial", "boa / consistente", "exata e completa"],
+            ),
+        }
+        state = {
+            "player_narrative_theory": narrative_theory.strip(),
+            "ground_truth_case_summary": scenario.case_summary,
+            "real_culprit_name": real_culprit_name,
+            "true_motive": true_motive_label or scenario.true_motive_key,
+        }
+        res = evaluate_system_one(state=state, questions=questions)
+        if res.ok and res.response is not None:
+            nouls = getattr(res.response, "nouls", {}) or {}
+            scores = getattr(res.response, "scores", {}) or {}
+            matched = [
+                k for k in ("culprit_identified", "motive_explained", "method_and_opportunity", "alibi_or_coverup")
+                if k in nouls and nouls[k].noul >= 0.65
+            ]
+            raw_score = float(scores["coherence"].score) if "coherence" in scores else 0.0
+            normalized = round(max(0.0, min(1.0, raw_score / 3.0)), 4)
+            return normalized, matched
+
+    # Fallback determinístico sem Jev
+    theory_lower = narrative_theory.lower()
+    matched_fallback: List[str] = []
+    if real_culprit_name and any(part in theory_lower for part in real_culprit_name.lower().split() if len(part) > 3):
+        matched_fallback.append("culprit_identified")
+    if true_motive_label and any(w in theory_lower for w in true_motive_label.lower().split() if len(w) > 4):
+        matched_fallback.append("motive_explained")
+    if scenario.case_summary:
+        summary_words = {w.strip(".,;:!?") for w in scenario.case_summary.lower().split() if len(w) > 5}
+        hits = sum(1 for w in summary_words if w in theory_lower)
+        if hits >= 2:
+            matched_fallback.append("method_and_opportunity")
+
+    score_fallback = round(len(matched_fallback) / 3.0, 4)
+    return score_fallback, matched_fallback
+
+
 def evaluate_verdict(
     session_id: int,
     chosen_suspect_id: int,
     evidence_ids: List[int],
     motive_key: str,
-    db: Optional[Session] = None
+    db: Optional[Session] = None,
+    narrative_theory: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Evaluates the final verdict of a session.
@@ -131,9 +205,22 @@ def evaluate_verdict(
                     raise RuleViolationError(f"Evidence {ev_id} was not used effectively during the session.")
 
         # ----------------------------------------
-        # 3. Assess Motive Result & Reason Codes
+        # 3. Assess Motive Result, Theory & Reason Codes
         # ----------------------------------------
         motive_result = "correct" if motive_key == true_motive_key else "wrong"
+        real_culprit_obj = db.query(SuspectModel).filter(SuspectModel.id == real_culprit_id).first() if real_culprit_id else None
+        true_motive_label = None
+        if scenario.motive_options and true_motive_key:
+            for m in scenario.motive_options:
+                if m.get("key") == true_motive_key:
+                    true_motive_label = m.get("label")
+                    break
+        theory_score, theory_matched_elements = evaluate_narrative_theory(
+            narrative_theory=narrative_theory,
+            scenario=scenario,
+            real_culprit_name=real_culprit_obj.name if real_culprit_obj else None,
+            true_motive_label=true_motive_label,
+        )
         
         # T11: Reason Codes
         reason_codes = []
@@ -154,7 +241,9 @@ def evaluate_verdict(
                 "chosen_motive_key": motive_key,
                 "motive_result": motive_result,
                 "reason_codes": reason_codes,
-                "missing_claim_ids": missing_claim_ids
+                "missing_claim_ids": missing_claim_ids,
+                "theory_score": theory_score,
+                "theory_matched_elements": theory_matched_elements,
             }
             telemetry_logger.info(json.dumps({
                 "event": "session_verdict",
@@ -202,7 +291,9 @@ def evaluate_verdict(
             "chosen_motive_key": motive_key,
             "motive_result": motive_result,
             "reason_codes": reason_codes,
-            "missing_claim_ids": missing_claim_ids
+            "missing_claim_ids": missing_claim_ids,
+            "theory_score": theory_score,
+            "theory_matched_elements": theory_matched_elements,
         }
         
         telemetry_logger.info(json.dumps({

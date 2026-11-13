@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Body
 from pydantic import BaseModel
 from typing import List, Optional
 
@@ -7,7 +7,14 @@ from app.api.schemas.verdict import AccuseRequest, AccuseResponse
 from app.api.schemas.evidence import EvidenceResponse, EvidenceUsageDetailSchema
 from app.api.schemas.suspect import SuspectSessionResponse, UsedEvidenceItem, SuspectStateSchema
 from app.api.schemas.log import SessionTurnsLogResponse, TurnLogItemSchema, VerdictLogResponse
-from app.api.schemas.board import BoardStateResponse, SaveBoardStateRequest, BoardDataSchema, BoardNodeSchema
+from app.api.schemas.board import (
+    BoardStateResponse,
+    SaveBoardStateRequest,
+    BoardDataSchema,
+    BoardNodeSchema,
+    EvaluateBoardRequest,
+    BoardEvaluationResponse,
+)
 
 from app.services.interrogation_turn_service import run_interrogation_turn
 from app.services.session_finalize_service import finalize_session
@@ -162,7 +169,8 @@ def accuse_session(session_id: int, payload: AccuseRequest):
             chosen_suspect_id=payload.suspect_id,
             evidence_ids=payload.evidence_ids,
             motive_key=payload.motive_key,
-            db=db
+            db=db,
+            narrative_theory=payload.narrative_theory,
         )
 
         verdict = result["verdict"]
@@ -236,7 +244,9 @@ def accuse_session(session_id: int, payload: AccuseRequest):
             chosen_motive_key=verdict["chosen_motive_key"],
             motive_result=verdict["motive_result"],
             partial_reasons=verdict.get("reason_codes", []),
-            description=description
+            description=description,
+            theory_score=verdict.get("theory_score"),
+            theory_matched_elements=verdict.get("theory_matched_elements"),
         )
 
     finally:
@@ -787,6 +797,31 @@ def save_session_board(session_id: int, payload: SaveBoardStateRequest):
             session_id=session_id,
             board_data=payload.board_data,
             updated_at=board_record.updated_at
+        )
+    finally:
+        db.close()
+
+
+@router.post(
+    "/sessions/{session_id}/board/evaluate",
+    response_model=BoardEvaluationResponse
+)
+def evaluate_session_board(
+    session_id: int,
+    payload: Optional[EvaluateBoardRequest] = Body(default=None),
+):
+    """
+    Avalia conexões do mural de investigação contra os fatos já descobertos no CaseFile.
+    """
+    from app.services.board_analysis_service import evaluate_board_hypotheses
+
+    db = SessionLocal()
+    try:
+        board_data = payload.board_data if payload else None
+        return evaluate_board_hypotheses(
+            session_id=session_id,
+            db=db,
+            board_data=board_data,
         )
     finally:
         db.close()

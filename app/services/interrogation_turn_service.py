@@ -74,8 +74,17 @@ def run_interrogation_turn(
     if turn_user is None and session and session.user_id:
         turn_user = db.query(UserModel).filter(UserModel.id == session.user_id).first()
 
+    import os
+    active_provider = os.getenv("MESSAGE_CLASSIFIER_PROVIDER", settings.MESSAGE_CLASSIFIER_PROVIDER).lower()
     turn_classifier = None
-    if turn_user and turn_user.openai_api_key:
+    if active_provider == "jev":
+        try:
+            from app.services.message_classifier_jev import JevSemanticMessageClassifier
+            turn_classifier = JevSemanticMessageClassifier()
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(f"[turn] Failed to create Jev classifier: {e}")
+    elif turn_user and turn_user.openai_api_key:
         try:
             from app.services.message_classifier_openai import OpenAISemanticMessageClassifier
             c_model = turn_user.openai_classifier_model or turn_user.openai_model or settings.OPENAI_CLASSIFIER_MODEL
@@ -113,6 +122,9 @@ def run_interrogation_turn(
         db=db,
     )
 
+    raw_flavor_slots = getattr(suspect_model, "flavor_slots", None) or []
+    flavor_slots_arg = raw_flavor_slots if isinstance(raw_flavor_slots, list) else []
+
     msg_analysis = analyze_message(
         text,
         available_topics=available_topics,
@@ -122,6 +134,7 @@ def run_interrogation_turn(
         suspect_state=semantic_ctx["suspect_state"],
         active_topic_id=semantic_ctx["active_topic_id"],
         classifier=turn_classifier,
+        flavor_slots=flavor_slots_arg,
     )
 
     # 1.2.5 Resolve move_type: GPT tem precedência, com validação (T1.4)
@@ -236,19 +249,39 @@ def run_interrogation_turn(
             db=db
         )
         
-        # Penalize for out_of_context
+        # EPIC 2 (T2.2): Zona Cinzenta calibrada (near_miss vs out_of_context)
         if evidence_effect == "out_of_context":
-            # MVP-004: Atenuate penalty if topic is sensitive
-            penalty = settings.OUT_OF_CONTEXT_PENALTY_DEFAULT
-            if msg_analysis.sensitivity_hit.value in ["high", "medium"]:
-                penalty = settings.OUT_OF_CONTEXT_PENALTY_SENSITIVE
-                
-            update_suspect_state_from_deltas(
-                session_id=session_id,
-                suspect_id=suspect_id,
-                deltas={"patience": penalty},
-                db=db
+            from app.services.evidence_context_service import evaluate_evidence_context_calibrated
+            calibrated_status = evaluate_evidence_context_calibrated(
+                evidence_id=evidence_id,
+                conversation_memory=conversation_context,
+                detected_topics=msg_analysis.detected_topic_ids,
+                referenced_evidence_ids=msg_analysis.referenced_evidence_ids,
+                target_claim_ids=msg_analysis.target_claim_ids,
+                evidence_probabilities=msg_analysis.evidence_probabilities,
+                claim_probabilities=msg_analysis.claim_probabilities,
+                db=db,
             )
+            if calibrated_status == "near_miss":
+                evidence_effect = "near_miss"
+                update_suspect_state_from_deltas(
+                    session_id=session_id,
+                    suspect_id=suspect_id,
+                    deltas={"patience": settings.NEAR_MISS_PATIENCE_PENALTY},
+                    db=db,
+                )
+            else:
+                # MVP-004: Atenuate penalty if topic is sensitive
+                penalty = settings.OUT_OF_CONTEXT_PENALTY_DEFAULT
+                if msg_analysis.sensitivity_hit.value in ["high", "medium"]:
+                    penalty = settings.OUT_OF_CONTEXT_PENALTY_SENSITIVE
+
+                update_suspect_state_from_deltas(
+                    session_id=session_id,
+                    suspect_id=suspect_id,
+                    deltas={"patience": penalty},
+                    db=db
+                )
 
         # Log evidence usage and update was_effective if applicable
         usage = db.query(SessionEvidenceUsageModel).filter(
@@ -259,6 +292,8 @@ def run_interrogation_turn(
 
         # Determinar effect_type
         def _resolve_effect_type(evidence_effect, newly_broken_claims, was_contextual):
+            if evidence_effect == "near_miss":
+                return "near_miss"
             if not was_contextual:
                 return "out_of_context"
             if evidence_effect == "revealed_secret":
@@ -272,7 +307,7 @@ def run_interrogation_turn(
             return "none"
 
         is_effective = len(revealed_secrets) > 0 or len(newly_broken_claims) > 0
-        was_contextual = evidence_effect != "out_of_context"
+        was_contextual = evidence_effect not in ("out_of_context", "near_miss")
         effect_type = _resolve_effect_type(evidence_effect, newly_broken_claims, was_contextual)
 
         if not usage:
@@ -443,7 +478,7 @@ def run_interrogation_turn(
 
     # Calculate evidence effect for UI feedback
     if evidence_id is not None:
-        if evidence_effect not in ("out_of_context", "revealed_secret"):
+        if evidence_effect not in ("out_of_context", "near_miss", "revealed_secret"):
             # Se a evidência não foi reveladora agora, e não bateu na trave do contexto,
             # mas ela já existia no histórico de uso (usage table) ANTES deste turno, então é duplicate.
             if was_previously_used:
@@ -461,7 +496,7 @@ def run_interrogation_turn(
         mechanical_effect = "broke_claim"
     elif revealed_secrets:
         mechanical_effect = "revealed_secret"
-    elif evidence_effect in ("revealed_secret", "broke_claim", "out_of_context", "reaction_only", "duplicate"):
+    elif evidence_effect in ("revealed_secret", "broke_claim", "out_of_context", "near_miss", "reaction_only", "duplicate"):
         mechanical_effect = evidence_effect
     else:
         mechanical_effect = "none"

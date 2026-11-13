@@ -134,6 +134,7 @@ def build_render_context(
         allowed_knowledge=allowed_knowledge or [],
         new_knowledge_this_turn=new_knowledge_this_turn or [],
         player_intent=analysis.intent.value,
+        semantic_move_type=getattr(analysis, "move_type", None),
         tone_hint=None, # Definido para testes no MVP
         forbidden_topics=must_not_say,
         active_topic_id=analysis.primary_topic_id,

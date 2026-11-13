@@ -680,6 +680,9 @@
         <button class="btn btn-secondary" onclick="DetectiveBoard.addStickyNote('yellow')" style="padding:5px 12px;font-size:0.8rem;">
           ➕ New Note
         </button>
+        <button class="btn btn-secondary" id="btn-evaluate-board" onclick="DetectiveBoard.evaluateBoard()" style="padding:5px 12px;font-size:0.8rem;">
+          🔍 Analisar Quadro
+        </button>
         <button class="btn btn-secondary" onclick="DetectiveBoard.clearConnections()" style="padding:5px 12px;font-size:0.8rem;">
           ✂️ Clear Strings
         </button>
@@ -724,6 +727,10 @@
       <div class="modal-section">
         <h3>3. Which evidence do you present?</h3>
         <div class="checkbox-group" id="accuse-evidences"></div>
+      </div>
+      <div class="modal-section">
+        <h3>4. Reconstruct the Crime (Optional)</h3>
+        <textarea id="accuse-theory" rows="3" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card);color:var(--text);font-family:inherit;resize:vertical;" placeholder="Briefly describe how and why the culprit committed the crime..."></textarea>
       </div>
       <div style="display:flex;gap:12px;margin-top:8px;">
         <button class="btn btn-primary" id="btn-confirm-accuse" onclick="submitAccusation()">Confirm Indictment</button>
@@ -2147,6 +2154,10 @@
         appendNoteBubble('🧐', 'The suspect seems to react to this evidence, but did not yield.', 'note note-hint');
       }
       
+      if (result.evidence_effect === 'near_miss' && !fb?.guidance) {
+        appendNoteBubble('🤔', 'The suspect hesitated at this evidence, but the contradiction is not explicit yet.', 'note note-hint');
+      }
+
       if (result.evidence_effect === 'out_of_context' && !fb?.evidence_feedback) {
         appendNoteBubble('⚠️', 'This evidence does not seem relevant at this moment.', 'note note-hint');
         toast('⚠️ Evidence', 'Out of context. Try with another suspect or topic.', 'ooc', 4000);
@@ -2515,6 +2526,9 @@
         </label>
       `).join('');
 
+      const theoryEl = document.getElementById('accuse-theory');
+      if (theoryEl) theoryEl.value = '';
+
       document.getElementById('modal-accuse').classList.add('open');
     }
 
@@ -2528,19 +2542,23 @@
       const evidenceIds = Array.from(
         document.querySelectorAll('input[name="accuse-evidence"]:checked')
       ).map(e => parseInt(e.value));
+      const narrativeTheory = document.getElementById('accuse-theory')?.value?.trim() || null;
 
       const btn = document.getElementById('btn-confirm-accuse');
       btn.disabled = true;
       btn.textContent = 'Submitting…';
 
       try {
+        const payload = {
+          suspect_id: parseInt(suspectEl.value),
+          motive_key: motiveEl.value,
+          evidence_ids: evidenceIds
+        };
+        if (narrativeTheory) payload.narrative_theory = narrativeTheory;
+
         const result = await api(`/sessions/${state.sessionId}/accuse`, {
           method: 'POST',
-          body: JSON.stringify({
-            suspect_id: parseInt(suspectEl.value),
-            motive_key: motiveEl.value,
-            evidence_ids: evidenceIds
-          })
+          body: JSON.stringify(payload)
         });
 
         closeModal();
@@ -2596,6 +2614,19 @@
               <span>🕵️ True Culprit: <strong>${culprit.name}</strong></span>
             </div>`;
         }
+      }
+
+      if (v.theory_score !== null && v.theory_score !== undefined) {
+        const pct = Math.round(v.theory_score * 100);
+        const elems = (v.theory_matched_elements || []).join(', ');
+        details += `
+          <div class="verdict-detail-item" style="flex-direction:column;align-items:flex-start;gap:4px;">
+            <div style="display:flex;justify-content:space-between;width:100%;align-items:center;">
+              <span>📝 Narrative Theory</span>
+              <span class="tag ${pct >= 66 ? 'ok' : 'fail'}">${pct}% match</span>
+            </div>
+            ${elems ? `<span style="font-size:.82rem;color:var(--text-muted)">Matched: ${elems}</span>` : ''}
+          </div>`;
       }
 
       const detailsEl = document.getElementById('verdict-details');

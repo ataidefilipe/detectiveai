@@ -393,7 +393,8 @@ def add_npc_reply(
             memory=narrative_mem,
             session_id=session_id,
             suspect_id=suspect_id,
-            message_id=player_message_id
+            message_id=player_message_id,
+            triggered_slots=getattr(msg_analysis, "triggered_flavor_slots", None),
         )
 
         narrative_view = build_narrative_memory_view(
@@ -415,6 +416,26 @@ def add_npc_reply(
             narrative_memory=narrative_view,
             pressure=state.pressure,
             patience=state.patience
+        )
+
+        # EPIC 6 (T6.1): Curadoria dinâmica pré-prompt com Jev
+        from app.services.prompt_curation_service import curate_prompt_context
+        curation_res = curate_prompt_context(
+            player_text=player_message_dict.get("text", ""),
+            may_say=render_context.may_say,
+            active_claims=npc_context.get("active_claims", []),
+            chat_history=chat_history,
+            effective_message_ids=effective_message_ids,
+            must_say=render_context.must_say,
+            active_topic_id=render_context.active_topic_id,
+            response_mode=render_context.response_mode.value if render_context.response_mode else None,
+        )
+        prompt_npc_context = {**npc_context, "active_claims": curation_res.active_claims}
+        prompt_render_context = render_context.model_copy(update={"may_say": curation_res.may_say})
+        prompt_effective_ids = (
+            list(dict.fromkeys([*(effective_message_ids or []), *curation_res.pinned_message_ids]))
+            if (effective_message_ids or curation_res.pinned_message_ids)
+            else effective_message_ids
         )
 
         turn_adapter = None
@@ -439,18 +460,18 @@ def add_npc_reply(
         reply_text, fallback_error = _generate_npc_text_with_fallback(
             suspect_id,
             suspect_state,
-            npc_context,
+            prompt_npc_context,
             chat_history,
             player_message_dict,
-            render_context,
+            prompt_render_context,
             revealed_now,
-            effective_message_ids,
+            prompt_effective_ids,
             adapter=turn_adapter
         )
         latency_ms = int((time.perf_counter() - started) * 1000)
         raw_reply = reply_text
 
-        # ── Sprint 3 T5.3: Guard pós-resposta ───────────────────────────────
+        # ── Sprint 3 T5.3 + EPIC 6 T6.2: Guard pós-resposta + 1 retry guiado ─
         motive_text = None
         if scenario.true_motive_key and scenario.motive_options:
             for m in scenario.motive_options:
@@ -458,12 +479,81 @@ def add_npc_reply(
                     motive_text = m.get("label")
                     break
 
-        from app.services.npc_response_guard import guard_npc_response
-        reply_text, was_blocked = guard_npc_response(
-            response_text=reply_text,
-            hidden_secrets=[s["content"] for s in suspect_state.get("hidden_secrets", [])],
-            true_motive=motive_text,
+        culprit_name = None
+        culprit_id = getattr(scenario, "culprit_id", None)
+        if isinstance(culprit_id, int):
+            if culprit_id == suspect_id and suspect:
+                culprit_name = suspect.name
+            else:
+                culprit_row = db.query(SuspectModel).filter(
+                    SuspectModel.id == culprit_id
+                ).first()
+                if culprit_row:
+                    culprit_name = culprit_row.name
+
+        internal_notes = (
+            [suspect.internal_note]
+            if suspect and getattr(suspect, "internal_note", None)
+            else []
         )
+        last_npc_reply = next(
+            (m["text"] for m in reversed(chat_history) if m.get("sender") == "npc" and m.get("text")),
+            None,
+        )
+        player_text = player_message_dict.get("text", "")
+
+        from app.services.npc_response_guard import (
+            build_guard_retry_instruction,
+            evaluate_npc_response_guard,
+        )
+        guard_kwargs = {
+            "hidden_secrets": [s["content"] for s in suspect_state.get("hidden_secrets", [])],
+            "true_motive": motive_text,
+            "culprit_name": culprit_name,
+            "internal_notes": internal_notes,
+            "active_claims": suspect_state.get("active_claims", []),
+            "must_say": prompt_render_context.must_say,
+            "response_mode": prompt_render_context.response_mode.value if prompt_render_context.response_mode else None,
+            "player_text": player_text,
+            "last_npc_reply": last_npc_reply,
+        }
+        guard_res = evaluate_npc_response_guard(
+            response_text=reply_text,
+            **guard_kwargs,
+        )
+        reply_text = guard_res.text
+        was_blocked = guard_res.was_blocked
+        guard_retry_used = False
+        guard_retry_succeeded = False
+        guard_first_reason = guard_res.reason if was_blocked else None
+
+        if was_blocked and fallback_error is None:
+            retry_hint = build_guard_retry_instruction(
+                guard_res.reason,
+                prompt_render_context.must_say,
+            )
+            retry_npc_context = {**prompt_npc_context, "guard_retry_hint": retry_hint}
+            retry_text, retry_fallback_err = _generate_npc_text_with_fallback(
+                suspect_id,
+                suspect_state,
+                retry_npc_context,
+                chat_history,
+                player_message_dict,
+                prompt_render_context,
+                revealed_now,
+                prompt_effective_ids,
+                adapter=turn_adapter,
+            )
+            guard_retry_used = True
+            if retry_fallback_err is None:
+                retry_guard_res = evaluate_npc_response_guard(
+                    response_text=retry_text,
+                    **guard_kwargs,
+                )
+                guard_res = retry_guard_res
+                reply_text = retry_guard_res.text
+                was_blocked = retry_guard_res.was_blocked
+                guard_retry_succeeded = not retry_guard_res.was_blocked
         # ───────────────────────────────────────────────────────────────────
 
         # Save NPC message and narrative memory
@@ -484,7 +574,12 @@ def add_npc_reply(
 
         # Trace analítico (consumido pelo turn log; não vai para a API)
         try:
-            prompt = build_npc_prompt(npc_context, chat_history, render_context, effective_message_ids)
+            prompt = build_npc_prompt(
+                prompt_npc_context,
+                chat_history,
+                prompt_render_context,
+                prompt_effective_ids,
+            )
         except Exception:
             prompt = None  # logging nunca deve quebrar o turno
         ai_trace = {
@@ -492,7 +587,24 @@ def add_npc_reply(
             "model": getattr(active_adapter, "model", None),
             "latency_ms": latency_ms,
             "fallback_error": fallback_error,
+            "curation_provider": curation_res.provider,
+            "curation_curated": curation_res.curated,
+            "curation_latency_ms": curation_res.latency_ms,
+            "curation_fallback_reason": curation_res.fallback_reason,
+            "original_may_say_count": curation_res.original_may_say_count,
+            "curated_may_say_count": curation_res.curated_may_say_count,
+            "original_active_claims_count": curation_res.original_active_claims_count,
+            "curated_active_claims_count": curation_res.curated_active_claims_count,
+            "semantic_pinned_history_count": curation_res.semantic_pinned_history_count,
             "guard_blocked": was_blocked,
+            "guard_provider": guard_res.provider,
+            "guard_reason": guard_res.reason,
+            "guard_first_reason": guard_first_reason,
+            "guard_retry_used": guard_retry_used,
+            "guard_retry_succeeded": guard_retry_succeeded,
+            "guard_probabilities": guard_res.probabilities,
+            "guard_latency_ms": guard_res.latency_ms,
+            "guard_fallback_reason": guard_res.fallback_reason,
             "raw_reply": raw_reply,
             "render_context": render_context.model_dump(mode="json") if hasattr(render_context, "model_dump") else None,
             "narrative_memory": narrative_mem.model_dump(mode="json") if hasattr(narrative_mem, "model_dump") else None,

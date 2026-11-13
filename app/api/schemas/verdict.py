@@ -1,11 +1,12 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 
 class AccuseRequest(BaseModel):
     suspect_id: int
     evidence_ids: List[int]
     motive_key: str
+    narrative_theory: Optional[str] = None
 
 
 class AccuseResponse(BaseModel):
@@ -20,3 +21,5 @@ class AccuseResponse(BaseModel):
     motive_result: str
     partial_reasons: List[str] = []
     description: str
+    theory_score: Optional[float] = None
+    theory_matched_elements: Optional[List[str]] = None

@@ -43,6 +43,7 @@ class NpcResponseRenderContext(BaseModel):
     must_not_reveal: List[str] = Field(default_factory=list)
     tone_hint: Optional[str] = None
     player_intent: str = "unknown"
+    semantic_move_type: Optional[str] = None
     claim_pressure_summary: List[str] = Field(default_factory=list)
     active_topic_id: Optional[str] = None
     # Sprint 3 T5.1

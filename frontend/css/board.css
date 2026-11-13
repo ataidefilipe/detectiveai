@@ -124,6 +124,27 @@
   stroke-width: 5.5px;
 }
 
+.red-string-path.eval-supported {
+  stroke: #10b981;
+  stroke-width: 4px;
+}
+
+.red-string-path.eval-plausible {
+  stroke: #f59e0b;
+  stroke-dasharray: 8 5;
+}
+
+.red-string-path.eval-contradicted {
+  stroke: #ef4444;
+  stroke-width: 4.5px;
+  stroke-dasharray: 3 4;
+}
+
+.red-string-path.eval-vague {
+  stroke: #94a3b8;
+  stroke-dasharray: 4 6;
+}
+
 .red-string-active {
   fill: none;
   stroke: var(--noir-amber);

@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     OUT_OF_CONTEXT_PENALTY_SENSITIVE: float = -5.0
 
     # --- Message Classifier (T1.2) ---
-    MESSAGE_CLASSIFIER_PROVIDER: str = "heuristic"  # "heuristic" | "openai"
+    MESSAGE_CLASSIFIER_PROVIDER: str = "heuristic"  # "heuristic" | "openai" | "jev"
 
     # --- OpenAI Settings ---
     OPENAI_MODEL: str = "gpt-6-luna"
@@ -52,6 +52,26 @@ class Settings(BaseSettings):
     OPENAI_CLASSIFIER_TIMEOUT_SECONDS: int = 6
     OPENAI_CLASSIFIER_MAX_RETRIES: int = 1
     OPENAI_CLASSIFIER_CONFIDENCE_THRESHOLD: float = 0.45
+
+    # --- TypeSafe AI / Jev (System One) ---
+    TYPESAFE_API_KEY: str = ""
+    JEV_MODEL: str = "jev-1.14.0"
+    JEV_TIMEOUT_SECONDS: float = 3.0
+    JEV_MAX_RETRIES: int = 1
+    NPC_RESPONSE_GUARD_PROVIDER: str = "literal"  # "literal" | "jev"
+    JEV_GUARD_LEAK_THRESHOLD: float = 0.75
+    JEV_GUARD_CONFESSION_THRESHOLD: float = 0.75
+    JEV_GUARD_CONTRADICTION_THRESHOLD: float = 0.80
+    JEV_GUARD_MODE_MIN_SCORE: float = 0.50
+    JEV_GUARD_QUALITY_THRESHOLD: float = 0.78
+    JEV_TOPIC_THRESHOLD: float = 0.60
+    JEV_CLAIM_THRESHOLD: float = 0.60
+    JEV_EVIDENCE_THRESHOLD: float = 0.60
+    JEV_GRAY_ZONE_LOW: float = 0.45
+    JEV_GRAY_ZONE_HIGH: float = 0.70
+    NEAR_MISS_PATIENCE_PENALTY: float = -2.0
+    JEV_PROMPT_CURATION_ENABLED: bool = True
+    JEV_CURATION_RELEVANCE_THRESHOLD: float = 0.55
 
     # --- Verdict Rules (T6.2) ---
     REQUIRE_DISCOVERED_MOTIVE: bool = True

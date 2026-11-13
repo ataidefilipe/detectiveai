@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, Dict
 from enum import Enum
 
 
@@ -63,8 +63,14 @@ class MessageAnalysisResult(BaseModel):
     move_type: Optional[str] = None                          # SemanticMoveType value, None para heurístico
     target_claim_ids: list[str] = Field(default_factory=list) # Claims que o jogador parece mirar
     referenced_evidence_ids: list[int] = Field(default_factory=list) # Evidências mencionadas indiretamente
-    analysis_provider: str = "heuristic"                      # "heuristic" | "openai"
+    analysis_provider: str = "heuristic"                      # "heuristic" | "openai" | "jev"
     fallback_reason: Optional[str] = None                     # "timeout" | "low_confidence" | "error"
+    # Probabilidades calibradas System One (backlog15 EPIC 2)
+    evidence_probabilities: Dict[int, float] = Field(default_factory=dict)
+    claim_probabilities: Dict[str, float] = Field(default_factory=dict)
+    # Sinais relacionais e flavor semântico (backlog15 EPIC 6 T6.3)
+    offered_protection_or_deal: bool = False
+    triggered_flavor_slots: List[str] = Field(default_factory=list)
 
 class ConversationEffect(str, Enum):
     none = "none"

@@ -244,6 +244,17 @@ Estes sao gostos e habitos pessoais confirmados por voce. Mantenha coerencia est
         speech_block = ""
         length_rule = "- Tente responder em 1 a 3 frases, mantendo a conversa fluida."
 
+    # -- Correção guiada após bloqueio do guard (EPIC 6 T6.2) ------------------
+    guard_retry_hint = npc_context.get("guard_retry_hint")
+    retry_block = ""
+    if guard_retry_hint:
+        retry_block = f"""
+=== CORRECAO OBRIGATORIA DE RESPOSTA ===
+{guard_retry_hint}
+Reescreva a resposta em primeira pessoa de forma natural e humana, respeitando estritamente estas regras.
+========================================
+"""
+
     system_prompt = f"""Voce e {name}, sendo interrogado por um detetive sobre um crime.
 
 == QUEM VOCE E ==
@@ -255,7 +266,7 @@ IMPORTANTE — seu initial_statement foi dito apenas uma vez, no inicio da conve
 "{initial_stmt}"
 NAO repita essa frase nem partes dela nas suas respostas. Ela ja foi dita.
 
-{mandatory_block}{optional_block}{forbidden_block}{evidence_block}{active_claims_block}
+{mandatory_block}{optional_block}{forbidden_block}{evidence_block}{active_claims_block}{retry_block}
 == O QUE VOCE SABE E PODE FALAR ==
 Estes sao os unicos fatos que voce revelou ou admitiu ate agora.
 Voce pode reformular e explicar os fatos autorizados, sem acrescentar novas atribuicoes, acontecimentos, pessoas, horarios ou pistas materiais.

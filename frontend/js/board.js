@@ -15,6 +15,7 @@ const DetectiveBoard = (() => {
   let activeDrag = null;
   let activePinId = null;
   let saveTimer = null;
+  let evaluationMap = {};
 
   // ── Inicialização & Carregamento ──────────────────────────────
   async function openBoard() {
@@ -290,8 +291,20 @@ const DetectiveBoard = (() => {
 
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', `M ${p1.x} ${p1.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${p2.x} ${p2.y}`);
-      path.setAttribute('class', 'red-string-path');
-      path.setAttribute('title', 'Click to cut this string');
+      const evalKey = `${conn.from_id}|${conn.to_id}`;
+      const evalItem = evaluationMap[evalKey];
+      const evalClassMap = {
+        supported_by_facts: 'eval-supported',
+        plausible_unproven: 'eval-plausible',
+        contradicted_by_facts: 'eval-contradicted',
+        vague: 'eval-vague'
+      };
+      const evalCls = evalItem ? (evalClassMap[evalItem.status] || '') : '';
+      path.setAttribute('class', `red-string-path${evalCls ? ' ' + evalCls : ''}`);
+      const statusLabel = evalItem
+        ? `[${evalItem.status} · ${Math.round((evalItem.confidence || 0) * 100)}%] `
+        : '';
+      path.setAttribute('title', `${statusLabel}Click to cut this string`);
 
       path.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -375,9 +388,36 @@ const DetectiveBoard = (() => {
       return;
     }
     boardState.connections = [];
+    evaluationMap = {};
     renderStrings();
     saveBoardDebounced();
     toast('✂️ Strings Cleared', 'All board connections have been cleared.', 'ok', 3000);
+  }
+
+  async function evaluateBoard() {
+    if (!state.sessionId) return;
+    if (!boardState.connections || !boardState.connections.length) {
+      toast('ℹ️ Mural', 'Conecte suspeitos e evidências antes de analisar.', 'hint', 2500);
+      return;
+    }
+    const btn = document.getElementById('btn-evaluate-board');
+    if (btn) btn.disabled = true;
+    try {
+      const res = await api(`/sessions/${state.sessionId}/board/evaluate`, {
+        method: 'POST',
+        body: JSON.stringify({ board_data: boardState })
+      });
+      evaluationMap = {};
+      (res.connections || []).forEach(c => {
+        evaluationMap[`${c.from_id}|${c.to_id}`] = c;
+      });
+      renderStrings();
+      toast('🔍 Análise do Mural', res.summary || 'Mural analisado.', 'ok', 4500);
+    } catch (e) {
+      toast('Erro na Análise', e.message || 'Falha ao analisar mural.', 'lie');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
   }
 
   // ── Persistência com Debounce ─────────────────────────────────
@@ -406,6 +446,7 @@ const DetectiveBoard = (() => {
     setStickyColor,
     onStickyTextChange,
     clearConnections,
-    clearPinSelection
+    clearPinSelection,
+    evaluateBoard
   };
 })();

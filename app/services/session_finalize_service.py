@@ -14,7 +14,8 @@ def finalize_session(
     chosen_suspect_id: int,
     evidence_ids: List[int],
     motive_key: str,
-    db: Optional[Session] = None
+    db: Optional[Session] = None,
+    narrative_theory: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Finalizes a game session:
@@ -53,7 +54,8 @@ def finalize_session(
             chosen_suspect_id=chosen_suspect_id,
             evidence_ids=evidence_ids,
             motive_key=motive_key,
-            db=db
+            db=db,
+            narrative_theory=narrative_theory,
         )
 
         # ----------------------------------------

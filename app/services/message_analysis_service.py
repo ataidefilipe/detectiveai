@@ -10,11 +10,21 @@ logger = logging.getLogger(__name__)
 
 def _create_classifier() -> MessageClassifier:
     """
-    T1.2 — Creates the appropriate classifier based on MESSAGE_CLASSIFIER_PROVIDER env.
-    Supports: 'heuristic' (default) | 'openai'.
-    Falls back to heuristic if OpenAI initialization fails.
+    T1.2 — Creates the appropriate classifier based on MESSAGE_CLASSIFIER_PROVIDER env/settings.
+    Supports: 'heuristic' (default) | 'openai' | 'jev'.
+    Falls back to heuristic if initialization fails.
     """
-    provider = os.getenv("MESSAGE_CLASSIFIER_PROVIDER", "heuristic").lower()
+    from app.core.config import settings
+    provider = os.getenv("MESSAGE_CLASSIFIER_PROVIDER", settings.MESSAGE_CLASSIFIER_PROVIDER).lower()
+
+    if provider == "jev":
+        try:
+            from app.services.message_classifier_jev import JevSemanticMessageClassifier
+            logger.info("[classifier] Using Jev System One semantic classifier")
+            return JevSemanticMessageClassifier()
+        except Exception as e:
+            logger.warning(f"[classifier] Failed to init Jev classifier: {e}. Falling back to heuristic.")
+            return HeuristicMessageClassifier()
 
     if provider == "openai":
         try:

@@ -60,8 +60,9 @@ def derive_relational_event_from_analysis(
     """
     text_lower = (player_text or "").lower()
     
-    # Detecção de oferta de proteção na fala do jogador
-    if any(k in text_lower for k in ["proteg", "imunidade", "garanto sua segurança", "prometo ajudar"]):
+    # Detecção semântica (Jev T6.3) ou fallback literal de oferta de proteção
+    offered_semantic = getattr(analysis, "offered_protection_or_deal", False) is True
+    if offered_semantic or any(k in text_lower for k in ["proteg", "imunidade", "garanto sua segurança", "prometo ajudar"]):
         return RelationalEvent(
             kind="player_offered_protection",
             source_message_id=source_message_id,
@@ -136,7 +137,8 @@ def resolve_dynamic_flavor_slots(
     memory: SessionNarrativeMemory,
     session_id: int,
     suspect_id: int,
-    message_id: Optional[int] = None
+    message_id: Optional[int] = None,
+    triggered_slots: Optional[List[str]] = None,
 ) -> List[str]:
     """
     Identifica se a mensagem do jogador toca no tema de algum flavor slot que
@@ -155,6 +157,7 @@ def resolve_dynamic_flavor_slots(
 
     text_lower = player_text.lower()
     established_keys = {entry.slot_key for entry in memory.flavor}
+    semantic_triggered = set(triggered_slots or [])
     resolved_slots = []
 
     for slot in suspect_flavor_slots:
@@ -163,10 +166,9 @@ def resolve_dynamic_flavor_slots(
             continue
 
         trigger_keywords = slot.get("trigger_keywords", [])
-        if not trigger_keywords:
-            continue
-
-        matched = any(kw.lower() in text_lower for kw in trigger_keywords if kw)
+        matched = slot_key in semantic_triggered or any(
+            kw.lower() in text_lower for kw in trigger_keywords if kw
+        )
         if not matched:
             continue
 
