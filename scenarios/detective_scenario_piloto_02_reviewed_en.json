@@ -372,11 +372,13 @@
           "claim_type": "alibi",
           "importance": "critical",
           "breakable_by_evidence_ids": [
+            "cartao_acesso",
             "testemunho_estagiaria"
           ],
           "breakable_by_claim_ids": [],
           "reveal_on_break": [
-            "know_presenca_01"
+            "know_presenca_01",
+            "know_conflito_02"
           ]
         },
         {
@@ -391,7 +393,8 @@
           ],
           "breakable_by_claim_ids": [],
           "reveal_on_break": [
-            "know_relatorio_02"
+            "know_relatorio_02",
+            "know_relatorio_04"
           ]
         },
         {
@@ -424,6 +427,16 @@
         }
       ],
       "knowledge": [
+        {
+          "id": "know_marina_alibi_01",
+          "topic_id": "alibi",
+          "kind": "observed",
+          "reliability": "high",
+          "content_layers": [
+            "I left Solarium early in the evening because I was exhausted after reviewing the reports. I went straight to the hotel and swiped my keycard around 7:45 p.m.",
+            "I stayed in my room resting and checking work emails. I did not go back to the company building after that."
+          ]
+        },
         {
           "id": "know_relatorio_01",
           "topic_id": "relatorio_contabil",
@@ -774,7 +787,10 @@
           ],
           "breakable_by_claim_ids": [],
           "reveal_on_break": [
-            "know_clara_sala_tecnica_01"
+            "know_clara_sala_tecnica_01",
+            "know_clara_viu_marina_01",
+            "know_clara_viu_marina_02",
+            "know_clara_silence_01"
           ]
         }
       ],
@@ -938,7 +954,8 @@
           ],
           "breakable_by_claim_ids": [],
           "reveal_on_break": [
-            "know_eduardo_luvas_01"
+            "know_eduardo_luvas_01",
+            "know_eduardo_luvas_02"
           ]
         }
       ],
@@ -960,9 +977,7 @@
           "kind": "observed",
           "reliability": "high",
           "content_layers": [
-            "I passed through the 9th-floor corridor after collecting my folder.",
-            "The floor was not as quiet as I first suggested. I heard muffled voices, but I could not make out the words.",
-            "I saw a dark liquid seeping from under Heitor’s door and decided not to get involved."
+            "I passed through the 9th-floor corridor after collecting my folder from a meeting room."
           ]
         },
         {

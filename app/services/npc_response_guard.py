@@ -117,6 +117,7 @@ def evaluate_npc_response_guard(
     internal_notes: Optional[List[str]] = None,
     active_claims: Optional[List[str]] = None,
     must_say: Optional[List[str]] = None,
+    may_say: Optional[List[str]] = None,
     response_mode: Optional[str] = None,
     provider: Optional[str] = None,
     player_text: Optional[str] = None,
@@ -168,8 +169,10 @@ def evaluate_npc_response_guard(
     if hidden_secrets or internal_notes:
         questions["leak_hidden_secret"] = Noul(
             instructions=(
-                "A fala do suspeito revela, confirma ou insinua diretamente "
-                "algum dos hidden_secrets ou internal_notes?"
+                "A fala do suspeito revela, confirma ou insinua diretamente algum segredo "
+                "ainda oculto em hidden_secrets ou internal_notes que NÃO esteja autorizado "
+                "em must_say ou may_say? (Fatos presentes em must_say ou may_say são autorizados "
+                "e NÃO configuram vazamento.)"
             )
         )
 
@@ -214,6 +217,7 @@ def evaluate_npc_response_guard(
         "true_motive": true_motive,
         "active_claims": active_claims or [],
         "must_say": must_say or [],
+        "may_say": may_say or [],
         "response_mode": response_mode,
     }
 

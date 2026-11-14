@@ -491,11 +491,6 @@ def add_npc_reply(
                 if culprit_row:
                     culprit_name = culprit_row.name
 
-        internal_notes = (
-            [suspect.internal_note]
-            if suspect and getattr(suspect, "internal_note", None)
-            else []
-        )
         last_npc_reply = next(
             (m["text"] for m in reversed(chat_history) if m.get("sender") == "npc" and m.get("text")),
             None,
@@ -510,9 +505,10 @@ def add_npc_reply(
             "hidden_secrets": [s["content"] for s in suspect_state.get("hidden_secrets", [])],
             "true_motive": motive_text,
             "culprit_name": culprit_name,
-            "internal_notes": internal_notes,
+            "internal_notes": [],
             "active_claims": suspect_state.get("active_claims", []),
             "must_say": prompt_render_context.must_say,
+            "may_say": prompt_render_context.may_say,
             "response_mode": prompt_render_context.response_mode.value if prompt_render_context.response_mode else None,
             "player_text": player_text,
             "last_npc_reply": last_npc_reply,
